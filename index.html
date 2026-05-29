@@ -349,10 +349,13 @@ DEFAULT_SIZES.forEach(s => sizeValues[s] = 0);
 
 // ── INIT ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  showLoading('Se încarcă...');
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     currentUser = session.user;
     await initAgent();
+  } else {
+    hideLoading();
   }
   // Ascultă schimbări de autentificare
   sb.auth.onAuthStateChange(async (event, session) => {
