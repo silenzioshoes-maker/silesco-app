@@ -328,8 +328,9 @@ async function handleLoggedIn(user) {
 
   // Redirect după 1.5 secunde
   setTimeout(() => {
-    // În producție: window.location.href = cfg.url;
-    // Acum arată un mesaj cu unde ar merge
+setTimeout(() => {
+  window.location.href = '/agent.html';
+}, 1500);
     document.getElementById('redirectScreen').innerHTML = `
       <div class="redirect-icon">✅</div>
       <div class="redirect-title">Autentificare reușită!</div>
