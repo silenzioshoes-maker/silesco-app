@@ -623,7 +623,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   showLoading('Se verifică sesiunea...');
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
-    window.location.href = 'silesco-login.html';
+    window.location.href = '/index.html';
     return;
   }
   currentUser = session.user;
