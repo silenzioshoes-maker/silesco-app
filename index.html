@@ -366,11 +366,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     hideLoading();
   }
   // Ascultă schimbări de autentificare
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
+sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session && !currentUser) {
       currentUser = session.user;
       await initAgent();
+    } else if (event === 'TOKEN_REFRESHED' && session) {
+      currentUser = session.user;
     } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
       showLoginScreen();
     }
   });
