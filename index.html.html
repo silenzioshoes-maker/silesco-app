@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SILESCO · Login</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #F5F2EE;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 48px 40px 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .logo-icon {
+    width: 56px; height: 56px;
+    background: #C84B0C;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin-bottom: 14px;
+  }
+  .logo h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1A1814;
+    letter-spacing: -0.5px;
+  }
+  .logo p {
+    font-size: 13px;
+    color: #9A9088;
+    margin-top: 4px;
+  }
+
+  .field {
+    margin-bottom: 18px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #5A5248;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 7px;
+  }
+  .field input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #DDD8D0;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #1A1814;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus {
+    border-color: #C84B0C;
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: #C84B0C;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+    margin-top: 8px;
+  }
+  .btn-login:hover { background: #A33A08; }
+  .btn-login:disabled {
+    background: #DDD8D0;
+    color: #9A9088;
+    cursor: not-allowed;
+  }
+
+  .error-msg {
+    display: none;
+    background: #FDEAEA;
+    border: 1px solid #E0A0A0;
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 13px;
+    color: #A02020;
+    margin-top: 14px;
+    text-align: center;
+  }
+  .error-msg.show { display: block; }
+
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 14px;
+    font-size: 14px;
+    color: #9A9088;
+  }
+  .loading.show { display: block; }
+
+  .footer {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 12px;
+    color: #C8C0B8;
+  }
+
+  /* Redirect screen */
+  .redirect-screen {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .redirect-screen.show { display: block; }
+  .redirect-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  .redirect-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A1814;
+    margin-bottom: 8px;
+  }
+  .redirect-sub {
+    font-size: 14px;
+    color: #9A9088;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .role-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid #DDD8D0;
+    border-top-color: #C84B0C;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .btn-go {
+    display: inline-block;
+    padding: 12px 28px;
+    background: #C84B0C;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+  }
+  .btn-go:hover { background: #A33A08; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">👟</div>
+    <h1>SILESCO</h1>
+    <p>Production OS · Autentificare</p>
+  </div>
+
+  <!-- Form login -->
+  <div id="loginForm">
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="email@silesco.ro"
+        onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <div class="field">
+      <label>Parolă</label>
+      <input type="password" id="password" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">
+      Intră în cont
+    </button>
+    <div class="loading" id="loadingMsg">Se verifică...</div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- Redirect după login reușit -->
+  <div class="redirect-screen" id="redirectScreen">
+    <div class="redirect-icon">✅</div>
+    <div class="redirect-title" id="welcomeName">Bine ai venit!</div>
+    <div class="redirect-sub">
+      Autentificare reușită.<br>
+      Te redirecționăm către panoul tău.
+    </div>
+    <div class="role-badge" id="roleBadge"></div>
+    <br>
+    <div class="spinner"></div>
+  </div>
+
+  <div class="footer">SILESCO SRL · Sistem intern · Acces restricționat</div>
+</div>
+
+<script>
+// ── SUPABASE INIT ─────────────────────────────────────────
+const SUPABASE_URL  = 'https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ── REDIRECT PER ROL ──────────────────────────────────────
+const ROLE_CONFIG = {
+  management:     { label: '🎯 Management',      color: '#1B3F6E', bg: '#E6EEF8', url: '/management'  },
+  agent:          { label: '🧳 Agent vânzări',   color: '#C84B0C', bg: '#FDF0EA', url: '/agent'       },
+  croit:          { label: '✂️ Croit',            color: '#A07010', bg: '#FDF6E0', url: '/croit'       },
+  talpuit:        { label: '👟 Talpuit',          color: '#1A6060', bg: '#E0F0F0', url: '/talpuit'     },
+  impachetat:     { label: '📦 Împachetat',       color: '#5C3418', bg: '#F3EAE0', url: '/impachetat'  },
+  birou:          { label: '🖥️ Birou',            color: '#2A6048', bg: '#EAF3ED', url: '/birou'       },
+  atelier_extern: { label: '🧵 Atelier extern',   color: '#4A2E72', bg: '#EEE8F8', url: '/atelier'     },
+};
+
+// ── VERIFICĂ SESIUNE EXISTENTĂ ────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await handleLoggedIn(session.user);
+  }
+});
+
+// ── LOGIN ─────────────────────────────────────────────────
+async function doLogin() {
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn      = document.getElementById('loginBtn');
+  const errEl    = document.getElementById('errorMsg');
+  const loadEl   = document.getElementById('loadingMsg');
+
+  if (!email || !password) {
+    showError('Completează emailul și parola.');
+    return;
+  }
+
+  btn.disabled = true;
+  errEl.classList.remove('show');
+  loadEl.classList.add('show');
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  loadEl.classList.remove('show');
+
+  if (error) {
+    btn.disabled = false;
+    showError(
+      error.message.includes('Invalid login')
+        ? 'Email sau parolă incorectă.'
+        : error.message
+    );
+    return;
+  }
+
+  await handleLoggedIn(data.user);
+}
+
+// ── DUPĂ LOGIN REUȘIT ─────────────────────────────────────
+async function handleLoggedIn(user) {
+  // Citește rolul din user_profiles
+  const { data: profile, error } = await sb
+    .from('user_profiles')
+    .select('full_name, role')
+    .eq('id', user.id)
+    .single();
+
+  if (error || !profile) {
+    showError('Contul nu are un profil configurat. Contactează managementul.');
+    await sb.auth.signOut();
+    document.getElementById('loginBtn').disabled = false;
+    return;
+  }
+
+  const cfg = ROLE_CONFIG[profile.role] || ROLE_CONFIG['management'];
+
+  // Arată ecranul de redirect
+  document.getElementById('loginForm').style.display = 'none';
+  const redir = document.getElementById('redirectScreen');
+  redir.classList.add('show');
+
+  document.getElementById('welcomeName').textContent =
+    `Bine ai venit, ${profile.full_name || 'utilizator'}!`;
+
+  const badge = document.getElementById('roleBadge');
+  badge.textContent  = cfg.label;
+  badge.style.background = cfg.bg;
+  badge.style.color      = cfg.color;
+
+  // Salvează rolul în sessionStorage pentru paginile următoare
+  sessionStorage.setItem('silesco_role',      profile.role);
+  sessionStorage.setItem('silesco_name',      profile.full_name || '');
+  sessionStorage.setItem('silesco_user_id',   user.id);
+
+  // Redirect după 1.5 secunde
+  setTimeout(() => {
+    // În producție: window.location.href = cfg.url;
+    // Acum arată un mesaj cu unde ar merge
+    document.getElementById('redirectScreen').innerHTML = `
+      <div class="redirect-icon">✅</div>
+      <div class="redirect-title">Autentificare reușită!</div>
+      <div class="redirect-sub">
+        Rol detectat: <strong>${cfg.label}</strong><br><br>
+        În producție vei fi redirecționat automat la:<br>
+        <code style="background:#f0f0f0;padding:4px 10px;border-radius:6px;font-size:13px">silesco.app${cfg.url}</code>
+      </div>
+      <br>
+      <button class="btn-go" onclick="logout()">
+        Deconectare
+      </button>
+    `;
+  }, 1500);
+}
+
+// ── DECONECTARE ───────────────────────────────────────────
+async function logout() {
+  await sb.auth.signOut();
+  sessionStorage.clear();
+  location.reload();
+}
+
+// ── HELPER ────────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+</script>
+</body>
+</html>
