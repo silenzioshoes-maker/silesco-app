@@ -350,7 +350,15 @@ DEFAULT_SIZES.forEach(s => sizeValues[s] = 0);
 // ── INIT ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   showLoading('Se încarcă...');
+  
+  // Timeout de siguranță — oprește loading după 3 secunde
+  const safetyTimeout = setTimeout(() => {
+    hideLoading();
+  }, 3000);
+
   const { data: { session } } = await sb.auth.getSession();
+  clearTimeout(safetyTimeout);
+  
   if (session) {
     currentUser = session.user;
     await initAgent();
