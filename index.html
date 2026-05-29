@@ -267,7 +267,10 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F5F2EE; min-
           <div class="field"><label>Culoare / Piele</label><input type="text" id="artCuloare" placeholder="ex: Negru Lac, Maro Cioco..."/></div>
           <div class="field"><label>Preț per pereche (RON)</label><input type="number" id="artPret" placeholder="ex: 85" min="0"/></div>
           <div style="margin-bottom:12px">
-            <div style="font-size:12px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Mărimi și cantități</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="font-size:12px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:0.8px">Mărimi și cantități</div>
+              <button onclick="setStandardPontaj()" style="padding:5px 12px;border-radius:6px;border:1px solid #C84B0C;background:#FDF0EA;color:#C84B0C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Standard</button>
+            </div>
             <div class="sizes-grid" id="sizesGrid"></div>
           </div>
           <div class="field"><label>Observații (opțional)</label><textarea class="obs-area" id="artObs" placeholder="ex: tălpici cu ață neagră..."></textarea></div>
@@ -349,31 +352,17 @@ DEFAULT_SIZES.forEach(s => sizeValues[s] = 0);
 
 // ── INIT ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  showLoading('Se încarcă...');
-  
-  // Timeout de siguranță — oprește loading după 3 secunde
-  const safetyTimeout = setTimeout(() => {
-    hideLoading();
-  }, 3000);
-
   const { data: { session } } = await sb.auth.getSession();
-  clearTimeout(safetyTimeout);
-  
   if (session) {
     currentUser = session.user;
     await initAgent();
-  } else {
-    hideLoading();
   }
   // Ascultă schimbări de autentificare
-sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session && !currentUser) {
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
       currentUser = session.user;
       await initAgent();
-    } else if (event === 'TOKEN_REFRESHED' && session) {
-      currentUser = session.user;
     } else if (event === 'SIGNED_OUT') {
-      currentUser = null;
       showLoginScreen();
     }
   });
@@ -486,7 +475,7 @@ async function addDefaultProducts() {
 // ── COMENZI ───────────────────────────────────────────────
 async function loadOrders() {
   const { data: orders } = await sb.from('orders')
-    .select('id,order_no,status,delivery_date,total_pairs,total_value,created_at,clients(name,company_name)')
+    .select('id,order_no,status,delivery_date,total_pairs,total_value,created_at,notes,plata,clients(name,company_name),order_lines(color,piele,ponytage,total_pairs,unit_price)')
     .eq('agent_id', currentUser.id)
     .order('created_at', { ascending: false });
   renderOrders(orders || []);
@@ -507,24 +496,127 @@ function renderOrders(orders) {
     document.getElementById('notifSub').textContent = (gata.clients?.company_name||gata.clients?.name||'') + ` · ${gata.total_pairs} per.`;
   } else { notif.classList.remove('show'); }
   const SC = { nou:{l:'Comandă nouă',c:'#1B3F6E',b:'#E6EEF8'}, aprobat:{l:'Aprobat',c:'#2A6048',b:'#EAF3ED'}, in_productie:{l:'În producție',c:'#A07010',b:'#FDF6E0'}, finalizat:{l:'Gata ✅',c:'#2A6048',b:'#EAF3ED'}, livrat:{l:'Livrat',c:'#9A9088',b:'#F5F2EE'}, anulat:{l:'Anulat',c:'#A02020',b:'#FDEAEA'} };
-  list.innerHTML = orders.map(o => {
+  list.innerHTML = orders.map((o,i) => {
     const cfg = SC[o.status]||SC.nou;
     const client = o.clients?.company_name||o.clients?.name||'—';
     const delDate = o.delivery_date ? new Date(o.delivery_date).toLocaleDateString('ro-RO') : '—';
     const daysLeft = o.delivery_date ? Math.ceil((new Date(o.delivery_date)-new Date())/86400000) : null;
     const dc = daysLeft===null?'#9A9088':daysLeft<0?'#A02020':daysLeft<=3?'#A07010':'#9A9088';
     const dt = daysLeft===null?'':daysLeft<0?`⚠ +${Math.abs(daysLeft)}z`:`${daysLeft}z rămase`;
-    return `<div class="order-card">
-      <div class="order-id">${o.order_no||'—'}</div>
-      <div class="order-client">${client}</div>
-      <div class="order-meta">
-        <span class="status-pill" style="color:${cfg.c};background:${cfg.b}">${cfg.l}</span>
-        <span style="font-size:12px;color:#9A9088">${o.total_pairs||0} per.</span>
-        <span style="font-size:12px;color:${dc}">${dt}</span>
+    // Preview scurt articole
+    const linesPreview = (o.order_lines||[]).slice(0,3).map(l=>
+      `<span style="font-size:11px;color:#9A9088;background:#F5F2EE;padding:2px 7px;border-radius:4px;white-space:nowrap">${l.color||'—'}</span>`
+    ).join(' ');
+    const moreLines = (o.order_lines||[]).length>3?`<span style="font-size:11px;color:#C8C0B8">+${(o.order_lines||[]).length-3}</span>`:'';
+    // Detalii expandabile
+    const linesDetail = (o.order_lines||[]).map(l => {
+      const pontaj = l.ponytage ? Object.entries(l.ponytage).map(([s,q])=>`${s}×${q}`).join(' ') : '—';
+      return `<div style="padding:8px 0;border-bottom:1px solid #F5F2EE">
+        <div style="font-size:14px;font-weight:700;color:#1A1814">${l.color||'—'} · ${l.total_pairs} per.</div>
+        <div style="font-size:11px;color:#C8C0B8;font-family:monospace;margin-top:2px">${pontaj}</div>
+        ${l.unit_price?`<div style="font-size:12px;color:#9A9088;margin-top:2px">${l.unit_price} RON/per. · ${(l.unit_price*l.total_pairs).toLocaleString('ro-RO')} RON</div>`:''}
+      </div>`;
+    }).join('');
+    return `<div class="order-card" style="cursor:default">
+      <div onclick="toggleOrder(${i})" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div class="order-id">${o.order_no||'—'}</div>
+            <div class="order-client">${client}</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">${linesPreview}${moreLines}</div>
+            <div class="order-meta">
+              <span class="status-pill" style="color:${cfg.c};background:${cfg.b}">${cfg.l}</span>
+              <span style="font-size:12px;color:#9A9088">${o.total_pairs||0} per.</span>
+              <span style="font-size:12px;color:${dc}">${dt}</span>
+            </div>
+            <div style="font-size:11px;color:#C8C0B8;margin-top:5px">Livrare: ${delDate}</div>
+          </div>
+          <span id="arr_${i}" style="font-size:16px;color:#C8C0B8;margin-left:8px;margin-top:4px;transition:transform 0.2s;display:inline-block">▼</span>
+        </div>
       </div>
-      <div style="font-size:11px;color:#C8C0B8;margin-top:5px">Livrare: ${delDate}</div>
+      <div id="od_${i}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #DDD8D0">
+        <div style="font-size:11px;font-weight:700;color:#9A9088;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Articole comandate</div>
+        ${linesDetail||'<div style="font-size:13px;color:#C8C0B8">Nicio linie</div>'}
+        <div style="margin-top:12px">
+          <button onclick="genPDF('${o.id}')" style="width:100%;padding:11px;border-radius:8px;border:none;background:#C84B0C;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📄 Generează fișă client</button>
+        </div>
+      </div>
     </div>`;
   }).join('');
+}
+
+function toggleOrder(i) {
+  const el = document.getElementById('od_'+i);
+  const arr = document.getElementById('arr_'+i);
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if(arr) arr.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+async function genPDF(orderId) {
+  showLoading('Se generează fișa...');
+  const { data: o } = await sb.from('orders')
+    .select('*,clients(*),order_lines(*)')
+    .eq('id', orderId).single();
+  hideLoading();
+  if (!o) { showToast('Eroare la încărcare!'); return; }
+  const client = o.clients?.company_name||o.clients?.name||'—';
+  const delDate = o.delivery_date ? new Date(o.delivery_date).toLocaleDateString('ro-RO') : '—';
+  const today = new Date().toLocaleDateString('ro-RO');
+  const totalPer = o.order_lines.reduce((s,l)=>s+l.total_pairs,0);
+  const totalVal = o.order_lines.reduce((s,l)=>s+(l.unit_price||0)*l.total_pairs,0);
+  const html = `<html><head><meta charset="UTF-8"><style>
+    body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:20px;max-width:600px;margin:0 auto}
+    h1{font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:4px}
+    .sub{font-size:11px;color:#888;margin-bottom:20px}
+    .row{display:flex;gap:40px;margin-bottom:20px}
+    .col{flex:1}.label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+    .val{font-size:15px;font-weight:700}
+    table{width:100%;border-collapse:collapse;margin:16px 0}
+    th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 6px;border-bottom:2px solid #1A1814;text-align:left}
+    td{padding:10px 6px;border-bottom:1px solid #eee;font-size:13px}
+    .tr{background:#f5f2ee;font-weight:700}
+    .pt{font-size:11px;color:#aaa;font-family:monospace}
+    .footer{margin-top:40px;display:flex;gap:60px}
+    .sig{border-top:1px solid #1A1814;padding-top:8px;font-size:11px;color:#888;width:200px}
+    @media print{button{display:none}}
+  </style></head><body>
+  <h1>SILESCO</h1>
+  <div class="sub">Fișă de Comandă · ${o.order_no||'—'} · Data: ${today}</div>
+  <div class="row">
+    <div class="col">
+      <div class="label">Client</div><div class="val">${client}</div>
+      ${o.clients?.cui?`<div style="font-size:12px;color:#888;margin-top:2px">CUI: ${o.clients.cui}</div>`:''}
+      ${o.clients?.delivery_address?`<div style="font-size:12px;color:#888;margin-top:2px">📍 ${o.clients.delivery_address}</div>`:''}
+      ${o.clients?.phone?`<div style="font-size:12px;color:#888;margin-top:2px">📞 ${o.clients.phone}</div>`:''}
+    </div>
+    <div class="col">
+      <div class="label">Termen livrare</div><div class="val">${delDate}</div>
+      <div style="font-size:12px;color:#888;margin-top:4px">Plată: ${o.plata||'—'}</div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Culoare / Piele</th><th>Preț/per.</th><th>Pontaj</th><th>Total</th><th>Valoare</th></tr></thead>
+    <tbody>
+      ${o.order_lines.map((l,i)=>{
+        const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`${s}×${q}`).join(' '):'—';
+        const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
+        return `<tr><td>${i+1}</td><td><strong>${l.color||'—'}</strong></td><td>${l.unit_price?l.unit_price+' RON':'—'}</td><td class="pt">${pt}</td><td><strong>${l.total_pairs}</strong></td><td>${val}</td></tr>`;
+      }).join('')}
+      <tr class="tr"><td colspan="4">TOTAL</td><td><strong>${totalPer}</strong></td><td><strong>${totalVal.toLocaleString('ro-RO')} RON</strong></td></tr>
+    </tbody>
+  </table>
+  ${o.notes?`<div style="padding:10px 14px;background:#FDF6E0;border-radius:6px;font-size:13px;margin-bottom:16px"><strong>Observații:</strong> ${o.notes}</div>`:''}
+  <div style="margin-bottom:16px;font-size:12px;color:#888">Prin semnarea prezentei fișe, clientul confirmă comanda și condițiile de livrare agreate.</div>
+  <div class="footer">
+    <div class="sig">Persoana care plasează comanda<br><br><br></div>
+    <div class="sig">SILESCO SRL · Agent: ${currentProfile?.full_name||'—'}<br><br><br></div>
+  </div>
+  <button onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#C84B0C;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">🖨 Printează / Salvează PDF</button>
+  </body></html>`;
+  const w = window.open('','_blank','width=720,height=960');
+  w.document.write(html);
+  w.document.close();
 }
 
 // ── NEW ORDER ─────────────────────────────────────────────
@@ -600,6 +692,11 @@ function calcDeliveryDate(t){const d=new Date();const z={'5z':5,'10z':10,'15z':1
 
 // ── MĂRIMI ────────────────────────────────────────────────
 function resetSizesGrid(){DEFAULT_SIZES.forEach(s=>sizeValues[s]=0);renderSizesGrid();}
+function setStandardPontaj(){
+  sizeValues={'39':1,'40':2,'41':3,'42':3,'43':2,'44':1};
+  renderSizesGrid();
+  showToast('Pontaj standard aplicat!');
+}
 function renderSizesGrid(){
   const grid=document.getElementById('sizesGrid');
   if(!grid)return;
