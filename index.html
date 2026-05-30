@@ -479,6 +479,11 @@ async function initAgent(){
   showLov('Se încarcă...');
   const{data:p}=await sb.from('user_profiles').select('full_name,role').eq('id',CU.id).single();
   CP=p;
+  // Redirect per rol
+  if(p?.role==='management'){
+    window.location.href='/management.html';
+    return;
+  }
   document.getElementById('hSub').textContent=p?.full_name||'';
   await loadProds();
   await loadOrders();
