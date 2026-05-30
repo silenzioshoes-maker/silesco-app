@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SILESCO · Management</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1B1B1B}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:#111111;display:flex;flex-direction:column;z-index:100}
+.sidebar-logo{padding:24px 20px 18px}
+.sidebar-brand{font-size:9px;color:rgba(255,255,255,.25);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
+.sidebar-title{font-family:'Playfair Display',serif;font-size:18px;color:#fff;font-weight:700}
+.sidebar-divider{height:1px;background:rgba(255,255,255,.06);margin:0 16px 12px}
+.sidebar-section{font-size:9px;color:rgba(255,255,255,.2);letter-spacing:2px;text-transform:uppercase;padding:0 20px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;border-radius:6px;margin:1px 8px;cursor:pointer;transition:background .15s}
+.nav-item:hover{background:rgba(255,255,255,.05)}
+.nav-item.active{background:rgba(176,141,87,.15)}
+.nav-item svg{width:15px;height:15px;stroke:rgba(255,255,255,.35);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nav-item.active svg{stroke:#B08D57}
+.nav-item span{font-size:12px;color:rgba(255,255,255,.4);font-weight:400}
+.nav-item.active span{color:#fff;font-weight:600}
+.nav-badge{margin-left:auto;background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:2px 6px}
+.sidebar-bottom{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.user-name{font-size:12px;color:rgba(255,255,255,.6);font-weight:600}
+.user-role{font-size:10px;color:rgba(255,255,255,.25)}
+
+/* ── MAIN ── */
+.main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid #DDD7CE;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.page-title{font-family:'Playfair Display',serif;font-size:20px;color:#1B1B1B;font-weight:700}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.content{padding:24px 28px;flex:1}
+
+/* ── ALERT BANNER ── */
+.alert-banner{background:#F5EAE8;border:1px solid rgba(156,58,43,.2);border-radius:8px;padding:11px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:13px;color:#9C3A2B}
+.alert-banner svg{width:15px;height:15px;stroke:#9C3A2B;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.kpi-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:20px 22px;border-top:2px solid transparent}
+.kpi-card.accent{border-top-color:#B08D57}
+.kpi-card.red{border-top-color:#9C3A2B}
+.kpi-card.green{border-top-color:#365A43}
+.kpi-icon{width:34px;height:34px;border-radius:6px;background:#F4F1EA;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.kpi-icon svg{width:16px;height:16px;stroke:#B08D57;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.kpi-val{font-family:'Playfair Display',serif;font-size:30px;color:#1B1B1B;font-weight:700;line-height:1;margin-bottom:5px}
+.kpi-label{font-size:12px;color:#6E6A64}
+
+/* ── FILTERS ── */
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:7px 14px;border-radius:6px;border:1.5px solid #DDD7CE;background:#fff;font-size:12px;color:#6E6A64;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;transition:all .12s}
+.filter-btn.active{border-color:#B08D57;background:#F6F0E5;color:#B08D57;font-weight:700}
+.search-box{padding:7px 12px;border-radius:6px;border:1.5px solid #DDD7CE;background:#fff;font-size:13px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;width:220px}
+.search-box:focus{border-color:#B08D57}
+
+/* ── TABLE ── */
+.table-wrap{background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden}
+.table-header{padding:14px 20px;border-bottom:1px solid #DDD7CE;display:flex;justify-content:space-between;align-items:center}
+.table-title{font-size:14px;font-weight:600;color:#1B1B1B}
+.table-count{font-size:12px;color:#9E9890}
+
+.order-row{border-bottom:1px solid #EDE8DF;cursor:pointer;transition:background .1s}
+.order-row:hover{background:#FAFAF8}
+.order-row:last-child{border-bottom:none}
+.order-row-main{display:grid;grid-template-columns:110px 1fr 80px 100px 160px 100px 40px;gap:12px;padding:13px 20px;align-items:center}
+.order-no-cell{font-size:11px;font-family:'Courier New',monospace;color:#C8C0B8;letter-spacing:.5px}
+.order-client-cell{font-size:13px;font-weight:600;color:#1B1B1B}
+.order-agent-cell{font-size:11px;color:#9E9890}
+.order-pairs-cell{font-size:13px;color:#6E6A64}
+.order-days-cell{font-size:12px}
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.expand-row{display:none;padding:0 20px 16px;border-bottom:1px solid #EDE8DF;background:#FAFAF8}
+
+/* ── ORDER DETAIL ── */
+.detail-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;padding-top:16px}
+.detail-section{background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:16px}
+.detail-label{font-size:9px;font-weight:700;color:#9E9890;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+
+/* Timeline */
+.timeline{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:8px;gap:0}
+.tl-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:72px}
+.tl-connector{display:flex;align-items:center;width:100%}
+.tl-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;z-index:1}
+.tl-dot.done{background:#111111;border:2px solid #111111}
+.tl-dot.active{background:#B08D57;border:2px solid #B08D57;box-shadow:0 0 0 4px rgba(176,141,87,.15)}
+.tl-dot.idle{background:transparent;border:2px solid #DDD7CE}
+.tl-dot svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.tl-line{flex:1;height:1.5px}
+.tl-line.done{background:#111111}
+.tl-line.idle{background:#DDD7CE}
+.tl-name{font-size:9px;margin-top:6px;text-align:center;line-height:1.3;max-width:64px;font-weight:400;color:#9E9890}
+.tl-name.done{color:#1B1B1B;font-weight:500}
+.tl-name.active{color:#B08D57;font-weight:700}
+
+/* Lot card */
+.lot-card{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.lot-no{font-size:10px;font-family:'Courier New',monospace;color:#C8C0B8;margin-bottom:3px}
+.lot-name{font-size:13px;font-weight:700;color:#1B1B1B;margin-bottom:4px}
+.lot-meta{font-size:11px;color:#9E9890}
+
+/* Action buttons */
+.action-btn{width:100%;padding:11px;border-radius:7px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px;letter-spacing:.2px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.action-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ab-gold{background:#111111;color:#fff}
+.ab-gold:hover{background:#2a2a2a}
+.ab-green{background:#365A43;color:#fff}
+.ab-outline{background:transparent;border:1.5px solid #DDD7CE;color:#6E6A64}
+.ab-red{background:transparent;border:1.5px solid #9C3A2B;color:#9C3A2B}
+
+/* Pontaj table */
+.pontaj-table{display:inline-flex;border:1px solid #DDD7CE;border-radius:5px;overflow:hidden;margin-top:4px}
+.pontaj-col{display:flex;flex-direction:column;border-right:1px solid #EDE8DF}
+.pontaj-col:last-child{border-right:none}
+.pontaj-sz{padding:3px 7px;font-size:9px;color:#9E9890;font-weight:700;text-align:center;background:#F4F1EA;border-bottom:1px solid #EDE8DF}
+.pontaj-qty{padding:4px 7px;font-size:12px;font-weight:700;color:#1B1B1B;text-align:center}
+
+/* Buttons */
+.btn{padding:9px 18px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-black{background:#111111;color:#fff}
+.btn-outline{background:transparent;border:1.5px solid #DDD7CE;color:#6E6A64}
+.btn-gold{background:transparent;border:1.5px solid #B08D57;color:#B08D57}
+
+/* Loading */
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.95);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.lov.show{display:flex}
+.spinner{width:32px;height:32px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lov-text{font-size:12px;color:#6E6A64;font-weight:500}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#111111;color:#fff;padding:11px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;letter-spacing:.2px}
+.toast.show{opacity:1}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;color:#1B1B1B;margin-bottom:4px}
+.modal-sub{font-size:12px;color:#9E9890;margin-bottom:20px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:10px;font-weight:700;color:#6E6A64;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.fld select,.fld input{width:100%;padding:11px 13px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;background:#fff}
+.fld select:focus,.fld input:focus{border-color:#B08D57}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .order-row-main{grid-template-columns:90px 1fr 80px 120px 36px}
+}
+</style>
+</head>
+<body>
+
+<div class="lov" id="lov"><div class="spinner"></div><div class="lov-text" id="lovText">Se încarcă...</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL APROBARE -->
+<div class="modal-overlay" id="approveModal">
+  <div class="modal-box">
+    <div class="modal-title">Aprobă comanda</div>
+    <div class="modal-sub" id="approveModalSub"></div>
+    <div id="approveLotsPreview" style="margin-bottom:16px"></div>
+    <div style="background:#F6F0E5;border-left:3px solid #B08D57;border-radius:0 6px 6px 0;padding:10px 12px;font-size:11px;color:#B0892B;line-height:1.5;margin-bottom:16px">
+      Se vor crea automat loturi de producție — câte unul per articol. Talpa se atribuie automat din setările modelului.
+    </div>
+    <button class="action-btn ab-green" onclick="confirmApprove()">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Aprobă și creează loturi
+    </button>
+    <button class="action-btn ab-outline" onclick="closeApproveModal()">Anulează</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-brand">SILESCO</div>
+    <div class="sidebar-title">Management</div>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div style="padding:0 8px;flex:1;overflow-y:auto">
+    <div class="sidebar-section" style="padding-top:4px">Principal</div>
+    <div class="nav-item active" onclick="showSection('orders')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Comenzi</span>
+      <span class="nav-badge" id="newOrdersBadge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showSection('productie')">
+      <svg viewBox="0 0 24 24"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+      <span>Producție</span>
+    </div>
+    <div class="sidebar-section" style="padding-top:12px">Stoc</div>
+    <div class="nav-item" onclick="showSection('talpi')">
+      <svg viewBox="0 0 24 24"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5c0 1-.38 2.42-.75 3.5L8 11"/></svg>
+      <span>Tălpi</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <span>FEȚE</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <span>Rapoarte</span>
+    </div>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-avatar">
+      <svg style="width:14px;height:14px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div>
+      <div class="user-name" id="userName">—</div>
+      <div class="user-role">Management</div>
+    </div>
+    <button onclick="doLogout()" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:4px">
+      <svg style="width:14px;height:14px;stroke:rgba(255,255,255,.3);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-actions">
+      <input class="search-box" id="searchBox" placeholder="Caută comandă sau client..." oninput="filterOrders(this.value)"/>
+      <button class="btn btn-outline" onclick="loadAll()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Reîncarcă
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ALERT BANNER -->
+    <div class="alert-banner" id="alertBanner" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span id="alertText"></span>
+    </div>
+
+    <!-- SECTION: COMENZI -->
+    <div id="sectionOrders">
+      <!-- KPIs -->
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('toate',this)">Toate</button>
+        <button class="filter-btn" onclick="setFilter('nou',this)">Noi</button>
+        <button class="filter-btn" onclick="setFilter('aprobat',this)">Aprobate</button>
+        <button class="filter-btn" onclick="setFilter('in_productie',this)">În producție</button>
+        <button class="filter-btn" onclick="setFilter('finalizat',this)">Gata livrare</button>
+        <button class="filter-btn" onclick="setFilter('intarziate',this)">Întârziate</button>
+      </div>
+
+      <!-- Orders table -->
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">Comenzi</div>
+          <div class="table-count" id="ordersCount">Se încarcă...</div>
+        </div>
+        <div id="ordersTable"></div>
+      </div>
+    </div>
+
+    <!-- SECTION: PRODUCȚIE -->
+    <div id="sectionProductie" style="display:none">
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">Loturi active în producție</div>
+          <div class="table-count" id="lotsCount"></div>
+        </div>
+        <div id="lotsTable"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+const{createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+
+let CU=null,CP=null,allOrders=[],filteredOrders=[],activeFilter='toate',activeSection='orders';
+let approveOrderId=null,approveOrderLines=[];
+
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/index.html';return;}
+  CU=session.user;
+  const{data:p}=await sb.from('user_profiles').select('full_name,role').eq('id',CU.id).single();
+  CP=p;
+  if(p?.role!=='management'){window.location.href='/index.html';return;}
+  document.getElementById('userName').textContent=p?.full_name||'Management';
+  sb.auth.onAuthStateChange((ev,ses)=>{
+    if(ev==='SIGNED_OUT'){window.location.href='/index.html';}
+  });
+  await loadAll();
+});
+
+async function doLogout(){await sb.auth.signOut();}
+
+// ── LOAD DATA ─────────────────────────────────────────────────
+async function loadAll(){
+  showLov('Se încarcă datele...');
+  await Promise.all([loadOrders(),loadLots()]);
+  hideLov();
+}
+
+async function loadOrders(){
+  const{data,error}=await sb.from('orders')
+    .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,
+      clients(id,name,company_name,cui,phone,delivery_address),
+      user_profiles!orders_agent_id_fkey(full_name),
+      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,products(id,code,name,default_sole_id))`)
+    .order('created_at',{ascending:false});
+  if(error){console.error(error);return;}
+  allOrders=data||[];
+  renderKPIs();
+  applyFilter();
+  updateAlerts();
+}
+
+async function loadLots(){
+  const{data}=await sb.from('production_lots')
+    .select(`id,lot_no,stage,qty_planned,qty_done,created_at,
+      orders(order_no,clients(company_name,name)),
+      products(code,name),
+      talpi(name)`)
+    .neq('stage','gata_livrare')
+    .order('created_at',{ascending:false})
+    .limit(50);
+  renderLots(data||[]);
+}
+
+// ── KPIs ──────────────────────────────────────────────────────
+function renderKPIs(){
+  const nou=allOrders.filter(o=>o.status==='nou').length;
+  const prod=allOrders.filter(o=>o.status==='in_productie').length;
+  const gata=allOrders.filter(o=>o.status==='finalizat').length;
+  const intarziate=allOrders.filter(o=>{
+    if(!o.delivery_date)return false;
+    return Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0&&o.status!=='livrat'&&o.status!=='anulat';
+  }).length;
+
+  if(nou>0){
+    document.getElementById('newOrdersBadge').style.display='inline';
+    document.getElementById('newOrdersBadge').textContent=nou;
+  }
+
+  document.getElementById('kpiGrid').innerHTML=[
+    {icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',val:nou,label:'Comenzi noi',cls:'accent'},
+    {icon:'<path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>',val:prod,label:'În producție',cls:''},
+    {icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>',val:intarziate,label:'Întârziate',cls:'red'},
+    {icon:'<polyline points="20 6 9 17 4 12"/>',val:gata,label:'Gata de livrare',cls:'green'},
+  ].map(k=>`
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#B08D57;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">${k.icon}</svg></div>
+      <div class="kpi-val">${k.val}</div>
+      <div class="kpi-label">${k.label}</div>
+    </div>`).join('');
+}
+
+// ── ALERTS ────────────────────────────────────────────────────
+function updateAlerts(){
+  const intarziate=allOrders.filter(o=>{
+    if(!o.delivery_date||['livrat','anulat'].includes(o.status))return false;
+    return Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0;
+  }).length;
+  const banner=document.getElementById('alertBanner');
+  if(intarziate>0){
+    banner.style.display='flex';
+    document.getElementById('alertText').textContent=intarziate+' '+(intarziate===1?'comandă a depășit':'comenzi au depășit')+' termenul de livrare';
+  }else{banner.style.display='none';}
+}
+
+// ── FILTERS ───────────────────────────────────────────────────
+let searchQ='';
+function setFilter(f,el){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilter();
+}
+function filterOrders(q){searchQ=q.toLowerCase();applyFilter();}
+
+function applyFilter(){
+  let list=allOrders;
+  if(activeFilter==='intarziate'){
+    list=list.filter(o=>{
+      if(!o.delivery_date||['livrat','anulat'].includes(o.status))return false;
+      return Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0;
+    });
+  }else if(activeFilter!=='toate'){
+    list=list.filter(o=>o.status===activeFilter);
+  }
+  if(searchQ){
+    list=list.filter(o=>{
+      const cl=o.clients?.company_name||o.clients?.name||'';
+      return (o.order_no||'').toLowerCase().includes(searchQ)||cl.toLowerCase().includes(searchQ);
+    });
+  }
+  filteredOrders=list;
+  renderOrders();
+}
+
+// ── RENDER ORDERS ─────────────────────────────────────────────
+const SC={
+  nou:         {l:'Comandă nouă', c:'#2F4A63',b:'#E8EFF6'},
+  aprobat:     {l:'Aprobat',      c:'#B08D57',b:'#F6F0E5'},
+  in_productie:{l:'În producție', c:'#B0892B',b:'#FAF3E0'},
+  finalizat:   {l:'Gata livrare', c:'#365A43',b:'#EAF0EC'},
+  livrat:      {l:'Livrat',       c:'#9E9890',b:'#F4F1EA'},
+  anulat:      {l:'Anulat',       c:'#9C3A2B',b:'#F5EAE8'},
+};
+
+function renderOrders(){
+  const el=document.getElementById('ordersTable');
+  document.getElementById('ordersCount').textContent=filteredOrders.length+' comenzi';
+  if(!filteredOrders.length){
+    el.innerHTML='<div style="padding:40px;text-align:center;color:#9E9890;font-size:13px">Nicio comandă găsită.</div>';
+    return;
+  }
+  el.innerHTML=filteredOrders.map((o,i)=>{
+    const cfg=SC[o.status]||SC.nou;
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const agent=o.user_profiles?.full_name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    const dl=o.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
+    const dc=dl===null?'#9E9890':dl<0?'#9C3A2B':dl<=3?'#B0892B':'#9E9890';
+    const dt=dl===null?'—':dl<0?'+'+Math.abs(dl)+'z':dl===0?'Azi':dl+'z';
+    const lines=o.order_lines||[];
+
+    // Detalii expandabile
+    const linesHTML=lines.map(l=>{
+      const entries=l.ponytage?Object.entries(l.ponytage):[];
+      const pt=entries.length?`<div class="pontaj-table">${entries.map(([s,q])=>`<div class="pontaj-col"><div class="pontaj-sz">${s}</div><div class="pontaj-qty">${q}</div></div>`).join('')}</div>`:'—';
+      const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
+      return `<div style="padding:8px 0;border-bottom:1px solid #EDE8DF">
+        <div style="font-size:13px;font-weight:700;color:#1B1B1B">Art. ${l.products?.code||'—'} · ${l.color||'—'} · ${l.total_pairs} per. ${l.unit_price?'· '+val:''}</div>
+        ${pt}
+      </div>`;
+    }).join('');
+
+    const actiuni=o.status==='nou'?`
+      <button class="action-btn ab-gold" onclick="openApproveModal('${o.id}',event)">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Aprobă comanda
+      </button>`
+      :o.status==='aprobat'?`
+      <button class="action-btn ab-green" onclick="sendToCroit('${o.id}',event)">
+        <svg viewBox="0 0 24 24"><path d="M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg>Lansează la Croit
+      </button>`:'';
+
+    return `<div class="order-row">
+      <div class="order-row-main" onclick="togRow(${i})">
+        <div class="order-no-cell">${o.order_no||'—'}</div>
+        <div>
+          <div class="order-client-cell">${cl}</div>
+          <div class="order-agent-cell">Agent: ${agent}</div>
+        </div>
+        <div class="order-pairs-cell">${o.total_pairs||0} per.</div>
+        <div style="font-size:12px;color:${dc};font-weight:${dl!==null&&dl<=3?600:400}">${dt}<br><span style="font-size:10px;color:#C8C0B8;font-weight:400">${dd}</span></div>
+        <span class="status-pill" style="color:${cfg.c};background:${cfg.b}">
+          <span style="width:5px;height:5px;border-radius:50%;background:${cfg.c};flex-shrink:0;display:inline-block"></span>${cfg.l}
+        </span>
+        <div style="font-size:12px;color:#9E9890;text-align:right">${o.total_value?o.total_value.toLocaleString('ro-RO')+' RON':'—'}</div>
+        <svg id="marr${i}" style="width:14px;height:14px;stroke:#C8C0B8;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;justify-self:center" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="expand-row" id="erow${i}">
+        <div class="detail-grid">
+          <div>
+            <!-- Timeline -->
+            <div class="detail-section" style="margin-bottom:12px">
+              <div class="detail-label">Progres producție</div>
+              ${renderTimeline(o)}
+            </div>
+            <!-- Articole -->
+            <div class="detail-section">
+              <div class="detail-label">Articole (${lines.length})</div>
+              ${linesHTML||'<div style="font-size:12px;color:#C8C0B8">Niciun articol.</div>'}
+            </div>
+          </div>
+          <div>
+            <!-- Client -->
+            <div class="detail-section" style="margin-bottom:12px">
+              <div class="detail-label">Client</div>
+              <div style="font-family:'Playfair Display',serif;font-size:15px;color:#1B1B1B;margin-bottom:4px">${cl}</div>
+              ${o.clients?.cui?`<div style="font-size:11px;color:#9E9890">CUI: ${o.clients.cui}</div>`:''}
+              ${o.clients?.phone?`<div style="font-size:11px;color:#9E9890">${o.clients.phone}</div>`:''}
+              ${o.clients?.delivery_address?`<div style="font-size:11px;color:#9E9890">${o.clients.delivery_address}</div>`:''}
+            </div>
+            <!-- Acțiuni -->
+            <div class="detail-section">
+              <div class="detail-label">Acțiuni</div>
+              ${actiuni}
+              <button class="action-btn ab-outline" onclick="genPDF('${o.id}',event)">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Fișă client PDF
+              </button>
+              ${o.notes?`<div style="margin-top:10px;padding:8px 10px;background:#F4F1EA;border-radius:6px;font-size:11px;color:#6E6A64"><strong>Obs:</strong> ${o.notes}</div>`:''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togRow(i){
+  const row=document.getElementById('erow'+i);
+  const arr=document.getElementById('marr'+i);
+  const open=row.style.display==='block';
+  row.style.display=open?'none':'block';
+  if(arr)arr.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+}
+
+// ── TIMELINE ──────────────────────────────────────────────────
+const STAGES=['nou','verificare_stoc','la_croit','fete_gata_cusut','la_cusut_extern','cusut_extern_finalizat','receptie_fete','la_talpuit','la_impachetat','gata_livrare'];
+const STAGE_LABELS=['Nou','Verif. stoc','La croit','FEȚE gata','Cusut ext.','Cusut fin.','Recepție','Talpuit','Împachetat','Gata'];
+function renderTimeline(order){
+  const statusToStage={nou:0,aprobat:1,in_productie:2,finalizat:9,livrat:9};
+  const cur=statusToStage[order.status]??0;
+  return `<div class="timeline">${STAGE_LABELS.map((lbl,i)=>{
+    const stat=i<cur?'done':i===cur?'active':'idle';
+    const isLast=i===STAGE_LABELS.length-1;
+    return `<div class="tl-step">
+      <div class="tl-connector">
+        ${i>0?`<div class="tl-line ${i<=cur?'done':'idle'}"></div>`:''}
+        <div class="tl-dot ${stat}">
+          ${stat==='done'?`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`:''}
+          ${stat==='active'?`<div style="width:7px;height:7px;border-radius:50%;background:#fff"></div>`:''}
+        </div>
+        ${!isLast?`<div class="tl-line ${i<cur?'done':'idle'}"></div>`:''}
+      </div>
+      <div class="tl-name ${stat}">${lbl}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ── APROBARE ──────────────────────────────────────────────────
+function openApproveModal(orderId,e){
+  e.stopPropagation();
+  approveOrderId=orderId;
+  const order=allOrders.find(o=>o.id===orderId);
+  if(!order)return;
+  const cl=order.clients?.company_name||order.clients?.name||'—';
+  document.getElementById('approveModalSub').textContent=order.order_no+' · '+cl+' · '+order.total_pairs+' perechi';
+  const preview=document.getElementById('approveLotsPreview');
+  preview.innerHTML=(order.order_lines||[]).map(l=>`
+    <div class="lot-card">
+      <div class="lot-name">Art. ${l.products?.code||'—'} · ${l.color||'—'}</div>
+      <div class="lot-meta">${l.total_pairs} perechi · Lot nou de producție</div>
+    </div>`).join('');
+  approveOrderLines=order.order_lines||[];
+  document.getElementById('approveModal').classList.add('show');
+}
+function closeApproveModal(){document.getElementById('approveModal').classList.remove('show');approveOrderId=null;}
+
+async function confirmApprove(){
+  if(!approveOrderId)return;
+  showLov('Se aprobă comanda...');
+  // Update status comandă
+  await sb.from('orders').update({status:'aprobat',approved_by:CU.id,approved_at:new Date().toISOString()}).eq('id',approveOrderId);
+  // Creează loturi — câte unul per linie
+  const lots=approveOrderLines.map(l=>({
+    order_id:approveOrderId,
+    order_line_id:l.id,
+    product_id:l.product_id,
+    stage:'nou',
+    qty_planned:l.total_pairs,
+    source_type:'fete_noi',
+    talpa_std_id:l.products?.default_sole_id||null,
+    talpa_used_id:l.products?.default_sole_id||null,
+  }));
+  if(lots.length)await sb.from('production_lots').insert(lots);
+  hideLov();closeApproveModal();
+  showToast('Comanda aprobată — '+lots.length+' loturi create!');
+  await loadAll();
+}
+
+// ── LANSARE CROIT ─────────────────────────────────────────────
+async function sendToCroit(orderId,e){
+  e.stopPropagation();
+  if(!confirm('Lansezi toate loturile la Croit?'))return;
+  showLov('Se lansează la Croit...');
+  const{data:lots}=await sb.from('production_lots').select('id').eq('order_id',orderId);
+  if(lots?.length){
+    await sb.from('production_lots').update({stage:'la_croit',started_at:new Date().toISOString()}).in('id',lots.map(l=>l.id));
+  }
+  await sb.from('orders').update({status:'in_productie'}).eq('id',orderId);
+  hideLov();
+  showToast('Loturi lansate la Croit!');
+  await loadAll();
+}
+
+// ── LOTURI ────────────────────────────────────────────────────
+const STAGE_LABELS_FULL={
+  nou:'Nou',verificare_stoc:'Verificare stoc',la_croit:'La croit',
+  fete_gata_cusut:'FEȚE gata',la_cusut_extern:'La cusut extern',
+  cusut_extern_finalizat:'Cusut fin.',receptie_fete:'Recepție FEȚE',
+  la_talpuit:'La talpuit',la_impachetat:'La împachetat',gata_livrare:'Gata livrare'
+};
+function renderLots(lots){
+  const el=document.getElementById('lotsTable');
+  document.getElementById('lotsCount').textContent=lots.length+' loturi active';
+  if(!lots.length){el.innerHTML='<div style="padding:40px;text-align:center;color:#9E9890;font-size:13px">Niciun lot activ.</div>';return;}
+  el.innerHTML=lots.map(l=>{
+    const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';
+    const stageLabel=STAGE_LABELS_FULL[l.stage]||l.stage;
+    const stageColor=l.stage==='la_croit'?'#B0892B':l.stage==='la_talpuit'?'#2F4A63':l.stage==='gata_livrare'?'#365A43':'#9E9890';
+    return `<div class="order-row">
+      <div style="display:grid;grid-template-columns:110px 1fr 100px 160px 100px;gap:12px;padding:13px 20px;align-items:center">
+        <div class="order-no-cell">${l.lot_no||'—'}</div>
+        <div>
+          <div class="order-client-cell">${cl}</div>
+          <div class="order-agent-cell">Art. ${l.products?.code||'—'} · Talpă: ${l.talpi?.name||'—'}</div>
+        </div>
+        <div class="order-pairs-cell">${l.qty_planned||0} per.</div>
+        <span class="status-pill" style="color:${stageColor};background:${stageColor}15">
+          <span style="width:5px;height:5px;border-radius:50%;background:${stageColor};display:inline-block"></span>${stageLabel}
+        </span>
+        <div style="font-size:11px;color:#C8C0B8">${new Date(l.created_at).toLocaleDateString('ro-RO')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SECTIONS ──────────────────────────────────────────────────
+function showSection(name){
+  activeSection=name;
+  document.getElementById('sectionOrders').style.display=name==='orders'?'block':'none';
+  document.getElementById('sectionProductie').style.display=name==='productie'?'block':'none';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const titles={orders:'Comenzi',productie:'Producție',talpi:'Stoc Tălpi'};
+  document.getElementById('pageTitle').textContent=titles[name]||name;
+}
+
+// ── PDF ───────────────────────────────────────────────────────
+async function genPDF(oid,e){
+  e.stopPropagation();
+  showLov('Se generează...');
+  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*,products(code,name))').eq('id',oid).single();
+  hideLov();
+  if(!o)return;
+  const cl=o.clients?.company_name||o.clients?.name||'—';
+  const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+  const azi=new Date().toLocaleDateString('ro-RO');
+  const tp=o.order_lines.reduce((s,l)=>s+l.total_pairs,0);
+  const tv=o.order_lines.reduce((s,l)=>s+(l.unit_price||0)*l.total_pairs,0);
+  const artRows=o.order_lines.map((l,i)=>{
+    const entries=l.ponytage?Object.entries(l.ponytage):[];
+    const cs='border:1px solid #ddd;padding:5px 8px;text-align:center;';
+    const sr=entries.map(([s])=>`<td style="${cs}font-size:10px;color:#888;font-weight:700">${s}</td>`).join('');
+    const qr=entries.map(([,q])=>`<td style="${cs}font-size:14px;font-weight:700;color:#1A1814">${q}</td>`).join('');
+    const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
+    return `<tr><td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top"><div style="font-weight:700;font-size:13px">Art. ${l.products?.code||'—'}</div><div style="font-size:13px;color:#444;margin-top:2px">${l.color||'—'}</div>${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}</td><td style="border:1px solid #ddd;padding:6px"><table style="border-collapse:collapse;width:100%"><tr>${sr}</tr><tr>${qr}</tr></table></td><td style="border:1px solid #ddd;padding:10px 12px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td><td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:13px">${val}</td></tr>`;
+  }).join('');
+  const html=`<html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:28px;max-width:680px;margin:0 auto}h1{font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:3px}.sub{font-size:10px;color:#aaa;margin-bottom:24px;letter-spacing:1px;text-transform:uppercase}.row{display:flex;gap:40px;margin-bottom:24px}.col{flex:1}.lbl{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;font-weight:700}.val{font-size:14px;font-weight:700}.meta{font-size:11px;color:#888;margin-top:3px}table.main{width:100%;border-collapse:collapse;margin:18px 0}table.main th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ddd;text-align:left;background:#f9f9f9;font-weight:700}.footer{margin-top:48px;display:flex;gap:60px}.sig{border-top:1.5px solid #1A1814;padding-top:8px;font-size:10px;color:#888;width:220px;min-height:50px}@media print{.noprint{display:none}}</style></head><body>
+  <h1>SILESCO</h1><div class="sub">Fișă de Comandă · ${o.order_no||'—'} · ${azi}</div>
+  <div class="row"><div class="col"><div class="lbl">Client</div><div class="val">${cl}</div>${o.clients?.cui?`<div class="meta">CUI: ${o.clients.cui}</div>`:''}${o.clients?.delivery_address?`<div class="meta">Livrare: ${o.clients.delivery_address}</div>`:''}${o.clients?.phone?`<div class="meta">Tel: ${o.clients.phone}</div>`:''}</div><div class="col"><div class="lbl">Termen livrare</div><div class="val">${dd}</div><div class="meta">Plată: ${o.plata||'—'}</div></div></div>
+  <table class="main"><thead><tr><th style="width:32%">Model / Culoare</th><th>Pontaj pe mărimi</th><th style="width:60px;text-align:center">Total</th><th style="width:110px;text-align:right">Valoare</th></tr></thead><tbody>${artRows}</tbody><tfoot><tr style="background:#f5f2ee"><td colspan="2" style="border:1px solid #ddd;padding:10px 12px;font-weight:700">TOTAL</td><td style="border:1px solid #ddd;padding:10px;text-align:center;font-weight:700;font-size:16px">${tp}</td><td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700">${tv.toLocaleString('ro-RO')} RON</td></tr></tfoot></table>
+  ${o.notes?`<div style="padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;font-size:12px;margin-bottom:16px"><strong>Observații:</strong> ${o.notes}</div>`:''}
+  <div class="footer"><div class="sig">Persoana care plasează comanda</div><div class="sig">SILESCO SRL · Management</div></div>
+  <br><button class="noprint" onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#111111;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:700">Printează / Salvează PDF</button>
+  </body></html>`;
+  const w=window.open('','_blank','width=720,height=960');
+  w.document.write(html);w.document.close();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
+function hideLov(){document.getElementById('lov').classList.remove('show');}
+function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+</script>
+</body>
+</html>
