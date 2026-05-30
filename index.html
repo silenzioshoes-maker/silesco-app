@@ -509,6 +509,10 @@ async function initAgent(){
     window.location.href='/management.html';
     return;
   }
+  if(p?.role==='croit'){
+    window.location.href='/croit.html';
+    return;
+  }
   document.getElementById('hSub').textContent=p?.full_name||'';
   await loadProds();
   await loadOrders();
