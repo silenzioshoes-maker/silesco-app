@@ -5,119 +5,214 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>SILESCO · Production OS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:100vh;color:#1A1814}
+body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100vh;color:#1B1B1B}
+
+/* ── LOGIN ── */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.lcard{background:#fff;border-radius:16px;padding:48px 40px 40px;width:100%;max-width:400px;box-shadow:0 4px 32px rgba(0,0,0,.1)}
+.lcard{background:#fff;border-radius:12px;padding:48px 40px 40px;width:100%;max-width:400px;box-shadow:0 4px 32px rgba(0,0,0,.08);border:1px solid #DDD7CE}
 .logo{text-align:center;margin-bottom:36px}
-.logo-icon{width:56px;height:56px;background:#1B1B1B;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px}
-.logo h1{font-size:22px;font-weight:700;color:#1A1814;letter-spacing:-.5px}
-.logo p{font-size:13px;color:#9A9088;margin-top:4px}
-.lf{margin-bottom:18px}
-.lf label{display:block;font-size:12px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px}
-.lf input{width:100%;padding:13px 16px;border:1.5px solid #DDD8D0;border-radius:8px;font-size:15px;font-family:inherit;color:#1A1814;outline:none;transition:border-color .15s}
+.logo-icon{width:52px;height:52px;background:#111111;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}
+.logo-icon svg{width:26px;height:26px;stroke:#B08D57;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.logo h1{font-family:'Playfair Display',serif;font-size:22px;color:#1B1B1B;letter-spacing:.5px}
+.logo p{font-size:12px;color:#6E6A64;margin-top:5px;letter-spacing:.3px}
+.lf{margin-bottom:16px}
+.lf label{display:block;font-size:10px;font-weight:700;color:#6E6A64;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.lf input{width:100%;padding:12px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;transition:border-color .15s;background:#fff}
 .lf input:focus{border-color:#B08D57}
-.btn-login{width:100%;padding:14px;background:#1B1B1B;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
-.btn-login:disabled{background:#DDD8D0;color:#9A9088;cursor:not-allowed}
-.lerr{display:none;background:#F5EAE8;border:1px solid rgba(156,58,43,.3);border-radius:8px;padding:11px 14px;font-size:13px;color:#9C3A2B;margin-top:14px;text-align:center}
+.btn-login{width:100%;padding:13px;background:#111111;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;letter-spacing:.3px;transition:background .15s}
+.btn-login:hover{background:#2a2a2a}
+.btn-login:disabled{background:#DDD7CE;color:#9E9890;cursor:not-allowed}
+.lerr{display:none;background:#F5EAE8;border:1px solid rgba(156,58,43,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#9C3A2B;margin-top:12px;text-align:center}
 .lerr.show{display:block}
+
+/* ── AGENT SCREEN ── */
 #agentScreen{display:none;max-width:480px;margin:0 auto;min-height:100vh}
-.hdr{background:#1B1B1B;padding:18px 20px 14px;display:flex;justify-content:space-between;align-items:flex-end}
-.hdr-l .brand{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
-.hdr-l .title{font-size:22px;font-weight:700;color:#fff;line-height:1;font-family:'Georgia',serif}
-.hdr-l .sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:3px}
-.badge{background:rgba(176,141,87,.2);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:5px 13px;font-size:12px;color:#B08D57;font-weight:700}
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid #DDD8D0;display:flex;padding:8px 0 20px;z-index:100}
-.nb{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;font-family:inherit}
-.nb .ni{font-size:20px}
-.nb .nl{font-size:10px;font-weight:600;color:#C8C0B8}
-.nb.active .nl{color:#B08D57}
-.wrap{padding:14px 16px 100px}
-.card{background:#fff;border:1px solid #DDD8D0;border-radius:10px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.card.al{border-left:3px solid #B08D57;border-radius:0 10px 10px 0}
-.sl{font-size:10px;font-weight:700;color:#9A9088;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
-.ocard{background:#fff;border:1px solid #DDD8D0;border-radius:10px;padding:14px;margin-bottom:8px;border-left:3px solid #B08D57;border-top-left-radius:0;border-bottom-left-radius:0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.ocard.edited{border-left-color:#B0892B}
-.oid{font-size:10px;font-family:monospace;color:#C8C0B8;margin-bottom:3px}
-.ocl{font-size:17px;font-weight:700;color:#1A1814;margin-bottom:5px;font-family:'Georgia',serif}
-.ometa{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
-.spill{display:inline-flex;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600}
-.fld{margin-bottom:16px}
-.fld label{display:block;font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px}
-.fld input,.fld select,.fld textarea{width:100%;padding:12px 14px;border:1.5px solid #DDD8D0;border-radius:8px;font-size:15px;font-family:inherit;color:#1A1814;outline:none;background:#fff;transition:border-color .15s}
-.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#B08D57}
-.btn{width:100%;padding:15px;border-radius:8px;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;transition:all .15s}
-.bp{background:#1B1B1B;color:#fff}
-.bp:disabled{background:#DDD8D0;color:#9A9088;cursor:not-allowed}
-.bs{background:transparent;border:1.5px solid #DDD8D0;color:#5A5248}
-.bg{background:#365A43;color:#fff}
-.bor{background:transparent;border:1.5px solid #B08D57;color:#B08D57}
-.br{background:transparent;border:1.5px solid #9C3A2B;color:#9C3A2B}
-.steps{background:#1B1B1B;padding:0 20px 14px;display:flex;gap:6px}
-.step{flex:1}
-.sb{height:2px;border-radius:2px;margin-bottom:5px;background:rgba(255,255,255,.15)}
-.sb.active{background:#B08D57}
-.sn{font-size:9px;color:rgba(255,255,255,.35);text-align:center;font-weight:600;letter-spacing:.5px}
-.sn.active{color:rgba(255,255,255,.8)}
-.szg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.szc{background:#F4F1EA;border:1px solid #DDD8D0;border-radius:8px;padding:10px 6px;text-align:center}
-.snr{font-size:12px;color:#9A9088;font-weight:600;margin-bottom:5px}
-.sct{display:flex;align-items:center;justify-content:center;gap:5px}
-.sbtn{width:30px;height:30px;border-radius:6px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:18px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
-.sv{font-size:20px;font-weight:700;color:#1A1814;min-width:24px;text-align:center;font-family:'Georgia',serif}
-.acrd{background:#F4F1EA;border:1px solid #DDD8D0;border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.acrd:hover{border-color:#B08D57}
-.tbox{background:#1B1B1B;border-radius:10px;padding:16px;margin-bottom:10px}
-.tr{display:flex;justify-content:space-between;align-items:center;padding:5px 0}
-.tl{font-size:13px;color:rgba(255,255,255,.45)}
-.tv{font-size:16px;font-weight:700;color:#fff}
-.tdv{height:1px;background:rgba(255,255,255,.08);margin:6px 0}
-.tgrd{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.tc{border:1.5px solid #DDD8D0;border-radius:8px;padding:14px 10px;cursor:pointer;background:#fff;transition:all .12s}
-.tc.sel{border-color:#B08D57;background:#F6F0E5}
-.tz{font-size:19px;font-weight:700;color:#1A1814;font-family:'Georgia',serif}
-.td{font-size:12px;color:#9A9088;margin-top:2px}
-.tc.sel .tz{color:#B08D57}
-.ntf{display:none;background:#EAF0EC;border:1px solid rgba(54,90,67,.25);border-radius:10px;padding:14px 16px;margin-bottom:14px}
-.ntf.show{display:flex;gap:10px;align-items:flex-start}
-.lov{display:none;position:fixed;inset:0;background:rgba(255,255,255,.94);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
-.lov.show{display:flex}
-.sp{width:36px;height:36px;border:2px solid #DDD8D0;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.lt{font-size:13px;color:#6E6A64;font-weight:500}
-.ssc{display:none;text-align:center;padding:40px 20px}
-.ssc.show{display:block}
-.son{display:inline-block;padding:10px 20px;background:#EAF0EC;border:1px solid rgba(54,90,67,.25);border-radius:8px;font-size:18px;font-weight:700;color:#365A43;font-family:monospace;margin-bottom:24px}
-.emp{text-align:center;padding:40px 20px;color:#C8C0B8}
-.ei{font-size:36px;margin-bottom:10px}
-.et{font-size:13px;line-height:1.6}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1B1B1B;color:#fff;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
-.toast.show{opacity:1}
-.oa{height:80px;resize:none}
-.expand-det{display:none;margin-top:12px;padding-top:12px;border-top:1px solid #EDE8DF}
+
+/* ── HEADER ── */
+.hdr{background:#111111;padding:18px 20px 14px;display:flex;justify-content:space-between;align-items:flex-end}
+.hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:4px}
+.hdr-title{font-family:'Playfair Display',serif;font-size:22px;color:#fff;line-height:1}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px}
+.hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:5px 12px;font-size:11px;color:#B08D57;font-weight:600}
+
+/* ── NAV ── */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid #DDD7CE;display:flex;padding:8px 0 20px;z-index:100}
+.nb{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;font-family:'Inter',sans-serif}
+.nb-icon{width:20px;height:20px;stroke:#C8C0B8;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nb.active .nb-icon{stroke:#B08D57}
+.nb-label{font-size:9px;font-weight:600;color:#C8C0B8;letter-spacing:.5px;text-transform:uppercase}
+.nb.active .nb-label{color:#B08D57}
+
+/* ── LAYOUT ── */
+.wrap{padding:16px 16px 100px}
+.card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:16px;margin-bottom:10px}
+.card-accent{border-left:3px solid #B08D57;border-radius:0 10px 10px 0}
+.sec-label{font-size:9px;font-weight:700;color:#9E9890;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+
+/* ── ORDER CARD ── */
+.ocard{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:8px;border-left:3px solid #B08D57;border-top-left-radius:0;border-bottom-left-radius:0}
+.ocard.modified{border-left-color:#B0892B}
+.order-no{font-size:10px;font-family:'Courier New',monospace;color:#C8C0B8;margin-bottom:4px;letter-spacing:.5px}
+.order-client{font-family:'Playfair Display',serif;font-size:17px;color:#1B1B1B;margin-bottom:6px}
+.order-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .art-preview{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
-.art-tag{font-size:11px;color:#6E6A64;background:#F4F1EA;border:1px solid #DDD8D0;padding:3px 9px;border-radius:4px;white-space:nowrap}
-/* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.art-tag{font-size:10px;color:#6E6A64;background:#F4F1EA;border:1px solid #DDD7CE;padding:3px 8px;border-radius:4px;white-space:nowrap}
+.modified-badge{font-size:9px;color:#B0892B;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:#FAF3E0;border:1px solid rgba(176,137,43,.25);padding:2px 7px;border-radius:3px}
+.expand-det{display:none;margin-top:14px;padding-top:14px;border-top:1px solid #EDE8DF}
+
+/* ── FORM ── */
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:10px;font-weight:700;color:#6E6A64;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.fld input,.fld select,.fld textarea{width:100%;padding:12px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;background:#fff;transition:border-color .15s}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#B08D57}
+.oa{height:72px;resize:none}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:14px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px;transition:all .15s;letter-spacing:.2px}
+.btn-black{background:#111111;color:#fff}
+.btn-black:hover{background:#2a2a2a}
+.btn-black:disabled{background:#DDD7CE;color:#9E9890;cursor:not-allowed}
+.btn-green{background:#365A43;color:#fff}
+.btn-outline{background:transparent;border:1.5px solid #DDD7CE;color:#6E6A64}
+.btn-gold{background:transparent;border:1.5px solid #B08D57;color:#B08D57}
+.btn-red{background:transparent;border:1.5px solid #9C3A2B;color:#9C3A2B}
+.btn-sm{padding:9px 14px;font-size:12px;margin-bottom:0;border-radius:7px}
+
+/* ── STEPS ── */
+.steps-bar{background:#111111;padding:0 20px 14px;display:flex;gap:6px}
+.step-item{flex:1}
+.step-line{height:2px;border-radius:1px;margin-bottom:5px;background:rgba(255,255,255,.12);transition:background .2s}
+.step-line.active{background:#B08D57}
+.step-name{font-size:8px;color:rgba(255,255,255,.3);text-align:center;font-weight:600;letter-spacing:.8px;text-transform:uppercase}
+.step-name.active{color:rgba(255,255,255,.75)}
+
+/* ── SIZES ── */
+.sizes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.size-cell{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:10px 6px;text-align:center}
+.size-nr{font-size:11px;color:#9E9890;font-weight:600;margin-bottom:5px;letter-spacing:.5px}
+.size-controls{display:flex;align-items:center;justify-content:center;gap:5px}
+.size-btn{width:30px;height:30px;border-radius:6px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:17px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+.size-val{font-size:20px;font-weight:700;color:#1B1B1B;min-width:24px;text-align:center;font-family:'Playfair Display',serif}
+
+/* ── TERMEN ── */
+.termen-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.termen-card{border:1.5px solid #DDD7CE;border-radius:8px;padding:13px 10px;cursor:pointer;background:#fff;transition:all .12s}
+.termen-card.sel{border-color:#B08D57;background:#F6F0E5}
+.termen-zile{font-family:'Playfair Display',serif;font-size:19px;color:#1B1B1B}
+.termen-desc{font-size:11px;color:#9E9890;margin-top:2px}
+.termen-card.sel .termen-zile{color:#B08D57}
+
+/* ── TOTAL BOX ── */
+.total-box{background:#111111;border-radius:10px;padding:16px;margin-bottom:10px}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.total-label{font-size:12px;color:rgba(255,255,255,.4)}
+.total-val{font-size:15px;font-weight:700;color:#fff;font-family:'Playfair Display',serif}
+.total-divider{height:1px;background:rgba(255,255,255,.07);margin:6px 0}
+
+/* ── AUTOCOMPLETE ── */
+.autocomplete-wrap{position:relative}
+.autocomplete-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #B08D57;border-top:none;border-radius:0 0 8px 8px;z-index:50;max-height:200px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.autocomplete-item{padding:11px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #F4F1EA;transition:background .1s;display:flex;align-items:center;gap:8px}
+.autocomplete-item:hover{background:#F6F0E5}
+.autocomplete-item:last-child{border-bottom:none}
+.autocomplete-code{font-weight:700;color:#1B1B1B}
+.autocomplete-name{color:#9E9890;font-size:11px}
+
+/* ── CLIENT SEARCH ── */
+.client-result{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:border-color .15s}
+.client-result:hover{border-color:#B08D57}
+
+/* ── NOTIF ── */
+.notif{display:none;background:#EAF0EC;border:1px solid rgba(54,90,67,.2);border-radius:10px;padding:13px 16px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+.notif.show{display:flex}
+.notif-icon{width:16px;height:16px;stroke:#365A43;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
+
+/* ── LOADING ── */
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.95);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.lov.show{display:flex}
+.spinner{width:32px;height:32px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lov-text{font-size:12px;color:#6E6A64;font-weight:500;letter-spacing:.3px}
+
+/* ── SUCCESS ── */
+.ssc{display:none;text-align:center;padding:48px 20px}
+.ssc.show{display:block}
+.ssc-icon{font-size:40px;margin-bottom:16px;color:#365A43}
+.ssc-title{font-family:'Playfair Display',serif;font-size:22px;color:#1B1B1B;margin-bottom:8px}
+.ssc-sub{font-size:13px;color:#9E9890;margin-bottom:28px;line-height:1.6}
+.ssc-no{display:inline-block;padding:10px 20px;background:#EAF0EC;border:1px solid rgba(54,90,67,.2);border-radius:8px;font-size:17px;font-weight:700;color:#365A43;font-family:'Courier New',monospace;margin-bottom:24px;letter-spacing:1px}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:48px 20px;color:#C8C0B8}
+.empty-icon{width:36px;height:36px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 12px}
+.empty-text{font-size:13px;color:#9E9890;line-height:1.6}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;letter-spacing:.2px}
+.toast.show{opacity:1}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;justify-content:center}
 .modal-overlay.show{display:flex}
-.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:16px;font-weight:700;color:#1A1814;margin-bottom:4px;font-family:'Georgia',serif}
-.modal-sub{font-size:13px;color:#9A9088;margin-bottom:20px}
+.modal-box{background:#fff;border-radius:14px 14px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;color:#1B1B1B;margin-bottom:4px}
+.modal-sub{font-size:12px;color:#9E9890;margin-bottom:20px}
+
+/* ── HISTORY ── */
+.history-item{padding:10px 0;border-bottom:1px solid #EDE8DF}
+.history-time{font-size:10px;color:#C8C0B8;margin-bottom:3px;font-family:'Courier New',monospace}
+.history-text{font-size:12px;color:#6E6A64;line-height:1.5}
+
+/* ── PONTAJ PREVIEW ── */
+.pontaj-table{display:inline-flex;border:1px solid #DDD7CE;border-radius:6px;overflow:hidden;margin-top:5px}
+.pontaj-col{display:flex;flex-direction:column;border-right:1px solid #EDE8DF}
+.pontaj-col:last-child{border-right:none}
+.pontaj-sz{padding:4px 8px;font-size:10px;color:#9E9890;font-weight:600;text-align:center;background:#F4F1EA;border-bottom:1px solid #EDE8DF}
+.pontaj-qty{padding:5px 8px;font-size:13px;font-weight:700;color:#1B1B1B;text-align:center}
 </style>
 </head>
 <body>
 
-<div class="lov" id="lov"><div class="sp"></div><div class="lt" id="lt">Se încarcă...</div></div>
+<div class="lov" id="lov"><div class="spinner"></div><div class="lov-text" id="lov-text">Se încarcă...</div></div>
 <div class="toast" id="toast"></div>
 
-<!-- MODAL EDITARE -->
+<!-- MODAL EDITARE COMPLETĂ -->
 <div class="modal-overlay" id="editModal">
   <div class="modal-box">
     <div class="modal-title">Editează comanda</div>
     <div class="modal-sub" id="editModalSub"></div>
+
+    <!-- Articole din comandă -->
+    <div class="sec-label">Articole</div>
+    <div id="editArticlesList"></div>
+
+    <div style="background:#F4F1EA;border-radius:8px;padding:14px;margin-bottom:16px">
+      <div class="sec-label" style="margin-bottom:10px">Adaugă articol</div>
+      <div class="fld autocomplete-wrap" style="margin-bottom:10px">
+        <label>Model</label>
+        <input type="text" id="editModInput" placeholder="Tastează — ex: 140, 0062..." oninput="filterEditModels(this.value)" onfocus="filterEditModels(this.value)" autocomplete="off"/>
+        <input type="hidden" id="editModId"/>
+        <div class="autocomplete-drop" id="editModDrop"></div>
+      </div>
+      <div class="fld" style="margin-bottom:10px"><label>Culoare / Piele</label><input type="text" id="editCol" placeholder="ex: Negru Lac"/></div>
+      <div class="fld" style="margin-bottom:10px"><label>Preț/per. (RON)</label><input type="number" id="editPret" placeholder="190" min="0"/></div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <label style="font-size:10px;font-weight:700;color:#6E6A64;text-transform:uppercase;letter-spacing:1px">Mărimi</label>
+          <button onclick="setEditStd()" style="padding:4px 10px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Standard</button>
+        </div>
+        <div class="sizes-grid" id="editSzGrid"></div>
+      </div>
+      <button onclick="addEditArticle()" style="width:100%;padding:10px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă articol</button>
+    </div>
+
     <div class="fld"><label>Termen livrare</label>
-      <select id="editTermen">
+      <select id="editTermen" style="padding:12px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;width:100%;background:#fff">
         <option value="5z">5 zile — Urgent</option>
         <option value="10z">10 zile — Standard</option>
         <option value="15z">15 zile — Normal</option>
@@ -126,34 +221,36 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
       </select>
     </div>
     <div class="fld"><label>Modalitate plată</label>
-      <select id="editPlata">
-        <option>30 zile</option>
-        <option>15 zile</option>
-        <option>La livrare</option>
-        <option>Avans 50%</option>
+      <select id="editPlata" style="padding:12px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;width:100%;background:#fff">
+        <option>30 zile</option><option>15 zile</option><option>La livrare</option><option>Avans 50%</option>
       </select>
     </div>
-    <div class="fld"><label>Observații</label>
-      <textarea class="oa" id="editNotes" placeholder="Observații comandă..."></textarea>
+    <div class="fld"><label>Observații</label><textarea class="oa" id="editNotes" placeholder="Observații..."></textarea></div>
+
+    <div style="background:#FAF3E0;border-left:3px solid #B08D57;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:16px;font-size:11px;color:#B0892B;line-height:1.5">
+      Modificările vor fi salvate în istoricul comenzii cu data și ora curentă.
     </div>
-    <div style="padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;border-radius:0 6px 6px 0;font-size:12px;color:#B0892B;margin-bottom:16px">
-      Modificarea va fi înregistrată cu data și ora curentă.
+    <button class="btn btn-green" onclick="saveEdit()">Salvează modificările</button>
+    <button class="btn btn-outline" onclick="closeEditModal()">Anulează</button>
+
+    <!-- Istoric -->
+    <div id="editHistorySection" style="margin-top:20px;display:none">
+      <div class="sec-label">Istoric modificări</div>
+      <div id="editHistoryList"></div>
     </div>
-    <button class="btn bg" onclick="saveEdit()">Salvează modificările</button>
-    <button class="btn bs" onclick="closeEditModal()">Anulează</button>
   </div>
 </div>
 
-<!-- MODAL CONFIRMARE ȘTERGERE -->
+<!-- MODAL ȘTERGERE -->
 <div class="modal-overlay" id="delModal">
   <div class="modal-box">
     <div class="modal-title">Șterge comanda</div>
     <div class="modal-sub" id="delModalSub"></div>
-    <div style="padding:12px 14px;background:#F5EAE8;border-left:3px solid #9C3A2B;border-radius:0 6px 6px 0;font-size:13px;color:#9C3A2B;margin-bottom:20px;line-height:1.6">
+    <div style="background:#F5EAE8;border-left:3px solid #9C3A2B;border-radius:0 6px 6px 0;padding:12px 14px;margin-bottom:20px;font-size:12px;color:#9C3A2B;line-height:1.6">
       Această acțiune este ireversibilă. Comanda și toate articolele asociate vor fi șterse permanent.
     </div>
-    <button class="btn br" onclick="confirmDelete()">Da, șterge comanda</button>
-    <button class="btn bs" onclick="closeDelModal()">Anulează</button>
+    <button class="btn btn-red" onclick="confirmDelete()">Da, șterge comanda</button>
+    <button class="btn btn-outline" onclick="closeDelModal()">Anulează</button>
   </div>
 </div>
 
@@ -161,7 +258,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
 <div id="loginScreen">
   <div class="lcard">
     <div class="logo">
-      <div class="logo-icon">👟</div>
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5c0 1-.38 2.42-.75 3.5L8 11M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 2 14 3.8 14 5c0 1 .38 2.42.75 3.5L16 11"/></svg>
+      </div>
       <h1>SILESCO</h1>
       <p>Production OS · Autentificare</p>
     </div>
@@ -175,156 +274,173 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
 <!-- AGENT -->
 <div id="agentScreen">
   <div class="hdr">
-    <div class="hdr-l">
-      <div class="brand">SILESCO · Agent</div>
-      <div class="title" id="hTitle">Comenzile mele</div>
-      <div class="sub" id="hSub"></div>
+    <div>
+      <div class="hdr-brand">SILESCO · Agent</div>
+      <div class="hdr-title" id="hTitle">Comenzile mele</div>
+      <div class="hdr-sub" id="hSub"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <div class="badge" id="hBadge">0 active</div>
-      <button onclick="doLogout()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;color:rgba(255,255,255,.6);font-size:11px;cursor:pointer;font-family:inherit">Ieși</button>
+      <div class="hdr-badge" id="hBadge">0 active</div>
+      <button onclick="doLogout()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 10px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif">Ieși</button>
     </div>
   </div>
 
-  <!-- ORDERS VIEW -->
+  <!-- ORDERS -->
   <div id="vOrders" style="display:none">
     <div class="wrap">
-      <div class="ntf" id="ntf">
-        <div style="font-size:18px;flex-shrink:0">✓</div>
+      <div class="notif" id="ntf">
+        <svg class="notif-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
         <div>
-          <div style="font-size:14px;font-weight:700;color:#365A43" id="ntfT"></div>
-          <div style="font-size:12px;color:#5A5248;margin-top:2px" id="ntfS"></div>
+          <div style="font-size:13px;font-weight:700;color:#365A43" id="ntfT"></div>
+          <div style="font-size:11px;color:#6E6A64;margin-top:2px" id="ntfS"></div>
         </div>
       </div>
-      <div class="sl">Comenzile mele</div>
+      <div class="sec-label">Comenzile mele</div>
       <div id="oList"></div>
-      <div class="emp" id="oEmpty" style="display:none">
-        <div class="ei">📋</div>
-        <div class="et">Nu ai comenzi active.<br>Apasă + pentru a introduce una nouă.</div>
+      <div class="empty-state" id="oEmpty" style="display:none">
+        <svg class="empty-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <div class="empty-text">Nu ai comenzi active.<br>Apasă + pentru a introduce una nouă.</div>
       </div>
     </div>
   </div>
 
-  <!-- NEW ORDER VIEW -->
+  <!-- NEW ORDER -->
   <div id="vNew" style="display:none">
-    <div class="steps">
-      <div class="step"><div class="sb active" id="sb0"></div><div class="sn active" id="sn0">Client</div></div>
-      <div class="step"><div class="sb" id="sb1"></div><div class="sn" id="sn1">Termen</div></div>
-      <div class="step"><div class="sb" id="sb2"></div><div class="sn" id="sn2">Articole</div></div>
-      <div class="step"><div class="sb" id="sb3"></div><div class="sn" id="sn3">Final</div></div>
+    <div class="steps-bar">
+      <div class="step-item"><div class="step-line active" id="sb0"></div><div class="step-name active" id="sn0">Client</div></div>
+      <div class="step-item"><div class="step-line" id="sb1"></div><div class="step-name" id="sn1">Termen</div></div>
+      <div class="step-item"><div class="step-line" id="sb2"></div><div class="step-name" id="sn2">Articole</div></div>
+      <div class="step-item"><div class="step-line" id="sb3"></div><div class="step-name" id="sn3">Final</div></div>
     </div>
     <div class="wrap">
+      <!-- S0 CLIENT -->
       <div id="s0">
-        <div class="fld"><label>Caută client</label><input type="text" id="cSearch" placeholder="Nume client sau companie..." oninput="searchClients(this.value)" autocomplete="off"/></div>
-        <div id="cRes" style="margin-bottom:12px"></div>
+        <div class="fld"><label>Caută client</label>
+          <input type="text" id="cSearch" placeholder="Nume client sau companie..." oninput="searchClients(this.value)" autocomplete="off"/>
+        </div>
+        <div id="cRes" style="margin-bottom:10px"></div>
         <div class="card" id="cSel" style="display:none">
-          <div style="font-size:10px;color:#9A9088;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Client selectat</div>
-          <div style="font-size:17px;font-weight:700;font-family:'Georgia',serif" id="cSelN"></div>
-          <div style="font-size:12px;color:#9A9088;margin-top:3px" id="cSelM"></div>
-          <button onclick="clearClient()" style="margin-top:10px;padding:5px 12px;border-radius:5px;border:1px solid #DDD8D0;background:#fff;color:#9A9088;font-size:12px;cursor:pointer">× Schimbă</button>
+          <div style="font-size:9px;color:#9E9890;margin-bottom:4px;text-transform:uppercase;letter-spacing:1.5px">Client selectat</div>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#1B1B1B" id="cSelN"></div>
+          <div style="font-size:11px;color:#9E9890;margin-top:3px" id="cSelM"></div>
+          <button onclick="clearClient()" style="margin-top:10px;padding:5px 10px;border-radius:5px;border:1px solid #DDD7CE;background:#fff;color:#9E9890;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif">× Schimbă</button>
         </div>
         <div id="ncForm" style="display:none">
-          <div style="font-size:11px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px">+ Client nou</div>
-          <div class="fld"><label>Nume companie *</label><input type="text" id="nc_co" placeholder="ex: Magazin ABC SRL"/></div>
+          <div style="font-size:10px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">+ Client nou</div>
+          <div class="fld"><label>Nume companie *</label><input type="text" id="nc_co" placeholder="Magazin ABC SRL"/></div>
           <div class="fld"><label>CUI</label><input type="text" id="nc_cui" placeholder="RO12345678"/></div>
           <div class="fld"><label>Persoană contact</label><input type="text" id="nc_nm" placeholder="Ion Popescu"/></div>
           <div class="fld"><label>Telefon</label><input type="tel" id="nc_ph" placeholder="07xx xxx xxx"/></div>
           <div class="fld"><label>Adresă livrare</label><input type="text" id="nc_ad" placeholder="Str. Exemplu 1, Oraș"/></div>
-          <button class="btn bg" onclick="saveNewClient()">Salvează client</button>
-          <button class="btn bs" onclick="toggleNCF(false)">Anulează</button>
+          <button class="btn btn-green" onclick="saveNewClient()">Salvează client</button>
+          <button class="btn btn-outline" onclick="toggleNCF(false)">Anulează</button>
         </div>
-        <div id="ncBtn" style="display:none"><button class="btn bor" onclick="toggleNCF(true)">+ Client nou</button></div>
-        <button class="btn bp" id="s0next" onclick="goStep(1)" style="margin-top:8px" disabled>Continuă →</button>
+        <div id="ncBtn" style="display:none"><button class="btn btn-gold" onclick="toggleNCF(true)">+ Client nou</button></div>
+        <button class="btn btn-black" id="s0next" onclick="goStep(1)" style="margin-top:8px" disabled>Continuă</button>
       </div>
 
+      <!-- S1 TERMEN -->
       <div id="s1" style="display:none">
-        <div class="sl">Termen de livrare</div>
-        <div class="tgrd">
-          <div class="tc" onclick="selTermen('5z',this)"><div class="tz">5 zile</div><div class="td">Urgent</div></div>
-          <div class="tc sel" onclick="selTermen('10z',this)"><div class="tz">10 zile</div><div class="td">Standard</div></div>
-          <div class="tc" onclick="selTermen('15z',this)"><div class="tz">15 zile</div><div class="td">Normal</div></div>
-          <div class="tc" onclick="selTermen('30z',this)"><div class="tz">30 zile</div><div class="td">Relaxat</div></div>
+        <div class="sec-label">Termen de livrare</div>
+        <div class="termen-grid">
+          <div class="termen-card" onclick="selTermen('5z',this)"><div class="termen-zile">5 zile</div><div class="termen-desc">Urgent</div></div>
+          <div class="termen-card sel" onclick="selTermen('10z',this)"><div class="termen-zile">10 zile</div><div class="termen-desc">Standard</div></div>
+          <div class="termen-card" onclick="selTermen('15z',this)"><div class="termen-zile">15 zile</div><div class="termen-desc">Normal</div></div>
+          <div class="termen-card" onclick="selTermen('30z',this)"><div class="termen-zile">30 zile</div><div class="termen-desc">Relaxat</div></div>
         </div>
-        <div class="tc" style="margin-bottom:16px" onclick="selTermen('prelungit',this)"><div class="tz">Prelungit</div><div class="td">Așteptare model / material / stoc</div></div>
+        <div class="termen-card" style="margin-bottom:16px" onclick="selTermen('prelungit',this)">
+          <div class="termen-zile">Prelungit</div>
+          <div class="termen-desc">Așteptare model / material / stoc</div>
+        </div>
         <div class="fld"><label>Modalitate plată</label>
           <select id="plata"><option>30 zile</option><option>15 zile</option><option>La livrare</option><option>Avans 50%</option></select>
         </div>
-        <button class="btn bp" onclick="goStep(2)">Continuă →</button>
-        <button class="btn bs" onclick="goStep(0)">← Înapoi</button>
+        <button class="btn btn-black" onclick="goStep(2)">Continuă</button>
+        <button class="btn btn-outline" onclick="goStep(0)">Înapoi</button>
       </div>
 
+      <!-- S2 ARTICOLE -->
       <div id="s2" style="display:none">
-        <div class="sl" id="artCnt">Articole: 0</div>
+        <div class="sec-label" id="artCnt">Articole: 0</div>
         <div id="artList"></div>
         <div class="card">
-          <div style="font-size:11px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">Adaugă articol</div>
-          <div class="fld" style="position:relative">
+          <div style="font-size:10px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">Adaugă articol</div>
+          <div class="fld autocomplete-wrap">
             <label>Model</label>
-            <input type="text" id="artModInput" placeholder="Tastează — ex: 140, 0062, 121..." 
-              oninput="filterModels(this.value)" onfocus="filterModels(this.value)" autocomplete="off"/>
+            <input type="text" id="artModInput" placeholder="Tastează — ex: 140, 0062, 121..." oninput="filterModels(this.value)" onfocus="filterModels(this.value)" autocomplete="off"/>
             <input type="hidden" id="artMod"/>
-            <div id="artModDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #B08D57;border-top:none;border-radius:0 0 8px 8px;z-index:50;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
+            <div class="autocomplete-drop" id="artModDrop"></div>
           </div>
           <div class="fld"><label>Culoare / Piele</label><input type="text" id="artCol" placeholder="ex: Negru Lac, Maro Cioco..."/></div>
           <div class="fld"><label>Preț per pereche (RON)</label><input type="number" id="artPr" placeholder="ex: 190" min="0"/></div>
           <div style="margin-bottom:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-              <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px">Mărimi și cantități</div>
-              <button onclick="setStd()" style="padding:5px 12px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Standard</button>
+              <label style="font-size:10px;font-weight:700;color:#6E6A64;text-transform:uppercase;letter-spacing:1px">Mărimi și cantități</label>
+              <button onclick="setStd()" style="padding:5px 11px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Standard</button>
             </div>
-            <div class="szg" id="szGrid"></div>
+            <div class="sizes-grid" id="szGrid"></div>
           </div>
           <div class="fld"><label>Observații (opțional)</label><textarea class="oa" id="artObs" placeholder="ex: tălpici cu ață neagră..."></textarea></div>
-          <button class="btn bp" onclick="addArt()">+ Adaugă articol</button>
+          <button class="btn btn-black" onclick="addArt()">+ Adaugă articol</button>
         </div>
-        <button class="btn bp" id="s2next" onclick="goStep(3)" disabled>Continuă →</button>
-        <button class="btn bs" onclick="goStep(1)">← Înapoi</button>
+        <button class="btn btn-black" id="s2next" onclick="goStep(3)" disabled>Continuă</button>
+        <button class="btn btn-outline" onclick="goStep(1)">Înapoi</button>
       </div>
 
+      <!-- S3 FINAL -->
       <div id="s3" style="display:none">
-        <div class="sl">Sumar comandă</div>
+        <div class="sec-label">Sumar comandă</div>
         <div class="card" style="margin-bottom:10px">
-          <div style="font-size:10px;color:#9A9088;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Client</div>
-          <div style="font-size:17px;font-weight:700;font-family:'Georgia',serif" id="sumCl"></div>
-          <div style="font-size:12px;color:#9A9088;margin-top:3px" id="sumT"></div>
+          <div style="font-size:9px;color:#9E9890;margin-bottom:4px;text-transform:uppercase;letter-spacing:1.5px">Client</div>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#1B1B1B" id="sumCl"></div>
+          <div style="font-size:11px;color:#9E9890;margin-top:3px" id="sumT"></div>
         </div>
         <div id="sumArt" style="margin-bottom:10px"></div>
-        <div class="tbox">
-          <div class="tr"><span class="tl">Total perechi</span><span class="tv" id="sumP">0</span></div>
-          <div class="tdv"></div>
-          <div class="tr"><span class="tl">Total valoare</span><span class="tv" id="sumV">0 RON</span></div>
+        <div class="total-box">
+          <div class="total-row"><span class="total-label">Total perechi</span><span class="total-val" id="sumP">0</span></div>
+          <div class="total-divider"></div>
+          <div class="total-row"><span class="total-label">Total valoare</span><span class="total-val" id="sumV">0 RON</span></div>
         </div>
         <div class="fld"><label>Observații generale</label><textarea class="oa" id="ordObs" placeholder="ex: livrare urgentă..."></textarea></div>
-        <button class="btn bg" id="saveBtn" onclick="saveOrder()">Salvează comanda</button>
-        <button class="btn bs" onclick="goStep(2)">← Înapoi</button>
+        <button class="btn btn-green" id="saveBtn" onclick="saveOrder()">Salvează comanda</button>
+        <button class="btn btn-outline" onclick="goStep(2)">Înapoi</button>
       </div>
 
+      <!-- SUCCESS -->
       <div class="ssc" id="succSc">
-        <div style="font-size:48px;margin-bottom:16px">✓</div>
-        <div style="font-size:22px;font-weight:700;color:#1A1814;margin-bottom:8px;font-family:'Georgia',serif">Comandă salvată!</div>
-        <div style="font-size:13px;color:#9A9088;margin-bottom:24px;line-height:1.6">Trimisă la management pentru aprobare.</div>
-        <div class="son" id="succNo">—</div>
-        <div style="margin-top:16px">
-          <button class="btn bp" onclick="startNew()">+ Comandă nouă</button>
-          <button class="btn bs" onclick="showV('orders')">Înapoi la comenzi</button>
-          <button class="btn bor" id="succPDF" onclick="">Generează fișă client</button>
-        </div>
+        <div class="ssc-icon">✓</div>
+        <div class="ssc-title">Comandă salvată</div>
+        <div class="ssc-sub">Trimisă la management pentru aprobare.</div>
+        <div class="ssc-no" id="succNo">—</div>
+        <button class="btn btn-black" onclick="startNew()">+ Comandă nouă</button>
+        <button class="btn btn-outline" onclick="showV('orders')">Înapoi la comenzi</button>
+        <button class="btn btn-gold" id="succPDF">Generează fișă client</button>
       </div>
     </div>
   </div>
 
-  <!-- STOC VIEW -->
+  <!-- STOC -->
   <div id="vStoc" style="display:none">
     <div class="wrap">
-      <div class="sl">Baxuri gata</div><div id="stBax"></div>
-      <div class="sl" style="margin-top:16px">FEȚE disponibile</div><div id="stFete"></div>
+      <div class="sec-label">Baxuri gata</div><div id="stBax"></div>
+      <div class="sec-label" style="margin-top:16px">FEȚE disponibile</div><div id="stFete"></div>
     </div>
   </div>
 
+  <!-- NAV -->
   <div class="bnav">
-    <button class="nb active" id="n_orders" onclick="showV('orders')"><span class="ni">📋</span><span class="nl">Comenzi</span></button>
-    <button class="nb" id="n_new" onclick="showV('new')"><span class="ni">＋</span><span class="nl">Comandă nouă</span></button>
-    <button class="nb" id="n_stoc" onclick="showV('stoc')"><span class="ni">📦</span><span class="nl">Stoc</span></button>
+    <button class="nb active" id="n_orders" onclick="showV('orders')">
+      <svg class="nb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="nb-label">Comenzi</span>
+    </button>
+    <button class="nb" id="n_new" onclick="showV('new')">
+      <svg class="nb-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span class="nb-label">Nou</span>
+    </button>
+    <button class="nb" id="n_stoc" onclick="showV('stoc')">
+      <svg class="nb-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span class="nb-label">Stoc</span>
+    </button>
   </div>
 </div>
 
@@ -335,9 +451,10 @@ const {createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
 let CU=null,CP=null,selClient=null,curTermen='10z',arts=[],prods=[];
-let editOrderId=null,delOrderId=null;
+let editOrderId=null,delOrderId=null,editArts=[];
 const SZ=['39','40','41','42','43','44'];
 let szV={};SZ.forEach(s=>szV[s]=0);
+let editSzV={};SZ.forEach(s=>editSzV[s]=0);
 
 // ── INIT ──────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',async()=>{
@@ -347,6 +464,14 @@ window.addEventListener('DOMContentLoaded',async()=>{
     if(ev==='SIGNED_IN'&&ses&&!CU){CU=ses.user;await initAgent();}
     else if(ev==='TOKEN_REFRESHED'&&ses){CU=ses.user;}
     else if(ev==='SIGNED_OUT'){CU=null;showLogin();}
+  });
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('#artModDrop')&&e.target.id!=='artModInput'){
+      const d=document.getElementById('artModDrop');if(d)d.style.display='none';
+    }
+    if(!e.target.closest('#editModDrop')&&e.target.id!=='editModInput'){
+      const d=document.getElementById('editModDrop');if(d)d.style.display='none';
+    }
   });
 });
 
@@ -409,7 +534,7 @@ async function loadProds(){
   const{data}=await sb.from('products').select('*').eq('is_active',true).order('code');
   prods=data||[];
   if(!prods.length){await addDefProds();const{data:d2}=await sb.from('products').select('*').eq('is_active',true).order('code');prods=d2||[];}
-  renderSz();
+  renderSz();renderEditSzGrid();
 }
 async function addDefProds(){
   await sb.from('products').insert([
@@ -423,12 +548,49 @@ async function addDefProds(){
   ]);
 }
 
+// ── AUTOSUGGESTION MODEL ──────────────────────────────────────
+function filterModels(q){
+  const drop=document.getElementById('artModDrop');
+  const filtered=q.trim()?prods.filter(p=>p.code.toLowerCase().includes(q.toLowerCase())||p.name.toLowerCase().includes(q.toLowerCase())):prods;
+  if(!filtered.length){drop.style.display='none';return;}
+  drop.style.display='block';
+  drop.innerHTML=filtered.map(p=>`
+    <div class="autocomplete-item" onclick="selectModel('${p.id}','${p.code}')">
+      <span class="autocomplete-code">Art. ${p.code}</span>
+      <span class="autocomplete-name">${p.name}</span>
+    </div>`).join('');
+}
+function selectModel(id,code){
+  document.getElementById('artMod').value=id;
+  document.getElementById('artModInput').value='Art. '+code;
+  document.getElementById('artModDrop').style.display='none';
+  resetSz();
+}
+
+function filterEditModels(q){
+  const drop=document.getElementById('editModDrop');
+  const filtered=q.trim()?prods.filter(p=>p.code.toLowerCase().includes(q.toLowerCase())||p.name.toLowerCase().includes(q.toLowerCase())):prods;
+  if(!filtered.length){drop.style.display='none';return;}
+  drop.style.display='block';
+  drop.innerHTML=filtered.map(p=>`
+    <div class="autocomplete-item" onclick="selectEditModel('${p.id}','${p.code}')">
+      <span class="autocomplete-code">Art. ${p.code}</span>
+      <span class="autocomplete-name">${p.name}</span>
+    </div>`).join('');
+}
+function selectEditModel(id,code){
+  document.getElementById('editModId').value=id;
+  document.getElementById('editModInput').value='Art. '+code;
+  document.getElementById('editModDrop').style.display='none';
+  renderEditSzGrid();
+}
+
 // ── COMENZI ───────────────────────────────────────────────────
 async function loadOrders(){
   const{data:orders,error}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,
       clients(id,name,company_name,cui,phone,delivery_address),
-      order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes)`)
+      order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,products(code,name))`)
     .eq('agent_id',CU.id)
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
@@ -447,99 +609,91 @@ function renderOrders(orders){
   const ntf=document.getElementById('ntf');
   if(gata){
     ntf.classList.add('show');
-    document.getElementById('ntfT').textContent=`Comanda ${gata.order_no} e gata de livrare!`;
-    document.getElementById('ntfS').textContent=(gata.clients?.company_name||gata.clients?.name||'')+` · ${gata.total_pairs} perechi`;
+    document.getElementById('ntfT').textContent='Comanda '+gata.order_no+' este gată de livrare';
+    document.getElementById('ntfS').textContent=(gata.clients?.company_name||gata.clients?.name||'')+' · '+gata.total_pairs+' perechi';
   }else{ntf.classList.remove('show');}
 
   const SC={
-    nou:         {l:'Comandă nouă',  c:'#2F4A63',b:'#E8EFF6'},
-    aprobat:     {l:'Aprobat',       c:'#B08D57',b:'#F6F0E5'},
-    in_productie:{l:'În producție',  c:'#B0892B',b:'#FAF3E0'},
-    finalizat:   {l:'Gata livrare',  c:'#365A43',b:'#EAF0EC'},
-    livrat:      {l:'Livrat',        c:'#9E9890',b:'#F4F1EA'},
-    anulat:      {l:'Anulat',        c:'#9C3A2B',b:'#F5EAE8'},
+    nou:         {l:'Comandă nouă', c:'#2F4A63',b:'#E8EFF6'},
+    aprobat:     {l:'Aprobat',      c:'#B08D57',b:'#F6F0E5'},
+    in_productie:{l:'În producție', c:'#B0892B',b:'#FAF3E0'},
+    finalizat:   {l:'Gata livrare', c:'#365A43',b:'#EAF0EC'},
+    livrat:      {l:'Livrat',       c:'#9E9890',b:'#F4F1EA'},
+    anulat:      {l:'Anulat',       c:'#9C3A2B',b:'#F5EAE8'},
   };
-
-  const canEdit = (status) => ['nou','aprobat'].includes(status);
+  const canEdit=s=>['nou','aprobat'].includes(s);
 
   list.innerHTML=orders.map((o,i)=>{
     const cfg=SC[o.status]||SC.nou;
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
     const dl=o.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
-    const dc=dl===null?'#9A9088':dl<0?'#9C3A2B':dl<=3?'#B0892B':'#9A9088';
-    const dt=dl===null?'':dl<0?`+${Math.abs(dl)}z întârziere`:dl===0?'Azi':`${dl}z rămase`;
+    const dc=dl===null?'#9E9890':dl<0?'#9C3A2B':dl<=3?'#B0892B':'#9E9890';
+    const dt=dl===null?'':dl<0?'+'+Math.abs(dl)+'z întârziere':dl===0?'Azi':dl+'z rămase';
     const lines=o.order_lines||[];
     const wasEdited=o.updated_at&&o.updated_at!==o.created_at;
 
-    // Preview articole
+    // Preview articole cu model+culoare
     const preview=lines.length
-      ? lines.slice(0,3).map(l=>`<span class="art-tag">${l.color||'—'} · ${l.total_pairs}per.</span>`).join('')
+      ? lines.slice(0,3).map(l=>`<span class="art-tag">Art.${l.products?.code||'—'} · ${l.color||'—'}</span>`).join('')
         +(lines.length>3?`<span class="art-tag">+${lines.length-3}</span>`:'')
-      :'<span style="font-size:11px;color:#C8C0B8">Fără articole</span>';
+      :'<span style="font-size:10px;color:#C8C0B8">—</span>';
 
-    // Detalii expandabile
+    // Detalii expandabile cu pontaj orizontal
     const det=lines.map(l=>{
-      // Pontaj orizontal: mărimi pe primul rând, cantități pe al doilea
-      const sizes=l.ponytage?Object.keys(l.ponytage):[];
-      const qtys=l.ponytage?Object.values(l.ponytage):[];
-      const pontajHTML=sizes.length?`
-        <div style="display:inline-flex;border:1px solid #DDD8D0;border-radius:6px;overflow:hidden;margin-top:5px">
-          <div>
-            <div style="display:flex">
-              ${sizes.map(s=>`<div style="min-width:32px;padding:4px 6px;text-align:center;font-size:10px;color:#9A9088;font-weight:600;border-right:1px solid #EDE8DF">${s}</div>`).join('')}
-            </div>
-            <div style="display:flex;border-top:1px solid #EDE8DF">
-              ${qtys.map((q,idx)=>`<div style="min-width:32px;padding:4px 6px;text-align:center;font-size:13px;font-weight:700;color:#1A1814;border-right:${idx<qtys.length-1?'1px solid #EDE8DF':'none'}">${q}</div>`).join('')}
-            </div>
-          </div>
+      const entries=l.ponytage?Object.entries(l.ponytage):[];
+      const pontajHTML=entries.length?`
+        <div class="pontaj-table">
+          ${entries.map(([s,q])=>`<div class="pontaj-col"><div class="pontaj-sz">${s}</div><div class="pontaj-qty">${q}</div></div>`).join('')}
         </div>`:'—';
       const val=l.unit_price?` · ${(l.unit_price*l.total_pairs).toLocaleString('ro-RO')} RON`:'';
-      return `<div style="padding:10px 0;border-bottom:1px solid #F4F1EA">
-        <div style="font-size:14px;font-weight:700;color:#1A1814">${l.color||'—'} · ${l.total_pairs} per.${val}</div>
+      return `<div style="padding:10px 0;border-bottom:1px solid #EDE8DF">
+        <div style="font-size:13px;font-weight:700;color:#1B1B1B">Art. ${l.products?.code||'—'} · ${l.color||'—'} · ${l.total_pairs} per.${val}</div>
         ${pontajHTML}
-        ${l.unit_price?`<div style="font-size:12px;color:#9A9088;margin-top:4px">${l.unit_price} RON/per.</div>`:''}
-        ${l.notes?`<div style="font-size:12px;color:#B08D57;margin-top:3px;font-style:italic">${l.notes}</div>`:''}
+        ${l.unit_price?`<div style="font-size:11px;color:#9E9890;margin-top:3px">${l.unit_price} RON/per.</div>`:''}
+        ${l.notes?`<div style="font-size:11px;color:#B08D57;margin-top:3px;font-style:italic">${l.notes}</div>`:''}
       </div>`;
     }).join('');
 
-    return `<div class="ocard${wasEdited?' edited':''}">
+    return `<div class="ocard${wasEdited?' modified':''}">
       <div onclick="togDet(${i})" style="cursor:pointer;user-select:none">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-              <div class="oid">${o.order_no||'—'}</div>
-              ${wasEdited?'<span style="font-size:9px;color:#B0892B;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Modificat</span>':''}
+              <div class="order-no">${o.order_no||'—'}</div>
+              ${wasEdited?'<span class="modified-badge">Modificat</span>':''}
             </div>
-            <div class="ocl">${cl}</div>
+            <div class="order-client">${cl}</div>
             <div class="art-preview">${preview}</div>
-            <div class="ometa">
-              <span class="spill" style="color:${cfg.c};background:${cfg.b}">${cfg.l}</span>
-              <span style="font-size:12px;color:#9A9088">${o.total_pairs||0} per.</span>
+            <div class="order-meta">
+              <span class="status-pill" style="color:${cfg.c};background:${cfg.b}">
+                <span class="status-dot" style="background:${cfg.c}"></span>${cfg.l}
+              </span>
+              <span style="font-size:11px;color:#9E9890">${o.total_pairs||0} per.</span>
               <span style="font-size:11px;color:${dc};font-weight:${dl!==null&&dl<=3?600:400}">${dt}</span>
             </div>
-            <div style="font-size:11px;color:#C8C0B8;margin-top:5px">Livrare: ${dd}</div>
+            <div style="font-size:10px;color:#C8C0B8;margin-top:5px;letter-spacing:.3px">Livrare: ${dd}</div>
           </div>
-          <span id="arr${i}" style="font-size:14px;color:#C8C0B8;margin-left:10px;margin-top:2px;transition:transform .2s;display:inline-block;flex-shrink:0">▼</span>
+          <svg id="arr${i}" style="width:14px;height:14px;stroke:#C8C0B8;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-left:10px;margin-top:4px;transition:transform .2s;flex-shrink:0" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
       <div class="expand-det" id="det${i}">
-        <div class="sl" style="margin-bottom:8px">Articole (${lines.length})</div>
-        ${det||'<div style="font-size:13px;color:#C8C0B8;padding:8px 0">Nicio linie înregistrată.</div>'}
+        <div class="sec-label" style="margin-bottom:8px">Articole (${lines.length})</div>
+        ${det||'<div style="font-size:12px;color:#C8C0B8;padding:8px 0">Nicio linie.</div>'}
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
-          <button onclick="genPDF('${o.id}')" style="width:100%;padding:11px;border-radius:7px;border:1px solid #1B1B1B;background:#1B1B1B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+          <button onclick="genPDF('${o.id}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #111111;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px">
             Generează fișă client
           </button>
           ${canEdit(o.status)?`
           <div style="display:flex;gap:8px">
-            <button onclick="openEditModal('${o.id}','${o.delivery_preset||'10z'}','${o.plata||'30 zile'}',\`${(o.notes||'').replace(/`/g,"'")}\`)" style="flex:1;padding:10px;border-radius:7px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+            <button onclick="openEditModal('${o.id}')" style="flex:1;padding:10px;border-radius:7px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
               Editează
             </button>
-            <button onclick="openDelModal('${o.id}','${o.order_no||'—'}','${cl.replace(/'/g,"\\'")}',${o.status==='nou'?'true':'false'})" style="flex:1;padding:10px;border-radius:7px;border:1.5px solid #9C3A2B;background:#F5EAE8;color:#9C3A2B;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+            <button onclick="openDelModal('${o.id}','${o.order_no||'—'}','${cl.replace(/'/g,"\\'")}')" style="flex:1;padding:10px;border-radius:7px;border:1.5px solid #9C3A2B;background:#F5EAE8;color:#9C3A2B;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
               Șterge
             </button>
           </div>`:`
-          <div style="padding:8px 12px;background:#F4F1EA;border-radius:6px;font-size:12px;color:#9A9088;text-align:center">
+          <div style="padding:8px 12px;background:#F4F1EA;border-radius:6px;font-size:11px;color:#9E9890;text-align:center">
             Comanda e în producție — pentru modificări contactează managementul
           </div>`}
         </div>
@@ -556,55 +710,154 @@ function togDet(i){
   if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
 }
 
-// ── EDITARE COMANDĂ ───────────────────────────────────────────
-function openEditModal(id,termen,plata,notes){
+// ── EDITARE COMPLETĂ ──────────────────────────────────────────
+async function openEditModal(id){
   editOrderId=id;
-  document.getElementById('editModalSub').textContent='Poți modifica termenul, modalitatea de plată și observațiile.';
-  document.getElementById('editTermen').value=termen;
-  document.getElementById('editPlata').value=plata;
-  document.getElementById('editNotes').value=notes;
+  showLov('Se încarcă comanda...');
+  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*,products(code,name))').eq('id',id).single();
+  const{data:history}=await sb.from('audit_log').select('*').eq('record_id',id).order('created_at',{ascending:false}).limit(10);
+  hideLov();
+
+  document.getElementById('editModalSub').textContent=(o.order_no||'—')+' · '+(o.clients?.company_name||o.clients?.name||'—');
+  document.getElementById('editTermen').value=o.delivery_preset||'10z';
+  document.getElementById('editPlata').value=o.plata||'30 zile';
+  document.getElementById('editNotes').value=o.notes||'';
+
+  // Populează articolele existente
+  editArts=o.order_lines.map(l=>({
+    id:l.id,
+    product_id:l.product_id,
+    code:l.products?.code||'—',
+    color:l.color||'',
+    ponytage:l.ponytage||{},
+    total_pairs:l.total_pairs||0,
+    unit_price:l.unit_price||0,
+    notes:l.notes||'',
+    isNew:false,
+  }));
+  renderEditArticles();
+
+  // Istoric
+  const histSection=document.getElementById('editHistorySection');
+  const histList=document.getElementById('editHistoryList');
+  if(history&&history.length){
+    histSection.style.display='block';
+    histList.innerHTML=history.map(h=>`
+      <div class="history-item">
+        <div class="history-time">${new Date(h.created_at).toLocaleString('ro-RO')}</div>
+        <div class="history-text">${h.new_data?.action||'Modificare'}</div>
+      </div>`).join('');
+  }else{histSection.style.display='none';}
+
+  // Reset câmpuri de adăugare
+  SZ.forEach(s=>editSzV[s]=0);
+  document.getElementById('editModInput').value='';
+  document.getElementById('editModId').value='';
+  document.getElementById('editCol').value='';
+  document.getElementById('editPret').value='';
+  renderEditSzGrid();
+
   document.getElementById('editModal').classList.add('show');
 }
-function closeEditModal(){document.getElementById('editModal').classList.remove('show');editOrderId=null;}
+
+function closeEditModal(){document.getElementById('editModal').classList.remove('show');editOrderId=null;editArts=[];}
+
+function renderEditArticles(){
+  const div=document.getElementById('editArticlesList');
+  if(!editArts.length){div.innerHTML='';return;}
+  div.innerHTML=editArts.map((a,i)=>`
+    <div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#1B1B1B">Art. ${a.code} · ${a.color}</div>
+        <div style="font-size:11px;color:#9E9890;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
+        <div style="font-size:10px;color:#C8C0B8;margin-top:2px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
+      </div>
+      <button onclick="removeEditArt(${i})" style="background:none;border:none;color:#C8C0B8;font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0;font-family:'Inter',sans-serif">×</button>
+    </div>`).join('');
+}
+
+function removeEditArt(i){editArts.splice(i,1);renderEditArticles();}
+
+function renderEditSzGrid(){
+  const g=document.getElementById('editSzGrid');if(!g)return;
+  g.innerHTML=SZ.map(s=>`
+    <div class="size-cell">
+      <div class="size-nr">Nr. ${s}</div>
+      <div class="size-controls">
+        <button class="size-btn" onclick="adjEditSz('${s}',-1)">−</button>
+        <span class="size-val" id="esv_${s}">${editSzV[s]}</span>
+        <button class="size-btn" onclick="adjEditSz('${s}',1)">+</button>
+      </div>
+    </div>`).join('');
+}
+function adjEditSz(s,d){editSzV[s]=Math.max(0,editSzV[s]+d);document.getElementById('esv_'+s).textContent=editSzV[s];}
+function setEditStd(){SZ.forEach(s=>editSzV[s]={'39':1,'40':2,'41':3,'42':3,'43':2,'44':1}[s]||0);renderEditSzGrid();}
+
+function addEditArticle(){
+  const mid=document.getElementById('editModId').value;
+  const col=document.getElementById('editCol').value.trim();
+  const pr=parseFloat(document.getElementById('editPret').value)||0;
+  const prod=prods.find(p=>p.id===mid);
+  if(!mid||!col){showToast('Selectează modelul și culoarea!');return;}
+  const pt={};let tot=0;SZ.forEach(s=>{if(editSzV[s]>0){pt[s]=editSzV[s];tot+=editSzV[s];}});
+  if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
+  editArts.push({product_id:mid,code:prod?.code||'—',color:col,ponytage:pt,total_pairs:tot,unit_price:pr,notes:'',isNew:true});
+  document.getElementById('editModInput').value='';document.getElementById('editModId').value='';
+  document.getElementById('editCol').value='';document.getElementById('editPret').value='';
+  SZ.forEach(s=>editSzV[s]=0);renderEditSzGrid();renderEditArticles();
+  showToast('Articol adăugat!');
+}
 
 async function saveEdit(){
   if(!editOrderId)return;
   const termen=document.getElementById('editTermen').value;
   const plata=document.getElementById('editPlata').value;
   const notes=document.getElementById('editNotes').value.trim();
-  const dd=calcDD(termen);
+  const tp=editArts.reduce((s,a)=>s+a.total_pairs,0);
+  const tv=editArts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
+
   showLov('Salvează modificările...');
-  const{error}=await sb.from('orders').update({
-    delivery_preset:termen,
-    delivery_date:dd,
-    plata,notes,
-    updated_at:new Date().toISOString(),
+
+  // Salvează audit înainte de update
+  await sb.from('audit_log').insert({
+    table_name:'orders',record_id:editOrderId,action:'update',
+    new_data:{action:'Modificat de agent: termen, articole, plată, observații',termen,plata,notes,total_pairs:tp},
+    done_by:CU.id,
+  });
+
+  // Update comandă
+  await sb.from('orders').update({
+    delivery_preset:termen,delivery_date:calcDD(termen),plata,notes,
+    total_pairs:tp,total_value:tv,updated_at:new Date().toISOString(),
   }).eq('id',editOrderId);
+
+  // Șterge liniile vechi și reinserează
+  await sb.from('order_lines').delete().eq('order_id',editOrderId);
+  if(editArts.length){
+    await sb.from('order_lines').insert(
+      editArts.map(a=>({order_id:editOrderId,product_id:a.product_id,color:a.color,ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null,notes:a.notes||null}))
+    );
+  }
+
   hideLov();
-  if(error){showToast('Eroare: '+error.message);return;}
   closeEditModal();
-  showToast('Comandă modificată cu succes!');
+  showToast('Comanda a fost modificată.');
   await loadOrders();
 }
 
-// ── ȘTERGERE COMANDĂ ──────────────────────────────────────────
-function openDelModal(id,orderNo,client,isNou){
+// ── ȘTERGERE ──────────────────────────────────────────────────
+function openDelModal(id,orderNo,client){
   delOrderId=id;
-  document.getElementById('delModalSub').textContent=`Comanda ${orderNo} · ${client}`;
+  document.getElementById('delModalSub').textContent=orderNo+' · '+client;
   document.getElementById('delModal').classList.add('show');
 }
 function closeDelModal(){document.getElementById('delModal').classList.remove('show');delOrderId=null;}
-
 async function confirmDelete(){
   if(!delOrderId)return;
-  showLov('Se șterge comanda...');
-  // Șterge mai întâi liniile
+  showLov('Se șterge...');
   await sb.from('order_lines').delete().eq('order_id',delOrderId);
-  // Șterge comanda
-  const{error}=await sb.from('orders').delete().eq('id',delOrderId);
-  hideLov();
-  if(error){showToast('Eroare la ștergere: '+error.message);return;}
-  closeDelModal();
+  await sb.from('orders').delete().eq('id',delOrderId);
+  hideLov();closeDelModal();
   showToast('Comanda a fost ștearsă.');
   await loadOrders();
 }
@@ -612,7 +865,7 @@ async function confirmDelete(){
 // ── PDF FIȘĂ CLIENT ───────────────────────────────────────────
 async function genPDF(oid){
   showLov('Se generează fișa...');
-  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*)').eq('id',oid).single();
+  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*,products(code,name))').eq('id',oid).single();
   hideLov();
   if(!o){showToast('Eroare!');return;}
   const cl=o.clients?.company_name||o.clients?.name||'—';
@@ -621,50 +874,47 @@ async function genPDF(oid){
   const tp=o.order_lines.reduce((s,l)=>s+l.total_pairs,0);
   const tv=o.order_lines.reduce((s,l)=>s+(l.unit_price||0)*l.total_pairs,0);
 
-  // Construiește tabelul cu pontaj orizontal per articol
   const artRows=o.order_lines.map((l,i)=>{
     const entries=l.ponytage?Object.entries(l.ponytage):[];
-    const sizes=entries.map(([s])=>s);
-    const qtys=entries.map(([,q])=>q);
-    const cellStyle='border:1px solid #ddd;padding:6px 10px;text-align:center;';
-    const sizeRow=sizes.map(s=>`<td style="${cellStyle}font-size:11px;color:#888;font-weight:700">${s}</td>`).join('');
-    const qtyRow=qtys.map(q=>`<td style="${cellStyle}font-size:15px;font-weight:700;color:#1A1814">${q}</td>`).join('');
+    const cellStyle='border:1px solid #ddd;padding:5px 8px;text-align:center;';
+    const sizeRow=entries.map(([s])=>`<td style="${cellStyle}font-size:10px;color:#888;font-weight:700">${s}</td>`).join('');
+    const qtyRow=entries.map(([,q])=>`<td style="${cellStyle}font-size:14px;font-weight:700;color:#1A1814">${q}</td>`).join('');
     const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
-    return `
-      <tr>
-        <td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top">
-          <div style="font-weight:700;font-size:14px">${l.color||'—'}</div>
-          ${l.unit_price?`<div style="font-size:12px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}
-          ${l.notes?`<div style="font-size:11px;color:#B08D57;margin-top:2px">${l.notes}</div>`:''}
-        </td>
-        <td style="border:1px solid #ddd;padding:6px">
-          <table style="border-collapse:collapse;width:100%">
-            <tr>${sizeRow}</tr>
-            <tr>${qtyRow}</tr>
-          </table>
-        </td>
-        <td style="border:1px solid #ddd;padding:10px 12px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td>
-        <td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:14px">${val}</td>
-      </tr>`;
+    return `<tr>
+      <td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top">
+        <div style="font-weight:700;font-size:13px">Art. ${l.products?.code||'—'}</div>
+        <div style="font-size:13px;color:#444;margin-top:2px">${l.color||'—'}</div>
+        ${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}
+        ${l.notes?`<div style="font-size:11px;color:#B08D57;margin-top:2px">${l.notes}</div>`:''}
+      </td>
+      <td style="border:1px solid #ddd;padding:6px">
+        <table style="border-collapse:collapse;width:100%">
+          <tr>${sizeRow}</tr>
+          <tr>${qtyRow}</tr>
+        </table>
+      </td>
+      <td style="border:1px solid #ddd;padding:10px 12px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td>
+      <td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:13px">${val}</td>
+    </tr>`;
   }).join('');
 
   const html=`<html><head><meta charset="UTF-8"><style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:24px;max-width:680px;margin:0 auto}
-    h1{font-size:20px;font-weight:700;letter-spacing:2px;margin-bottom:3px}
-    .sub{font-size:11px;color:#888;margin-bottom:22px;letter-spacing:.5px}
-    .row{display:flex;gap:32px;margin-bottom:22px}.col{flex:1}
-    .lbl{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px}
+    body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:28px;max-width:680px;margin:0 auto}
+    h1{font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:3px}
+    .sub{font-size:10px;color:#aaa;margin-bottom:24px;letter-spacing:1px;text-transform:uppercase}
+    .row{display:flex;gap:40px;margin-bottom:24px}.col{flex:1}
+    .lbl{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;font-weight:700}
     .val{font-size:14px;font-weight:700}
     .meta{font-size:11px;color:#888;margin-top:3px}
     table.main{width:100%;border-collapse:collapse;margin:18px 0}
-    table.main th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ddd;text-align:left;background:#f9f9f9}
+    table.main th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ddd;text-align:left;background:#f9f9f9;font-weight:700}
     .footer{margin-top:48px;display:flex;gap:60px}
-    .sig{border-top:2px solid #1A1814;padding-top:8px;font-size:11px;color:#888;width:220px;min-height:50px}
+    .sig{border-top:1.5px solid #1A1814;padding-top:8px;font-size:10px;color:#888;width:220px;min-height:50px}
     @media print{.noprint{display:none}}
   </style></head><body>
   <h1>SILESCO</h1>
-  <div class="sub">Fișă de Comandă · ${o.order_no||'—'} · Data: ${azi}</div>
+  <div class="sub">Fișă de Comandă · ${o.order_no||'—'} · ${azi}</div>
   <div class="row">
     <div class="col">
       <div class="lbl">Client</div><div class="val">${cl}</div>
@@ -679,32 +929,27 @@ async function genPDF(oid){
     </div>
   </div>
   <table class="main">
-    <thead>
-      <tr>
-        <th style="width:30%">Culoare / Piele</th>
-        <th>Pontaj pe mărimi</th>
-        <th style="width:60px;text-align:center">Total</th>
-        <th style="width:100px;text-align:right">Valoare</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th style="width:32%">Model / Culoare</th>
+      <th>Pontaj pe mărimi</th>
+      <th style="width:60px;text-align:center">Total</th>
+      <th style="width:110px;text-align:right">Valoare</th>
+    </tr></thead>
     <tbody>${artRows}</tbody>
-    <tfoot>
-      <tr style="background:#f5f2ee">
-        <td colspan="2" style="border:1px solid #ddd;padding:10px 12px;font-weight:700">TOTAL</td>
-        <td style="border:1px solid #ddd;padding:10px 12px;text-align:center;font-weight:700;font-size:16px">${tp}</td>
-        <td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700">${tv.toLocaleString('ro-RO')} RON</td>
-      </tr>
-    </tfoot>
+    <tfoot><tr style="background:#f5f2ee">
+      <td colspan="2" style="border:1px solid #ddd;padding:10px 12px;font-weight:700;font-size:13px">TOTAL COMANDĂ</td>
+      <td style="border:1px solid #ddd;padding:10px;text-align:center;font-weight:700;font-size:16px">${tp}</td>
+      <td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700">${tv.toLocaleString('ro-RO')} RON</td>
+    </tr></tfoot>
   </table>
-  ${o.notes?`<div style="padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;font-size:12px;margin-bottom:16px"><strong>Observații:</strong> ${o.notes}</div>`:''}
-  <div style="font-size:11px;color:#888;margin-bottom:28px;line-height:1.6">Prin semnarea prezentei fișe, clientul confirmă comanda și condițiile de livrare agreate cu SILESCO SRL.</div>
+  ${o.notes?`<div style="padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;font-size:12px;margin-bottom:16px;line-height:1.5"><strong>Observații:</strong> ${o.notes}</div>`:''}
+  <div style="font-size:10px;color:#aaa;margin-bottom:28px;line-height:1.7;text-transform:uppercase;letter-spacing:.5px">Prin semnarea prezentei fișe, clientul confirmă comanda și condițiile de livrare agreate cu SILESCO SRL.</div>
   <div class="footer">
     <div class="sig">Persoana care plasează comanda</div>
     <div class="sig">SILESCO SRL · ${CP?.full_name||'—'}</div>
   </div>
-  <br><button class="noprint" onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#1B1B1B;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">Printează / Salvează PDF</button>
+  <br><button class="noprint" onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#111111;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:700;letter-spacing:.5px">Printează / Salvează PDF</button>
   </body></html>`;
-
   const w=window.open('','_blank','width=720,height=960');
   w.document.write(html);w.document.close();
 }
@@ -744,12 +989,18 @@ async function searchClients(q){
   if(!q.trim()){res.innerHTML='';btn.style.display='none';return;}
   sTimer=setTimeout(async()=>{
     const{data}=await sb.from('clients').select('id,name,company_name,phone,cui,delivery_address').or(`name.ilike.%${q}%,company_name.ilike.%${q}%`).limit(6);
-    if(!data?.length){res.innerHTML=`<div style="font-size:13px;color:#9A9088;padding:8px 0">Niciun client găsit.</div>`;btn.style.display='block';return;}
+    if(!data?.length){res.innerHTML=`<div style="font-size:12px;color:#9E9890;padding:8px 0">Niciun client găsit.</div>`;btn.style.display='block';return;}
     btn.style.display='block';
-    res.innerHTML=data.map(c=>`<div class="acrd" onclick='selC(${JSON.stringify(c)})'><div><div style="font-size:15px;font-weight:700">${c.company_name||c.name}</div><div style="font-size:12px;color:#9A9088;margin-top:2px">${c.phone||''} ${c.cui?'· CUI: '+c.cui:''}</div></div><span style="color:#B08D57;font-size:18px">›</span></div>`).join('');
+    res.innerHTML=data.map(c=>`
+      <div class="client-result" onclick='selC(${JSON.stringify(c)})'>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1B1B1B">${c.company_name||c.name}</div>
+          <div style="font-size:11px;color:#9E9890;margin-top:2px">${c.phone||''} ${c.cui?'· CUI: '+c.cui:''}</div>
+        </div>
+        <svg style="width:16px;height:16px;stroke:#B08D57;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`).join('');
   },300);
 }
-
 function selC(c){
   selClient=c;
   document.getElementById('cRes').innerHTML='';document.getElementById('cSearch').value='';
@@ -761,7 +1012,6 @@ function selC(c){
 }
 function clearClient(){selClient=null;document.getElementById('cSel').style.display='none';document.getElementById('s0next').disabled=true;}
 function toggleNCF(s){document.getElementById('ncForm').style.display=s?'block':'none';document.getElementById('ncBtn').style.display=s?'none':'block';}
-
 async function saveNewClient(){
   const co=document.getElementById('nc_co').value.trim();
   if(!co){showToast('Completează numele companiei!');return;}
@@ -777,44 +1027,15 @@ async function saveNewClient(){
 }
 
 // ── TERMEN ────────────────────────────────────────────────────
-function selTermen(v,el){curTermen=v;document.querySelectorAll('.tc').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+function selTermen(v,el){curTermen=v;document.querySelectorAll('.termen-card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
 function calcDD(t){const d=new Date();const z={'5z':5,'10z':10,'15z':15,'30z':30,'prelungit':90};d.setDate(d.getDate()+(z[t]||30));return d.toISOString().split('T')[0];}
 
-// ── AUTOSUGGESTION MODEL ──────────────────────────────────────
-function filterModels(q){
-  const drop=document.getElementById('artModDrop');
-  const hidden=document.getElementById('artMod');
-  const filtered=q.trim()
-    ? prods.filter(p=>p.code.toLowerCase().includes(q.toLowerCase())||p.name.toLowerCase().includes(q.toLowerCase()))
-    : prods;
-  if(!filtered.length){drop.style.display='none';return;}
-  drop.style.display='block';
-  drop.innerHTML=filtered.map(p=>`
-    <div onclick="selectModel('${p.id}','Art. ${p.code} — ${p.name}')"
-      style="padding:11px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #F4F1EA;transition:background .1s"
-      onmouseover="this.style.background='#F6F0E5'" onmouseout="this.style.background='#fff'">
-      <span style="font-weight:700;color:#1A1814">Art. ${p.code}</span>
-      <span style="color:#9A9088;font-size:12px;margin-left:8px">${p.name}</span>
-    </div>`).join('');
-}
-function selectModel(id,label){
-  document.getElementById('artMod').value=id;
-  document.getElementById('artModInput').value=label;
-  document.getElementById('artModDrop').style.display='none';
-  resetSz();
-}
-// Închide dropdown când dai click în altă parte
-document.addEventListener('click',e=>{
-  if(!e.target.closest('#artModDrop')&&e.target.id!=='artModInput'){
-    const d=document.getElementById('artModDrop');
-    if(d)d.style.display='none';
-  }
-});
+// ── MĂRIMI ────────────────────────────────────────────────────
 function resetSz(){SZ.forEach(s=>szV[s]=0);renderSz();}
 function setStd(){szV={'39':1,'40':2,'41':3,'42':3,'43':2,'44':1};renderSz();showToast('Pontaj standard aplicat!');}
 function renderSz(){
   const g=document.getElementById('szGrid');if(!g)return;
-  g.innerHTML=SZ.map(s=>`<div class="szc"><div class="snr">Nr. ${s}</div><div class="sct"><button class="sbtn" onclick="adjSz('${s}',-1)">−</button><span class="sv" id="sv_${s}">${szV[s]}</span><button class="sbtn" onclick="adjSz('${s}',1)">+</button></div></div>`).join('');
+  g.innerHTML=SZ.map(s=>`<div class="size-cell"><div class="size-nr">Nr. ${s}</div><div class="size-controls"><button class="size-btn" onclick="adjSz('${s}',-1)">−</button><span class="size-val" id="sv_${s}">${szV[s]}</span><button class="size-btn" onclick="adjSz('${s}',1)">+</button></div></div>`).join('');
 }
 function adjSz(s,d){szV[s]=Math.max(0,szV[s]+d);document.getElementById('sv_'+s).textContent=szV[s];}
 
@@ -833,20 +1054,20 @@ function addArt(){
   document.getElementById('artMod').value='';document.getElementById('artModInput').value='';
   document.getElementById('artModDrop').style.display='none';
   resetSz();renderArtList();document.getElementById('s2next').disabled=arts.length===0;
-  showToast(`Art. ${prod?.code||'—'} adăugat!`);
+  showToast('Art. '+(prod?.code||'—')+' adăugat!');
 }
 function renderArtList(){
-  document.getElementById('artCnt').textContent=`Articole: ${arts.length}`;
+  document.getElementById('artCnt').textContent='Articole: '+arts.length;
   document.getElementById('s2next').disabled=arts.length===0;
   document.getElementById('artList').innerHTML=arts.map((a,i)=>`
-    <div class="card al" style="margin-bottom:8px">
+    <div class="card card-accent" style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div style="font-size:15px;font-weight:700">Art. ${a.code} · ${a.color}</div>
-          <div style="font-size:12px;color:#9A9088;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
-          <div style="font-size:11px;color:#C8C0B8;margin-top:3px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>`${s}×${q}`).join('  ')}</div>
+          <div style="font-size:14px;font-weight:700;color:#1B1B1B">Art. ${a.code} · ${a.color}</div>
+          <div style="font-size:11px;color:#9E9890;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
+          <div style="font-size:10px;color:#C8C0B8;margin-top:3px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
         </div>
-        <button onclick="remArt(${i})" style="background:none;border:none;color:#C8C0B8;font-size:20px;cursor:pointer;padding:0 4px;flex-shrink:0">×</button>
+        <button onclick="remArt(${i})" style="background:none;border:none;color:#C8C0B8;font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0">×</button>
       </div>
     </div>`).join('');
 }
@@ -856,16 +1077,16 @@ function remArt(i){arts.splice(i,1);renderArtList();}
 function renderSum(){
   const tl={'5z':'5 zile','10z':'10 zile','15z':'15 zile','30z':'30 zile','prelungit':'Prelungit'};
   document.getElementById('sumCl').textContent=selClient?.company_name||selClient?.name||'—';
-  document.getElementById('sumT').textContent=`Termen: ${tl[curTermen]} · Plată: ${document.getElementById('plata').value}`;
+  document.getElementById('sumT').textContent='Termen: '+tl[curTermen]+' · Plată: '+document.getElementById('plata').value;
   const tp=arts.reduce((s,a)=>s+a.total_pairs,0);
   const tv=arts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
   document.getElementById('sumP').textContent=tp+' per.';
   document.getElementById('sumV').textContent=tv.toLocaleString('ro-RO')+' RON';
   document.getElementById('sumArt').innerHTML=arts.map(a=>`
     <div class="card" style="margin-bottom:6px;padding:12px 14px">
-      <div style="font-size:14px;font-weight:700">Art. ${a.code} · ${a.color}</div>
-      <div style="font-size:12px;color:#9A9088;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
-      <div style="font-size:11px;color:#C8C0B8;margin-top:3px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>`${s}×${q}`).join('  ')}</div>
+      <div style="font-size:13px;font-weight:700;color:#1B1B1B">Art. ${a.code} · ${a.color}</div>
+      <div style="font-size:11px;color:#9E9890;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
+      <div style="font-size:10px;color:#C8C0B8;margin-top:2px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
     </div>`).join('');
 }
 
@@ -883,10 +1104,7 @@ async function saveOrder(){
     notes:document.getElementById('ordObs').value.trim(),
   }).select().single();
   if(ordErr){hideLov();showToast('Eroare: '+ordErr.message);document.getElementById('saveBtn').disabled=false;return;}
-  const{error:lErr}=await sb.from('order_lines').insert(
-    arts.map(a=>({order_id:ord.id,product_id:a.product_id,color:a.color,ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null,notes:a.notes||null}))
-  );
-  if(lErr)console.error('Lines error:',lErr);
+  await sb.from('order_lines').insert(arts.map(a=>({order_id:ord.id,product_id:a.product_id,color:a.color,ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null,notes:a.notes||null})));
   hideLov();
   document.getElementById('succPDF').onclick=()=>genPDF(ord.id);
   for(let i=0;i<=3;i++)document.getElementById('s'+i).style.display='none';
@@ -899,13 +1117,13 @@ async function saveOrder(){
 async function loadStoc(){
   const{data:bx}=await sb.from('stock_operational').select('*,products(code,name)').eq('stock_type','bax_gata');
   const{data:ft}=await sb.from('stock_operational').select('*,products(code,name)').eq('stock_type','fete');
-  const ri=(item,c)=>`<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:700">Art. ${item.products?.code||'—'} · ${item.color||''}</div></div><div style="text-align:center"><div style="font-size:26px;font-weight:700;color:${c};font-family:'Georgia',serif">${item.qty_available}</div><div style="font-size:10px;color:#9A9088">${item.stock_type==='bax_gata'?'baxuri':'per.'}</div></div></div>`;
-  document.getElementById('stBax').innerHTML=bx?.length?bx.map(b=>ri(b,'#365A43')).join(''):'<div class="emp" style="padding:20px 0"><div class="ei">📦</div><div class="et">Niciun bax în stoc</div></div>';
-  document.getElementById('stFete').innerHTML=ft?.length?ft.map(f=>ri(f,'#2F4A63')).join(''):'<div class="emp" style="padding:20px 0"><div class="ei">🧶</div><div class="et">Nicio FEȚE disponibilă</div></div>';
+  const ri=(item,c)=>`<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px;font-weight:700;color:#1B1B1B">Art. ${item.products?.code||'—'} · ${item.color||''}</div></div><div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:${c}">${item.qty_available}</div><div style="font-size:9px;color:#9E9890;text-transform:uppercase;letter-spacing:.5px">${item.stock_type==='bax_gata'?'baxuri':'per.'}</div></div></div>`;
+  document.getElementById('stBax').innerHTML=bx?.length?bx.map(b=>ri(b,'#365A43')).join(''):'<div class="empty-state" style="padding:20px 0"><svg class="empty-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><div class="empty-text">Niciun bax în stoc</div></div>';
+  document.getElementById('stFete').innerHTML=ft?.length?ft.map(f=>ri(f,'#2F4A63')).join(''):'<div class="empty-state" style="padding:20px 0"><div class="empty-text">Nicio FEȚE disponibilă</div></div>';
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
-function showLov(t){document.getElementById('lt').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
+function showLov(t){document.getElementById('lov-text').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
 </script>
