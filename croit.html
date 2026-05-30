@@ -270,13 +270,25 @@ async function doLogout(){await sb.auth.signOut();}
 async function loadLots(){
   showLov('Se încarcă loturile...');
   const{data,error}=await sb.from('production_lots')
-    .select(`id,lot_no,stage,qty_planned,qty_done,has_issue,issue_notes,started_at,completed_at,created_at,
+    .select(`id,lot_no,stage,qty_planned,qty_done,has_issue,issue_notes,
+      started_at,completed_at,created_at,order_line_id,
       orders(id,order_no,clients(name,company_name)),
       products(code,name),
-      order_lines(ponytage,color),
       talpi(name)`)
     .in('stage',['nou','la_croit','fete_gata_cusut'])
     .order('created_at',{ascending:true});
+
+  // Fetch order_lines separat
+  if(data&&data.length){
+    const lineIds=data.map(l=>l.order_line_id).filter(Boolean);
+    if(lineIds.length){
+      const{data:lines}=await sb.from('order_lines')
+        .select('id,ponytage,color').in('id',lineIds);
+      data.forEach(lot=>{
+        lot.order_line_data=lines?.find(l=>l.id===lot.order_line_id)||null;
+      });
+    }
+  }
 
   // Loturi finalizate azi pentru istoric
   const azi=new Date().toISOString().split('T')[0];
@@ -347,7 +359,7 @@ function renderActiveLot(){
   // Info
   const cl=lot.orders?.clients?.company_name||lot.orders?.clients?.name||'—';
   document.getElementById('lotClient').textContent=cl;
-  document.getElementById('lotArt').textContent='Art. '+(lot.products?.code||'—')+' · '+(lot.order_lines?.color||'');
+  document.getElementById('lotArt').textContent='Art. '+(lot.products?.code||'—')+' · '+(lot.order_line_data?.color||'');
 
   // Tags
   const tags=[];
@@ -357,7 +369,7 @@ function renderActiveLot(){
   document.getElementById('lotTags').innerHTML=tags.join('');
 
   // Pontaj
-  const pontaj=lot.order_lines?.ponytage||{};
+  const pontaj=lot.order_line_data?.ponytage||{};
   const entries=Object.entries(pontaj);
   document.getElementById('lotTotalPairs').textContent=(lot.qty_planned||0)+(extraPairs)+' per.';
   document.getElementById('sizesGrid').innerHTML=entries.length
