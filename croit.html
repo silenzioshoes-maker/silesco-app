@@ -363,19 +363,18 @@ async function doLogout(){await sb.auth.signOut();}
 async function loadLots(){
   showLov('Se încarcă loturile...');
 
-  // Query principal — fără order_lines join care poate eșua
+  // Query principal — FĂRĂ talpi join (are 2 FK-uri și eșuează)
   const{data,error}=await sb.from('production_lots')
     .select(`id,lot_no,stage,qty_planned,qty_done,has_issue,issue_notes,
-      started_at,completed_at,created_at,order_line_id,order_id,
+      started_at,completed_at,created_at,order_line_id,order_id,talpa_used_id,
       orders(id,order_no,clients(name,company_name)),
-      products(code,name),
-      talpi(name)`)
+      products(code,name)`)
     .in('stage',['nou','la_croit','fete_gata_cusut'])
     .order('created_at',{ascending:true});
 
-  if(error){console.error('Lots error:',error);hideLov();showToast('Eroare la încărcare!');return;}
+  if(error){console.error('Lots error:',error);hideLov();showToast('Eroare: '+error.message);return;}
 
-  // Fetch order_lines separat pentru ponytage și culoare
+  // Fetch order_lines separat
   let linesMap={};
   if(data&&data.length){
     const lineIds=data.map(l=>l.order_line_id).filter(Boolean);
@@ -384,6 +383,16 @@ async function loadLots(){
         .select('id,ponytage,color,unit_price')
         .in('id',lineIds);
       if(lines)lines.forEach(l=>{linesMap[l.id]=l;});
+    }
+  }
+
+  // Fetch talpi separat
+  let talpiMap={};
+  if(data&&data.length){
+    const talpaIds=data.map(l=>l.talpa_used_id).filter(Boolean);
+    if(talpaIds.length){
+      const{data:tp}=await sb.from('talpi').select('id,name').in('id',talpaIds);
+      if(tp)tp.forEach(t=>{talpiMap[t.id]=t;});
     }
   }
 
@@ -397,7 +406,7 @@ async function loadLots(){
     .order('completed_at',{ascending:false});
 
   hideLov();
-  lots=(data||[]).map(l=>({...l,lineData:linesMap[l.order_line_id]||null}));
+  lots=(data||[]).map(l=>({...l,lineData:linesMap[l.order_line_id]||null,talpaData:talpiMap[l.talpa_used_id]||null}));
   doneTodayCount=(done||[]).length;
   document.getElementById('hdrStat').textContent=doneTodayCount+'/'+(lots.length+doneTodayCount);
   document.getElementById('vLoturi').style.display='block';
@@ -458,7 +467,7 @@ function renderActiveLot(){
 
   const tags=[];
   tags.push(`<span class="lot-tag tag-gold">${(lot.qty_planned||0)+extraPairs} perechi</span>`);
-  if(lot.talpi?.name)tags.push(`<span class="lot-tag tag-dark">Talpă: ${lot.talpi.name}</span>`);
+  if(lot.talpaData?.name)tags.push(`<span class="lot-tag tag-dark">Talpă: ${lot.talpaData.name}</span>`);
   if(lot.has_issue)tags.push(`<span class="lot-tag tag-red">⚠ Problemă raportată</span>`);
   if(lot.stage==='fete_gata_cusut')tags.push(`<span class="lot-tag tag-green">✓ Finalizat</span>`);
   document.getElementById('lotTags').innerHTML=tags.join('');
