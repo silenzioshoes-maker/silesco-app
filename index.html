@@ -38,6 +38,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
 .card.al{border-left:3px solid #B08D57;border-radius:0 10px 10px 0}
 .sl{font-size:10px;font-weight:700;color:#9A9088;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
 .ocard{background:#fff;border:1px solid #DDD8D0;border-radius:10px;padding:14px;margin-bottom:8px;border-left:3px solid #B08D57;border-top-left-radius:0;border-bottom-left-radius:0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ocard.edited{border-left-color:#B0892B}
 .oid{font-size:10px;font-family:monospace;color:#C8C0B8;margin-bottom:3px}
 .ocl{font-size:17px;font-weight:700;color:#1A1814;margin-bottom:5px;font-family:'Georgia',serif}
 .ometa{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
@@ -52,6 +53,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
 .bs{background:transparent;border:1.5px solid #DDD8D0;color:#5A5248}
 .bg{background:#365A43;color:#fff}
 .bor{background:transparent;border:1.5px solid #B08D57;color:#B08D57}
+.br{background:transparent;border:1.5px solid #9C3A2B;color:#9C3A2B}
 .steps{background:#1B1B1B;padding:0 20px 14px;display:flex;gap:6px}
 .step{flex:1}
 .sb{height:2px;border-radius:2px;margin-bottom:5px;background:rgba(255,255,255,.15)}
@@ -94,15 +96,66 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
 .toast.show{opacity:1}
 .oa{height:80px;resize:none}
 .expand-det{display:none;margin-top:12px;padding-top:12px;border-top:1px solid #EDE8DF}
-/* Preview articole pe card */
 .art-preview{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
 .art-tag{font-size:11px;color:#6E6A64;background:#F4F1EA;border:1px solid #DDD8D0;padding:3px 9px;border-radius:4px;white-space:nowrap}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:700;color:#1A1814;margin-bottom:4px;font-family:'Georgia',serif}
+.modal-sub{font-size:13px;color:#9A9088;margin-bottom:20px}
 </style>
 </head>
 <body>
 
 <div class="lov" id="lov"><div class="sp"></div><div class="lt" id="lt">Se încarcă...</div></div>
 <div class="toast" id="toast"></div>
+
+<!-- MODAL EDITARE -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title">Editează comanda</div>
+    <div class="modal-sub" id="editModalSub"></div>
+    <div class="fld"><label>Termen livrare</label>
+      <select id="editTermen">
+        <option value="5z">5 zile — Urgent</option>
+        <option value="10z">10 zile — Standard</option>
+        <option value="15z">15 zile — Normal</option>
+        <option value="30z">30 zile — Relaxat</option>
+        <option value="prelungit">Prelungit</option>
+      </select>
+    </div>
+    <div class="fld"><label>Modalitate plată</label>
+      <select id="editPlata">
+        <option>30 zile</option>
+        <option>15 zile</option>
+        <option>La livrare</option>
+        <option>Avans 50%</option>
+      </select>
+    </div>
+    <div class="fld"><label>Observații</label>
+      <textarea class="oa" id="editNotes" placeholder="Observații comandă..."></textarea>
+    </div>
+    <div style="padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;border-radius:0 6px 6px 0;font-size:12px;color:#B0892B;margin-bottom:16px">
+      Modificarea va fi înregistrată cu data și ora curentă.
+    </div>
+    <button class="btn bg" onclick="saveEdit()">Salvează modificările</button>
+    <button class="btn bs" onclick="closeEditModal()">Anulează</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMARE ȘTERGERE -->
+<div class="modal-overlay" id="delModal">
+  <div class="modal-box">
+    <div class="modal-title">Șterge comanda</div>
+    <div class="modal-sub" id="delModalSub"></div>
+    <div style="padding:12px 14px;background:#F5EAE8;border-left:3px solid #9C3A2B;border-radius:0 6px 6px 0;font-size:13px;color:#9C3A2B;margin-bottom:20px;line-height:1.6">
+      Această acțiune este ireversibilă. Comanda și toate articolele asociate vor fi șterse permanent.
+    </div>
+    <button class="btn br" onclick="confirmDelete()">Da, șterge comanda</button>
+    <button class="btn bs" onclick="closeDelModal()">Anulează</button>
+  </div>
+</div>
 
 <!-- LOGIN -->
 <div id="loginScreen">
@@ -112,14 +165,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
       <h1>SILESCO</h1>
       <p>Production OS · Autentificare</p>
     </div>
-    <div class="lf">
-      <label>Email</label>
-      <input type="email" id="lem" placeholder="email@silesco.ro" onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
-    <div class="lf">
-      <label>Parolă</label>
-      <input type="password" id="lpw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
+    <div class="lf"><label>Email</label><input type="email" id="lem" placeholder="email@silesco.ro" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="lf"><label>Parolă</label><input type="password" id="lpw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
     <button class="btn-login" id="lbtn" onclick="doLogin()">Intră în cont</button>
     <div class="lerr" id="lerr"></div>
   </div>
@@ -167,12 +214,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
       <div class="step"><div class="sb" id="sb3"></div><div class="sn" id="sn3">Final</div></div>
     </div>
     <div class="wrap">
-      <!-- STEP 0: CLIENT -->
       <div id="s0">
-        <div class="fld">
-          <label>Caută client</label>
-          <input type="text" id="cSearch" placeholder="Nume client sau companie..." oninput="searchClients(this.value)" autocomplete="off"/>
-        </div>
+        <div class="fld"><label>Caută client</label><input type="text" id="cSearch" placeholder="Nume client sau companie..." oninput="searchClients(this.value)" autocomplete="off"/></div>
         <div id="cRes" style="margin-bottom:12px"></div>
         <div class="card" id="cSel" style="display:none">
           <div style="font-size:10px;color:#9A9088;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Client selectat</div>
@@ -190,13 +233,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
           <button class="btn bg" onclick="saveNewClient()">Salvează client</button>
           <button class="btn bs" onclick="toggleNCF(false)">Anulează</button>
         </div>
-        <div id="ncBtn" style="display:none">
-          <button class="btn bor" onclick="toggleNCF(true)">+ Client nou</button>
-        </div>
+        <div id="ncBtn" style="display:none"><button class="btn bor" onclick="toggleNCF(true)">+ Client nou</button></div>
         <button class="btn bp" id="s0next" onclick="goStep(1)" style="margin-top:8px" disabled>Continuă →</button>
       </div>
 
-      <!-- STEP 1: TERMEN -->
       <div id="s1" style="display:none">
         <div class="sl">Termen de livrare</div>
         <div class="tgrd">
@@ -205,34 +245,25 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
           <div class="tc" onclick="selTermen('15z',this)"><div class="tz">15 zile</div><div class="td">Normal</div></div>
           <div class="tc" onclick="selTermen('30z',this)"><div class="tz">30 zile</div><div class="td">Relaxat</div></div>
         </div>
-        <div class="tc" style="margin-bottom:16px" onclick="selTermen('prelungit',this)">
-          <div class="tz">Prelungit</div>
-          <div class="td">Așteptare model / material / stoc</div>
-        </div>
-        <div class="fld">
-          <label>Modalitate plată</label>
-          <select id="plata">
-            <option>30 zile</option>
-            <option>15 zile</option>
-            <option>La livrare</option>
-            <option>Avans 50%</option>
-          </select>
+        <div class="tc" style="margin-bottom:16px" onclick="selTermen('prelungit',this)"><div class="tz">Prelungit</div><div class="td">Așteptare model / material / stoc</div></div>
+        <div class="fld"><label>Modalitate plată</label>
+          <select id="plata"><option>30 zile</option><option>15 zile</option><option>La livrare</option><option>Avans 50%</option></select>
         </div>
         <button class="btn bp" onclick="goStep(2)">Continuă →</button>
         <button class="btn bs" onclick="goStep(0)">← Înapoi</button>
       </div>
 
-      <!-- STEP 2: ARTICOLE -->
       <div id="s2" style="display:none">
         <div class="sl" id="artCnt">Articole: 0</div>
         <div id="artList"></div>
         <div class="card">
           <div style="font-size:11px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">Adaugă articol</div>
-          <div class="fld">
+          <div class="fld" style="position:relative">
             <label>Model</label>
-            <select id="artMod" onchange="resetSz()">
-              <option value="">Selectează model...</option>
-            </select>
+            <input type="text" id="artModInput" placeholder="Tastează — ex: 140, 0062, 121..." 
+              oninput="filterModels(this.value)" onfocus="filterModels(this.value)" autocomplete="off"/>
+            <input type="hidden" id="artMod"/>
+            <div id="artModDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #B08D57;border-top:none;border-radius:0 0 8px 8px;z-index:50;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
           </div>
           <div class="fld"><label>Culoare / Piele</label><input type="text" id="artCol" placeholder="ex: Negru Lac, Maro Cioco..."/></div>
           <div class="fld"><label>Preț per pereche (RON)</label><input type="number" id="artPr" placeholder="ex: 190" min="0"/></div>
@@ -243,14 +274,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
             </div>
             <div class="szg" id="szGrid"></div>
           </div>
-          <div class="fld"><label>Observații (opțional)</label><textarea class="oa" id="artObs" placeholder="ex: tălpici cu ață neagră, logo embossat..."></textarea></div>
+          <div class="fld"><label>Observații (opțional)</label><textarea class="oa" id="artObs" placeholder="ex: tălpici cu ață neagră..."></textarea></div>
           <button class="btn bp" onclick="addArt()">+ Adaugă articol</button>
         </div>
         <button class="btn bp" id="s2next" onclick="goStep(3)" disabled>Continuă →</button>
         <button class="btn bs" onclick="goStep(1)">← Înapoi</button>
       </div>
 
-      <!-- STEP 3: FINAL -->
       <div id="s3" style="display:none">
         <div class="sl">Sumar comandă</div>
         <div class="card" style="margin-bottom:10px">
@@ -264,12 +294,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
           <div class="tdv"></div>
           <div class="tr"><span class="tl">Total valoare</span><span class="tv" id="sumV">0 RON</span></div>
         </div>
-        <div class="fld"><label>Observații generale</label><textarea class="oa" id="ordObs" placeholder="ex: livrare urgentă, client special..."></textarea></div>
+        <div class="fld"><label>Observații generale</label><textarea class="oa" id="ordObs" placeholder="ex: livrare urgentă..."></textarea></div>
         <button class="btn bg" id="saveBtn" onclick="saveOrder()">Salvează comanda</button>
         <button class="btn bs" onclick="goStep(2)">← Înapoi</button>
       </div>
 
-      <!-- SUCCESS -->
       <div class="ssc" id="succSc">
         <div style="font-size:48px;margin-bottom:16px">✓</div>
         <div style="font-size:22px;font-weight:700;color:#1A1814;margin-bottom:8px;font-family:'Georgia',serif">Comandă salvată!</div>
@@ -287,212 +316,207 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F2EE;min-height:1
   <!-- STOC VIEW -->
   <div id="vStoc" style="display:none">
     <div class="wrap">
-      <div class="sl">Baxuri gata</div>
-      <div id="stBax"></div>
-      <div class="sl" style="margin-top:16px">FEȚE disponibile</div>
-      <div id="stFete"></div>
+      <div class="sl">Baxuri gata</div><div id="stBax"></div>
+      <div class="sl" style="margin-top:16px">FEȚE disponibile</div><div id="stFete"></div>
     </div>
   </div>
 
-  <!-- BOTTOM NAV -->
   <div class="bnav">
-    <button class="nb active" id="n_orders" onclick="showV('orders')">
-      <span class="ni">📋</span><span class="nl">Comenzi</span>
-    </button>
-    <button class="nb" id="n_new" onclick="showV('new')">
-      <span class="ni">＋</span><span class="nl">Comandă nouă</span>
-    </button>
-    <button class="nb" id="n_stoc" onclick="showV('stoc')">
-      <span class="ni">📦</span><span class="nl">Stoc</span>
-    </button>
+    <button class="nb active" id="n_orders" onclick="showV('orders')"><span class="ni">📋</span><span class="nl">Comenzi</span></button>
+    <button class="nb" id="n_new" onclick="showV('new')"><span class="ni">＋</span><span class="nl">Comandă nouă</span></button>
+    <button class="nb" id="n_stoc" onclick="showV('stoc')"><span class="ni">📦</span><span class="nl">Stoc</span></button>
   </div>
 </div>
 
 <script>
-// ── SUPABASE ──────────────────────────────────────────────────────────────────
-const SURL = 'https://nprpwaxijtbjkxdhdxmq.supabase.co';
-const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
-const { createClient } = supabase;
-const sb = createClient(SURL, SKEY);
+const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+const {createClient}=supabase;
+const sb=createClient(SURL,SKEY);
 
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let CU = null, CP = null;
-let selClient = null, curTermen = '10z';
-let arts = [], prods = [];
-let lastSavedOrderId = null;
-const SZ = ['39','40','41','42','43','44'];
-let szV = {}; SZ.forEach(s => szV[s] = 0);
+let CU=null,CP=null,selClient=null,curTermen='10z',arts=[],prods=[];
+let editOrderId=null,delOrderId=null;
+const SZ=['39','40','41','42','43','44'];
+let szV={};SZ.forEach(s=>szV[s]=0);
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) { CU = session.user; await initAgent(); }
-
-  sb.auth.onAuthStateChange(async (ev, ses) => {
-    if (ev === 'SIGNED_IN' && ses && !CU) { CU = ses.user; await initAgent(); }
-    else if (ev === 'TOKEN_REFRESHED' && ses) { CU = ses.user; }
-    else if (ev === 'SIGNED_OUT') { CU = null; showLogin(); }
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){CU=session.user;await initAgent();}
+  sb.auth.onAuthStateChange(async(ev,ses)=>{
+    if(ev==='SIGNED_IN'&&ses&&!CU){CU=ses.user;await initAgent();}
+    else if(ev==='TOKEN_REFRESHED'&&ses){CU=ses.user;}
+    else if(ev==='SIGNED_OUT'){CU=null;showLogin();}
   });
 });
 
-async function initAgent() {
+async function initAgent(){
   showLov('Se încarcă...');
-  const { data: p } = await sb.from('user_profiles').select('full_name,role').eq('id', CU.id).single();
-  CP = p;
-  document.getElementById('hSub').textContent = p?.full_name || '';
+  const{data:p}=await sb.from('user_profiles').select('full_name,role').eq('id',CU.id).single();
+  CP=p;
+  document.getElementById('hSub').textContent=p?.full_name||'';
   await loadProds();
   await loadOrders();
   hideLov();
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('agentScreen').style.display = 'block';
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('agentScreen').style.display='block';
   showV('orders');
 }
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
-async function doLogin() {
-  const em = document.getElementById('lem').value.trim();
-  const pw = document.getElementById('lpw').value;
-  const btn = document.getElementById('lbtn');
-  if (!em || !pw) { showLErr('Completează emailul și parola.'); return; }
-  btn.disabled = true;
+// ── AUTH ──────────────────────────────────────────────────────
+async function doLogin(){
+  const em=document.getElementById('lem').value.trim();
+  const pw=document.getElementById('lpw').value;
+  const btn=document.getElementById('lbtn');
+  if(!em||!pw){showLErr('Completează emailul și parola.');return;}
+  btn.disabled=true;
   document.getElementById('lerr').classList.remove('show');
-  const { error } = await sb.auth.signInWithPassword({ email: em, password: pw });
-  if (error) { btn.disabled = false; showLErr(error.message.includes('Invalid') ? 'Email sau parolă incorectă.' : error.message); }
+  const{error}=await sb.auth.signInWithPassword({email:em,password:pw});
+  if(error){btn.disabled=false;showLErr(error.message.includes('Invalid')?'Email sau parolă incorectă.':error.message);}
 }
-function showLErr(m) { const e = document.getElementById('lerr'); e.textContent = m; e.classList.add('show'); }
-async function doLogout() { await sb.auth.signOut(); }
-function showLogin() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('agentScreen').style.display = 'none';
-  document.getElementById('lbtn').disabled = false;
+function showLErr(m){const e=document.getElementById('lerr');e.textContent=m;e.classList.add('show');}
+async function doLogout(){await sb.auth.signOut();}
+function showLogin(){
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('agentScreen').style.display='none';
+  document.getElementById('lbtn').disabled=false;
 }
 
-// ── VIEWS ─────────────────────────────────────────────────────────────────────
-function showV(n) {
-  ['vOrders','vNew','vStoc'].forEach(v => document.getElementById(v).style.display = 'none');
-  ['orders','new','stoc'].forEach(x => document.getElementById('n_'+x)?.classList.remove('active'));
-  if (n === 'orders') {
-    document.getElementById('vOrders').style.display = 'block';
+// ── VIEWS ─────────────────────────────────────────────────────
+function showV(n){
+  ['vOrders','vNew','vStoc'].forEach(v=>document.getElementById(v).style.display='none');
+  ['orders','new','stoc'].forEach(x=>document.getElementById('n_'+x)?.classList.remove('active'));
+  if(n==='orders'){
+    document.getElementById('vOrders').style.display='block';
     document.getElementById('n_orders').classList.add('active');
-    document.getElementById('hTitle').textContent = 'Comenzile mele';
+    document.getElementById('hTitle').textContent='Comenzile mele';
     loadOrders();
-  } else if (n === 'new') {
-    document.getElementById('vNew').style.display = 'block';
+  }else if(n==='new'){
+    document.getElementById('vNew').style.display='block';
     document.getElementById('n_new').classList.add('active');
-    document.getElementById('hTitle').textContent = 'Comandă nouă';
+    document.getElementById('hTitle').textContent='Comandă nouă';
     startNew();
-  } else if (n === 'stoc') {
-    document.getElementById('vStoc').style.display = 'block';
+  }else if(n==='stoc'){
+    document.getElementById('vStoc').style.display='block';
     document.getElementById('n_stoc').classList.add('active');
-    document.getElementById('hTitle').textContent = 'Stoc disponibil';
+    document.getElementById('hTitle').textContent='Stoc disponibil';
     loadStoc();
   }
 }
 
-// ── PRODUSE ───────────────────────────────────────────────────────────────────
-async function loadProds() {
-  const { data } = await sb.from('products').select('*').eq('is_active', true).order('code');
-  prods = data || [];
-  if (!prods.length) { await addDefProds(); const { data: d2 } = await sb.from('products').select('*').eq('is_active', true).order('code'); prods = d2 || []; }
-  const sel = document.getElementById('artMod');
-  sel.innerHTML = '<option value="">Selectează model...</option>';
-  prods.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = `Art. ${p.code}`; sel.appendChild(o); });
+// ── PRODUSE ───────────────────────────────────────────────────
+async function loadProds(){
+  const{data}=await sb.from('products').select('*').eq('is_active',true).order('code');
+  prods=data||[];
+  if(!prods.length){await addDefProds();const{data:d2}=await sb.from('products').select('*').eq('is_active',true).order('code');prods=d2||[];}
   renderSz();
 }
-async function addDefProds() {
+async function addDefProds(){
   await sb.from('products').insert([
-    { code:'140',  name:'Oxford Lac',      default_box_qty:12, consum_piele_mp:0.95, piele_tip:'Lac',   is_active:true },
-    { code:'0062', name:'Derby Cioco',     default_box_qty:12, consum_piele_mp:0.85, piele_tip:'Cioco', is_active:true },
-    { code:'2580', name:'Classic',         default_box_qty:12, consum_piele_mp:0.90, piele_tip:'Lac',   is_active:true },
-    { code:'121',  name:'Oxford Standard', default_box_qty:12, consum_piele_mp:0.80, piele_tip:'Lac',   is_active:true },
-    { code:'215',  name:'Derby Box',       default_box_qty:12, consum_piele_mp:0.75, piele_tip:'Box',   is_active:true },
-    { code:'315',  name:'Casual Velur',    default_box_qty:12, consum_piele_mp:0.70, piele_tip:'Velur', is_active:true },
-    { code:'089',  name:'Sport Nappa',     default_box_qty:12, consum_piele_mp:0.85, piele_tip:'Nappa', is_active:true },
+    {code:'140',name:'Oxford Lac',default_box_qty:12,consum_piele_mp:0.95,piele_tip:'Lac',is_active:true},
+    {code:'0062',name:'Derby Cioco',default_box_qty:12,consum_piele_mp:0.85,piele_tip:'Cioco',is_active:true},
+    {code:'2580',name:'Classic',default_box_qty:12,consum_piele_mp:0.90,piele_tip:'Lac',is_active:true},
+    {code:'121',name:'Oxford Standard',default_box_qty:12,consum_piele_mp:0.80,piele_tip:'Lac',is_active:true},
+    {code:'215',name:'Derby Box',default_box_qty:12,consum_piele_mp:0.75,piele_tip:'Box',is_active:true},
+    {code:'315',name:'Casual Velur',default_box_qty:12,consum_piele_mp:0.70,piele_tip:'Velur',is_active:true},
+    {code:'089',name:'Sport Nappa',default_box_qty:12,consum_piele_mp:0.85,piele_tip:'Nappa',is_active:true},
   ]);
 }
 
-// ── COMENZI ───────────────────────────────────────────────────────────────────
-async function loadOrders() {
-  const { data: orders, error } = await sb
-    .from('orders')
-    .select(`
-      id, order_no, status, delivery_date, total_pairs, total_value, created_at, notes, plata,
-      clients ( id, name, company_name, cui, phone, delivery_address ),
-      order_lines ( id, color, piele, ponytage, total_pairs, unit_price, notes )
-    `)
-    .eq('agent_id', CU.id)
-    .order('created_at', { ascending: false });
-
-  if (error) { console.error('loadOrders error:', error); return; }
-  renderOrders(orders || []);
-  const active = (orders || []).filter(o => o.status !== 'livrat' && o.status !== 'anulat').length;
-  document.getElementById('hBadge').textContent = active + ' active';
+// ── COMENZI ───────────────────────────────────────────────────
+async function loadOrders(){
+  const{data:orders,error}=await sb.from('orders')
+    .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,
+      clients(id,name,company_name,cui,phone,delivery_address),
+      order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes)`)
+    .eq('agent_id',CU.id)
+    .order('created_at',{ascending:false});
+  if(error){console.error(error);return;}
+  renderOrders(orders||[]);
+  const active=(orders||[]).filter(o=>o.status!=='livrat'&&o.status!=='anulat').length;
+  document.getElementById('hBadge').textContent=active+' active';
 }
 
-function renderOrders(orders) {
-  const list  = document.getElementById('oList');
-  const empty = document.getElementById('oEmpty');
+function renderOrders(orders){
+  const list=document.getElementById('oList');
+  const empty=document.getElementById('oEmpty');
+  if(!orders.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
 
-  if (!orders.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-
-  // Notificare comandă finalizată
-  const gata = orders.find(o => o.status === 'finalizat');
-  const ntf = document.getElementById('ntf');
-  if (gata) {
+  const gata=orders.find(o=>o.status==='finalizat');
+  const ntf=document.getElementById('ntf');
+  if(gata){
     ntf.classList.add('show');
-    document.getElementById('ntfT').textContent = `Comanda ${gata.order_no} e gata de livrare!`;
-    document.getElementById('ntfS').textContent = (gata.clients?.company_name || gata.clients?.name || '') + ` · ${gata.total_pairs} perechi`;
-  } else { ntf.classList.remove('show'); }
+    document.getElementById('ntfT').textContent=`Comanda ${gata.order_no} e gata de livrare!`;
+    document.getElementById('ntfS').textContent=(gata.clients?.company_name||gata.clients?.name||'')+` · ${gata.total_pairs} perechi`;
+  }else{ntf.classList.remove('show');}
 
-  const SC = {
-    nou:          { l:'Comandă nouă',    c:'#2F4A63', b:'#E8EFF6' },
-    aprobat:      { l:'Aprobat',         c:'#B08D57', b:'#F6F0E5' },
-    in_productie: { l:'În producție',    c:'#B0892B', b:'#FAF3E0' },
-    finalizat:    { l:'Gata livrare',    c:'#365A43', b:'#EAF0EC' },
-    livrat:       { l:'Livrat',          c:'#9E9890', b:'#F4F1EA' },
-    anulat:       { l:'Anulat',          c:'#9C3A2B', b:'#F5EAE8' },
+  const SC={
+    nou:         {l:'Comandă nouă',  c:'#2F4A63',b:'#E8EFF6'},
+    aprobat:     {l:'Aprobat',       c:'#B08D57',b:'#F6F0E5'},
+    in_productie:{l:'În producție',  c:'#B0892B',b:'#FAF3E0'},
+    finalizat:   {l:'Gata livrare',  c:'#365A43',b:'#EAF0EC'},
+    livrat:      {l:'Livrat',        c:'#9E9890',b:'#F4F1EA'},
+    anulat:      {l:'Anulat',        c:'#9C3A2B',b:'#F5EAE8'},
   };
 
-  list.innerHTML = orders.map((o, i) => {
-    const cfg = SC[o.status] || SC.nou;
-    const cl  = o.clients?.company_name || o.clients?.name || '—';
-    const dd  = o.delivery_date ? new Date(o.delivery_date).toLocaleDateString('ro-RO') : '—';
-    const dl  = o.delivery_date ? Math.ceil((new Date(o.delivery_date) - new Date()) / 86400000) : null;
-    const dc  = dl === null ? '#9A9088' : dl < 0 ? '#9C3A2B' : dl <= 3 ? '#B0892B' : '#9A9088';
-    const dt  = dl === null ? '' : dl < 0 ? `+${Math.abs(dl)}z întârziere` : dl === 0 ? 'Azi' : `${dl}z rămase`;
+  const canEdit = (status) => ['nou','aprobat'].includes(status);
 
-    const lines = o.order_lines || [];
+  list.innerHTML=orders.map((o,i)=>{
+    const cfg=SC[o.status]||SC.nou;
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    const dl=o.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
+    const dc=dl===null?'#9A9088':dl<0?'#9C3A2B':dl<=3?'#B0892B':'#9A9088';
+    const dt=dl===null?'':dl<0?`+${Math.abs(dl)}z întârziere`:dl===0?'Azi':`${dl}z rămase`;
+    const lines=o.order_lines||[];
+    const wasEdited=o.updated_at&&o.updated_at!==o.created_at;
 
-    // PREVIEW articole — vizibil tot timpul pe card
-    const preview = lines.length
-      ? lines.slice(0, 3).map(l => `<span class="art-tag">${l.color || '—'} · ${l.total_pairs}per.</span>`).join('')
-        + (lines.length > 3 ? `<span class="art-tag">+${lines.length - 3}</span>` : '')
-      : '<span style="font-size:11px;color:#C8C0B8">Fără articole</span>';
+    // Preview articole
+    const preview=lines.length
+      ? lines.slice(0,3).map(l=>`<span class="art-tag">${l.color||'—'} · ${l.total_pairs}per.</span>`).join('')
+        +(lines.length>3?`<span class="art-tag">+${lines.length-3}</span>`:'')
+      :'<span style="font-size:11px;color:#C8C0B8">Fără articole</span>';
 
-    // DETALII expandabile
-    const det = lines.map(l => {
-      const pt  = l.ponytage ? Object.entries(l.ponytage).map(([s,q]) => `${s}×${q}`).join('  ') : '—';
-      const val = l.unit_price ? ` · ${(l.unit_price * l.total_pairs).toLocaleString('ro-RO')} RON` : '';
-      return `<div style="padding:9px 0;border-bottom:1px solid #F4F1EA">
-        <div style="font-size:14px;font-weight:700;color:#1A1814">${l.color || '—'} · ${l.total_pairs} per.${val}</div>
-        <div style="font-size:11px;color:#C8C0B8;font-family:monospace;margin-top:3px;letter-spacing:.5px">${pt}</div>
-        ${l.unit_price ? `<div style="font-size:12px;color:#9A9088;margin-top:2px">${l.unit_price} RON/per.</div>` : ''}
-        ${l.notes ? `<div style="font-size:12px;color:#B08D57;margin-top:2px;font-style:italic">${l.notes}</div>` : ''}
+    // Detalii expandabile
+    const det=lines.map(l=>{
+      // Pontaj orizontal: mărimi pe primul rând, cantități pe al doilea
+      const sizes=l.ponytage?Object.keys(l.ponytage):[];
+      const qtys=l.ponytage?Object.values(l.ponytage):[];
+      const pontajHTML=sizes.length?`
+        <div style="display:inline-flex;border:1px solid #DDD8D0;border-radius:6px;overflow:hidden;margin-top:5px">
+          <div>
+            <div style="display:flex">
+              ${sizes.map(s=>`<div style="min-width:32px;padding:4px 6px;text-align:center;font-size:10px;color:#9A9088;font-weight:600;border-right:1px solid #EDE8DF">${s}</div>`).join('')}
+            </div>
+            <div style="display:flex;border-top:1px solid #EDE8DF">
+              ${qtys.map((q,idx)=>`<div style="min-width:32px;padding:4px 6px;text-align:center;font-size:13px;font-weight:700;color:#1A1814;border-right:${idx<qtys.length-1?'1px solid #EDE8DF':'none'}">${q}</div>`).join('')}
+            </div>
+          </div>
+        </div>`:'—';
+      const val=l.unit_price?` · ${(l.unit_price*l.total_pairs).toLocaleString('ro-RO')} RON`:'';
+      return `<div style="padding:10px 0;border-bottom:1px solid #F4F1EA">
+        <div style="font-size:14px;font-weight:700;color:#1A1814">${l.color||'—'} · ${l.total_pairs} per.${val}</div>
+        ${pontajHTML}
+        ${l.unit_price?`<div style="font-size:12px;color:#9A9088;margin-top:4px">${l.unit_price} RON/per.</div>`:''}
+        ${l.notes?`<div style="font-size:12px;color:#B08D57;margin-top:3px;font-style:italic">${l.notes}</div>`:''}
       </div>`;
     }).join('');
 
-    return `<div class="ocard">
+    return `<div class="ocard${wasEdited?' edited':''}">
       <div onclick="togDet(${i})" style="cursor:pointer;user-select:none">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;min-width:0">
-            <div class="oid">${o.order_no || '—'}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <div class="oid">${o.order_no||'—'}</div>
+              ${wasEdited?'<span style="font-size:9px;color:#B0892B;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Modificat</span>':''}
+            </div>
             <div class="ocl">${cl}</div>
             <div class="art-preview">${preview}</div>
             <div class="ometa">
               <span class="spill" style="color:${cfg.c};background:${cfg.b}">${cfg.l}</span>
-              <span style="font-size:12px;color:#9A9088">${o.total_pairs || 0} per.</span>
-              <span style="font-size:11px;color:${dc};font-weight:${dl !== null && dl <= 3 ? 600 : 400}">${dt}</span>
+              <span style="font-size:12px;color:#9A9088">${o.total_pairs||0} per.</span>
+              <span style="font-size:11px;color:${dc};font-weight:${dl!==null&&dl<=3?600:400}">${dt}</span>
             </div>
             <div style="font-size:11px;color:#C8C0B8;margin-top:5px">Livrare: ${dd}</div>
           </div>
@@ -501,370 +525,389 @@ function renderOrders(orders) {
       </div>
       <div class="expand-det" id="det${i}">
         <div class="sl" style="margin-bottom:8px">Articole (${lines.length})</div>
-        ${det || '<div style="font-size:13px;color:#C8C0B8;padding:8px 0">Nicio linie înregistrată.</div>'}
-        <div style="margin-top:14px">
+        ${det||'<div style="font-size:13px;color:#C8C0B8;padding:8px 0">Nicio linie înregistrată.</div>'}
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
           <button onclick="genPDF('${o.id}')" style="width:100%;padding:11px;border-radius:7px;border:1px solid #1B1B1B;background:#1B1B1B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
             Generează fișă client
           </button>
+          ${canEdit(o.status)?`
+          <div style="display:flex;gap:8px">
+            <button onclick="openEditModal('${o.id}','${o.delivery_preset||'10z'}','${o.plata||'30 zile'}',\`${(o.notes||'').replace(/`/g,"'")}\`)" style="flex:1;padding:10px;border-radius:7px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+              Editează
+            </button>
+            <button onclick="openDelModal('${o.id}','${o.order_no||'—'}','${cl.replace(/'/g,"\\'")}',${o.status==='nou'?'true':'false'})" style="flex:1;padding:10px;border-radius:7px;border:1.5px solid #9C3A2B;background:#F5EAE8;color:#9C3A2B;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+              Șterge
+            </button>
+          </div>`:`
+          <div style="padding:8px 12px;background:#F4F1EA;border-radius:6px;font-size:12px;color:#9A9088;text-align:center">
+            Comanda e în producție — pentru modificări contactează managementul
+          </div>`}
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-function togDet(i) {
-  const d = document.getElementById('det' + i);
-  const a = document.getElementById('arr' + i);
-  const open = d.style.display === 'block';
-  d.style.display = open ? 'none' : 'block';
-  if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+function togDet(i){
+  const d=document.getElementById('det'+i);
+  const a=document.getElementById('arr'+i);
+  const open=d.style.display==='block';
+  d.style.display=open?'none':'block';
+  if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
 }
 
-// ── PDF FIȘĂ CLIENT ───────────────────────────────────────────────────────────
-async function genPDF(oid) {
-  showLov('Se generează fișa...');
-  const { data: o } = await sb.from('orders').select('*,clients(*),order_lines(*)').eq('id', oid).single();
-  hideLov();
-  if (!o) { showToast('Eroare la încărcare!'); return; }
-  const cl  = o.clients?.company_name || o.clients?.name || '—';
-  const dd  = o.delivery_date ? new Date(o.delivery_date).toLocaleDateString('ro-RO') : '—';
-  const azi = new Date().toLocaleDateString('ro-RO');
-  const tp  = o.order_lines.reduce((s,l) => s + l.total_pairs, 0);
-  const tv  = o.order_lines.reduce((s,l) => s + (l.unit_price||0) * l.total_pairs, 0);
+// ── EDITARE COMANDĂ ───────────────────────────────────────────
+function openEditModal(id,termen,plata,notes){
+  editOrderId=id;
+  document.getElementById('editModalSub').textContent='Poți modifica termenul, modalitatea de plată și observațiile.';
+  document.getElementById('editTermen').value=termen;
+  document.getElementById('editPlata').value=plata;
+  document.getElementById('editNotes').value=notes;
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEditModal(){document.getElementById('editModal').classList.remove('show');editOrderId=null;}
 
-  const html = `<html><head><meta charset="UTF-8"><style>
+async function saveEdit(){
+  if(!editOrderId)return;
+  const termen=document.getElementById('editTermen').value;
+  const plata=document.getElementById('editPlata').value;
+  const notes=document.getElementById('editNotes').value.trim();
+  const dd=calcDD(termen);
+  showLov('Salvează modificările...');
+  const{error}=await sb.from('orders').update({
+    delivery_preset:termen,
+    delivery_date:dd,
+    plata,notes,
+    updated_at:new Date().toISOString(),
+  }).eq('id',editOrderId);
+  hideLov();
+  if(error){showToast('Eroare: '+error.message);return;}
+  closeEditModal();
+  showToast('Comandă modificată cu succes!');
+  await loadOrders();
+}
+
+// ── ȘTERGERE COMANDĂ ──────────────────────────────────────────
+function openDelModal(id,orderNo,client,isNou){
+  delOrderId=id;
+  document.getElementById('delModalSub').textContent=`Comanda ${orderNo} · ${client}`;
+  document.getElementById('delModal').classList.add('show');
+}
+function closeDelModal(){document.getElementById('delModal').classList.remove('show');delOrderId=null;}
+
+async function confirmDelete(){
+  if(!delOrderId)return;
+  showLov('Se șterge comanda...');
+  // Șterge mai întâi liniile
+  await sb.from('order_lines').delete().eq('order_id',delOrderId);
+  // Șterge comanda
+  const{error}=await sb.from('orders').delete().eq('id',delOrderId);
+  hideLov();
+  if(error){showToast('Eroare la ștergere: '+error.message);return;}
+  closeDelModal();
+  showToast('Comanda a fost ștearsă.');
+  await loadOrders();
+}
+
+// ── PDF FIȘĂ CLIENT ───────────────────────────────────────────
+async function genPDF(oid){
+  showLov('Se generează fișa...');
+  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*)').eq('id',oid).single();
+  hideLov();
+  if(!o){showToast('Eroare!');return;}
+  const cl=o.clients?.company_name||o.clients?.name||'—';
+  const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+  const azi=new Date().toLocaleDateString('ro-RO');
+  const tp=o.order_lines.reduce((s,l)=>s+l.total_pairs,0);
+  const tv=o.order_lines.reduce((s,l)=>s+(l.unit_price||0)*l.total_pairs,0);
+
+  // Construiește tabelul cu pontaj orizontal per articol
+  const artRows=o.order_lines.map((l,i)=>{
+    const entries=l.ponytage?Object.entries(l.ponytage):[];
+    const sizes=entries.map(([s])=>s);
+    const qtys=entries.map(([,q])=>q);
+    const cellStyle='border:1px solid #ddd;padding:6px 10px;text-align:center;';
+    const sizeRow=sizes.map(s=>`<td style="${cellStyle}font-size:11px;color:#888;font-weight:700">${s}</td>`).join('');
+    const qtyRow=qtys.map(q=>`<td style="${cellStyle}font-size:15px;font-weight:700;color:#1A1814">${q}</td>`).join('');
+    const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
+    return `
+      <tr>
+        <td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top">
+          <div style="font-weight:700;font-size:14px">${l.color||'—'}</div>
+          ${l.unit_price?`<div style="font-size:12px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}
+          ${l.notes?`<div style="font-size:11px;color:#B08D57;margin-top:2px">${l.notes}</div>`:''}
+        </td>
+        <td style="border:1px solid #ddd;padding:6px">
+          <table style="border-collapse:collapse;width:100%">
+            <tr>${sizeRow}</tr>
+            <tr>${qtyRow}</tr>
+          </table>
+        </td>
+        <td style="border:1px solid #ddd;padding:10px 12px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td>
+        <td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:14px">${val}</td>
+      </tr>`;
+  }).join('');
+
+  const html=`<html><head><meta charset="UTF-8"><style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:24px;max-width:620px;margin:0 auto}
+    body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:24px;max-width:680px;margin:0 auto}
     h1{font-size:20px;font-weight:700;letter-spacing:2px;margin-bottom:3px}
     .sub{font-size:11px;color:#888;margin-bottom:22px;letter-spacing:.5px}
     .row{display:flex;gap:32px;margin-bottom:22px}.col{flex:1}
     .lbl{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px}
     .val{font-size:14px;font-weight:700}
     .meta{font-size:11px;color:#888;margin-top:3px}
-    table{width:100%;border-collapse:collapse;margin:18px 0}
-    th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 8px;border-bottom:2px solid #1A1814;text-align:left;font-weight:700}
-    td{padding:10px 8px;border-bottom:1px solid #eee;font-size:13px;vertical-align:top}
-    .ttr{background:#f5f2ee;font-weight:700}
-    .pt{font-size:11px;color:#aaa;font-family:monospace;line-height:1.8}
+    table.main{width:100%;border-collapse:collapse;margin:18px 0}
+    table.main th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ddd;text-align:left;background:#f9f9f9}
     .footer{margin-top:48px;display:flex;gap:60px}
-    .sig{border-top:1px solid #1A1814;padding-top:8px;font-size:11px;color:#888;width:220px;min-height:50px}
+    .sig{border-top:2px solid #1A1814;padding-top:8px;font-size:11px;color:#888;width:220px;min-height:50px}
     @media print{.noprint{display:none}}
   </style></head><body>
   <h1>SILESCO</h1>
-  <div class="sub">Fișă de Comandă · ${o.order_no || '—'} · Data: ${azi}</div>
+  <div class="sub">Fișă de Comandă · ${o.order_no||'—'} · Data: ${azi}</div>
   <div class="row">
     <div class="col">
-      <div class="lbl">Client</div>
-      <div class="val">${cl}</div>
-      ${o.clients?.cui ? `<div class="meta">CUI: ${o.clients.cui}</div>` : ''}
-      ${o.clients?.delivery_address ? `<div class="meta">Livrare: ${o.clients.delivery_address}</div>` : ''}
-      ${o.clients?.phone ? `<div class="meta">Tel: ${o.clients.phone}</div>` : ''}
+      <div class="lbl">Client</div><div class="val">${cl}</div>
+      ${o.clients?.cui?`<div class="meta">CUI: ${o.clients.cui}</div>`:''}
+      ${o.clients?.delivery_address?`<div class="meta">Livrare: ${o.clients.delivery_address}</div>`:''}
+      ${o.clients?.phone?`<div class="meta">Tel: ${o.clients.phone}</div>`:''}
     </div>
     <div class="col">
-      <div class="lbl">Termen livrare</div>
-      <div class="val">${dd}</div>
-      <div class="meta">Plată: ${o.plata || '—'}</div>
-      <div class="meta">Agent: ${CP?.full_name || '—'}</div>
+      <div class="lbl">Termen livrare</div><div class="val">${dd}</div>
+      <div class="meta">Plată: ${o.plata||'—'}</div>
+      <div class="meta">Agent: ${CP?.full_name||'—'}</div>
     </div>
   </div>
-  <table>
+  <table class="main">
     <thead>
       <tr>
-        <th>#</th>
-        <th>Culoare / Piele</th>
-        <th>Preț/per.</th>
+        <th style="width:30%">Culoare / Piele</th>
         <th>Pontaj pe mărimi</th>
-        <th>Total</th>
-        <th>Valoare</th>
+        <th style="width:60px;text-align:center">Total</th>
+        <th style="width:100px;text-align:right">Valoare</th>
       </tr>
     </thead>
-    <tbody>
-      ${o.order_lines.map((l, i) => {
-        // Pontaj formatat: fiecare mărime pe rând propriu
-        const pontajRows = l.ponytage
-          ? Object.entries(l.ponytage).map(([s,q]) =>
-              `<div style="display:flex;gap:8px"><span style="width:24px;color:#888">${s}</span><strong>${q}</strong></div>`
-            ).join('')
-          : '—';
-        const val = l.unit_price ? (l.unit_price * l.total_pairs).toLocaleString('ro-RO') + ' RON' : '—';
-        return `<tr>
-          <td>${i+1}</td>
-          <td><strong>${l.color || '—'}</strong>${l.notes ? `<div style="font-size:11px;color:#B08D57;margin-top:3px">${l.notes}</div>` : ''}</td>
-          <td>${l.unit_price ? l.unit_price + ' RON' : '—'}</td>
-          <td class="pt">${pontajRows}</td>
-          <td><strong>${l.total_pairs}</strong></td>
-          <td>${val}</td>
-        </tr>`;
-      }).join('')}
-      <tr class="ttr">
-        <td colspan="4">TOTAL</td>
-        <td><strong>${tp}</strong></td>
-        <td><strong>${tv.toLocaleString('ro-RO')} RON</strong></td>
+    <tbody>${artRows}</tbody>
+    <tfoot>
+      <tr style="background:#f5f2ee">
+        <td colspan="2" style="border:1px solid #ddd;padding:10px 12px;font-weight:700">TOTAL</td>
+        <td style="border:1px solid #ddd;padding:10px 12px;text-align:center;font-weight:700;font-size:16px">${tp}</td>
+        <td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700">${tv.toLocaleString('ro-RO')} RON</td>
       </tr>
-    </tbody>
+    </tfoot>
   </table>
-  ${o.notes ? `<div style="padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;border-radius:0 6px 6px 0;font-size:13px;margin-bottom:16px"><strong>Observații:</strong> ${o.notes}</div>` : ''}
-  <div style="font-size:11px;color:#888;margin-bottom:24px;line-height:1.6">Prin semnarea prezentei fișe, clientul confirmă comanda și condițiile de livrare agreate cu SILESCO SRL.</div>
+  ${o.notes?`<div style="padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;font-size:12px;margin-bottom:16px"><strong>Observații:</strong> ${o.notes}</div>`:''}
+  <div style="font-size:11px;color:#888;margin-bottom:28px;line-height:1.6">Prin semnarea prezentei fișe, clientul confirmă comanda și condițiile de livrare agreate cu SILESCO SRL.</div>
   <div class="footer">
     <div class="sig">Persoana care plasează comanda</div>
-    <div class="sig">SILESCO SRL · ${CP?.full_name || '—'}</div>
+    <div class="sig">SILESCO SRL · ${CP?.full_name||'—'}</div>
   </div>
   <br><button class="noprint" onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#1B1B1B;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">Printează / Salvează PDF</button>
   </body></html>`;
 
-  const w = window.open('', '_blank', 'width=720,height:960');
-  w.document.write(html);
-  w.document.close();
+  const w=window.open('','_blank','width=720,height=960');
+  w.document.write(html);w.document.close();
 }
 
-// ── NEW ORDER ─────────────────────────────────────────────────────────────────
-function startNew() {
-  selClient = null; curTermen = '10z'; arts = []; SZ.forEach(s => szV[s] = 0);
-  ['cSearch','artCol','artPr','artObs','ordObs'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
-  document.getElementById('cRes').innerHTML = '';
-  document.getElementById('cSel').style.display = 'none';
-  document.getElementById('ncForm').style.display = 'none';
-  document.getElementById('ncBtn').style.display = 'none';
-  document.getElementById('s0next').disabled = true;
+// ── NEW ORDER ─────────────────────────────────────────────────
+function startNew(){
+  selClient=null;curTermen='10z';arts=[];SZ.forEach(s=>szV[s]=0);
+  ['cSearch','artCol','artPr','artObs','ordObs','artModInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('cRes').innerHTML='';
+  document.getElementById('cSel').style.display='none';
+  document.getElementById('ncForm').style.display='none';
+  document.getElementById('ncBtn').style.display='none';
+  document.getElementById('s0next').disabled=true;
   document.getElementById('succSc').classList.remove('show');
-  const am = document.getElementById('artMod'); if (am) am.value = '';
-  renderSz(); goStep(0);
+  const am=document.getElementById('artMod');if(am)am.value='';
+  const amd=document.getElementById('artModDrop');if(amd)amd.style.display='none';
+  renderSz();goStep(0);
 }
 
-function goStep(n) {
-  for (let i = 0; i <= 3; i++) {
-    document.getElementById('s'+i).style.display = i === n ? 'block' : 'none';
-    document.getElementById('sb'+i).classList.toggle('active', i <= n);
-    document.getElementById('sn'+i).classList.toggle('active', i <= n);
+function goStep(n){
+  for(let i=0;i<=3;i++){
+    document.getElementById('s'+i).style.display=i===n?'block':'none';
+    document.getElementById('sb'+i).classList.toggle('active',i<=n);
+    document.getElementById('sn'+i).classList.toggle('active',i<=n);
   }
   document.getElementById('succSc').classList.remove('show');
-  if (n === 2) renderArtList();
-  if (n === 3) renderSum();
+  if(n===2)renderArtList();
+  if(n===3)renderSum();
 }
 
-// ── CLIENT ────────────────────────────────────────────────────────────────────
-let sTimer = null;
-async function searchClients(q) {
+// ── CLIENT ────────────────────────────────────────────────────
+let sTimer=null;
+async function searchClients(q){
   clearTimeout(sTimer);
-  const res = document.getElementById('cRes');
-  const btn = document.getElementById('ncBtn');
-  if (!q.trim()) { res.innerHTML = ''; btn.style.display = 'none'; return; }
-  sTimer = setTimeout(async () => {
-    const { data } = await sb.from('clients')
-      .select('id,name,company_name,phone,cui,delivery_address')
-      .or(`name.ilike.%${q}%,company_name.ilike.%${q}%`)
-      .limit(6);
-    if (!data?.length) {
-      res.innerHTML = `<div style="font-size:13px;color:#9A9088;padding:8px 0">Niciun client găsit.</div>`;
-      btn.style.display = 'block'; return;
-    }
-    btn.style.display = 'block';
-    res.innerHTML = data.map(c => `
-      <div class="acrd" onclick='selC(${JSON.stringify(c)})'>
-        <div>
-          <div style="font-size:15px;font-weight:700">${c.company_name || c.name}</div>
-          <div style="font-size:12px;color:#9A9088;margin-top:2px">${c.phone || ''} ${c.cui ? '· CUI: '+c.cui : ''}</div>
-        </div>
-        <span style="color:#B08D57;font-size:18px">›</span>
-      </div>`).join('');
-  }, 300);
+  const res=document.getElementById('cRes');
+  const btn=document.getElementById('ncBtn');
+  if(!q.trim()){res.innerHTML='';btn.style.display='none';return;}
+  sTimer=setTimeout(async()=>{
+    const{data}=await sb.from('clients').select('id,name,company_name,phone,cui,delivery_address').or(`name.ilike.%${q}%,company_name.ilike.%${q}%`).limit(6);
+    if(!data?.length){res.innerHTML=`<div style="font-size:13px;color:#9A9088;padding:8px 0">Niciun client găsit.</div>`;btn.style.display='block';return;}
+    btn.style.display='block';
+    res.innerHTML=data.map(c=>`<div class="acrd" onclick='selC(${JSON.stringify(c)})'><div><div style="font-size:15px;font-weight:700">${c.company_name||c.name}</div><div style="font-size:12px;color:#9A9088;margin-top:2px">${c.phone||''} ${c.cui?'· CUI: '+c.cui:''}</div></div><span style="color:#B08D57;font-size:18px">›</span></div>`).join('');
+  },300);
 }
 
-function selC(c) {
-  selClient = c;
-  document.getElementById('cRes').innerHTML = '';
-  document.getElementById('cSearch').value = '';
-  document.getElementById('ncBtn').style.display = 'none';
-  document.getElementById('ncForm').style.display = 'none';
-  document.getElementById('cSel').style.display = 'block';
-  document.getElementById('cSelN').textContent = c.company_name || c.name;
-  document.getElementById('cSelM').textContent = [c.phone, c.cui ? 'CUI: '+c.cui : '', c.delivery_address].filter(Boolean).join(' · ');
-  document.getElementById('s0next').disabled = false;
+function selC(c){
+  selClient=c;
+  document.getElementById('cRes').innerHTML='';document.getElementById('cSearch').value='';
+  document.getElementById('ncBtn').style.display='none';document.getElementById('ncForm').style.display='none';
+  document.getElementById('cSel').style.display='block';
+  document.getElementById('cSelN').textContent=c.company_name||c.name;
+  document.getElementById('cSelM').textContent=[c.phone,c.cui?'CUI: '+c.cui:'',c.delivery_address].filter(Boolean).join(' · ');
+  document.getElementById('s0next').disabled=false;
 }
+function clearClient(){selClient=null;document.getElementById('cSel').style.display='none';document.getElementById('s0next').disabled=true;}
+function toggleNCF(s){document.getElementById('ncForm').style.display=s?'block':'none';document.getElementById('ncBtn').style.display=s?'none':'block';}
 
-function clearClient() { selClient = null; document.getElementById('cSel').style.display = 'none'; document.getElementById('s0next').disabled = true; }
-function toggleNCF(s) { document.getElementById('ncForm').style.display = s ? 'block' : 'none'; document.getElementById('ncBtn').style.display = s ? 'none' : 'block'; }
-
-async function saveNewClient() {
-  const co = document.getElementById('nc_co').value.trim();
-  if (!co) { showToast('Completează numele companiei!'); return; }
+async function saveNewClient(){
+  const co=document.getElementById('nc_co').value.trim();
+  if(!co){showToast('Completează numele companiei!');return;}
   showLov('Salvează client...');
-  const { data, error } = await sb.from('clients').insert({
-    company_name: co,
-    name: document.getElementById('nc_nm').value.trim() || co,
-    cui: document.getElementById('nc_cui').value.trim(),
-    phone: document.getElementById('nc_ph').value.trim(),
-    delivery_address: document.getElementById('nc_ad').value.trim(),
-    agent_id: CU.id,
+  const{data,error}=await sb.from('clients').insert({
+    company_name:co,name:document.getElementById('nc_nm').value.trim()||co,
+    cui:document.getElementById('nc_cui').value.trim(),phone:document.getElementById('nc_ph').value.trim(),
+    delivery_address:document.getElementById('nc_ad').value.trim(),agent_id:CU.id,
   }).select().single();
   hideLov();
-  if (error) { showToast('Eroare: ' + error.message); return; }
-  selC(data); toggleNCF(false); showToast('Client salvat!');
+  if(error){showToast('Eroare: '+error.message);return;}
+  selC(data);toggleNCF(false);showToast('Client salvat!');
 }
 
-// ── TERMEN ────────────────────────────────────────────────────────────────────
-function selTermen(v, el) {
-  curTermen = v;
-  document.querySelectorAll('.tc').forEach(c => c.classList.remove('sel'));
-  el.classList.add('sel');
-}
-function calcDD(t) {
-  const d = new Date();
-  const z = { '5z':5, '10z':10, '15z':15, '30z':30, 'prelungit':90 };
-  d.setDate(d.getDate() + (z[t] || 30));
-  return d.toISOString().split('T')[0];
-}
+// ── TERMEN ────────────────────────────────────────────────────
+function selTermen(v,el){curTermen=v;document.querySelectorAll('.tc').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+function calcDD(t){const d=new Date();const z={'5z':5,'10z':10,'15z':15,'30z':30,'prelungit':90};d.setDate(d.getDate()+(z[t]||30));return d.toISOString().split('T')[0];}
 
-// ── MĂRIMI ────────────────────────────────────────────────────────────────────
-function resetSz() { SZ.forEach(s => szV[s] = 0); renderSz(); }
-function setStd() { szV = { '39':1,'40':2,'41':3,'42':3,'43':2,'44':1 }; renderSz(); showToast('Pontaj standard aplicat!'); }
-function renderSz() {
-  const g = document.getElementById('szGrid'); if (!g) return;
-  g.innerHTML = SZ.map(s => `
-    <div class="szc">
-      <div class="snr">Nr. ${s}</div>
-      <div class="sct">
-        <button class="sbtn" onclick="adjSz('${s}',-1)">−</button>
-        <span class="sv" id="sv_${s}">${szV[s]}</span>
-        <button class="sbtn" onclick="adjSz('${s}',1)">+</button>
-      </div>
+// ── AUTOSUGGESTION MODEL ──────────────────────────────────────
+function filterModels(q){
+  const drop=document.getElementById('artModDrop');
+  const hidden=document.getElementById('artMod');
+  const filtered=q.trim()
+    ? prods.filter(p=>p.code.toLowerCase().includes(q.toLowerCase())||p.name.toLowerCase().includes(q.toLowerCase()))
+    : prods;
+  if(!filtered.length){drop.style.display='none';return;}
+  drop.style.display='block';
+  drop.innerHTML=filtered.map(p=>`
+    <div onclick="selectModel('${p.id}','Art. ${p.code} — ${p.name}')"
+      style="padding:11px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #F4F1EA;transition:background .1s"
+      onmouseover="this.style.background='#F6F0E5'" onmouseout="this.style.background='#fff'">
+      <span style="font-weight:700;color:#1A1814">Art. ${p.code}</span>
+      <span style="color:#9A9088;font-size:12px;margin-left:8px">${p.name}</span>
     </div>`).join('');
 }
-function adjSz(s, d) { szV[s] = Math.max(0, szV[s] + d); document.getElementById('sv_'+s).textContent = szV[s]; }
+function selectModel(id,label){
+  document.getElementById('artMod').value=id;
+  document.getElementById('artModInput').value=label;
+  document.getElementById('artModDrop').style.display='none';
+  resetSz();
+}
+// Închide dropdown când dai click în altă parte
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#artModDrop')&&e.target.id!=='artModInput'){
+    const d=document.getElementById('artModDrop');
+    if(d)d.style.display='none';
+  }
+});
+function resetSz(){SZ.forEach(s=>szV[s]=0);renderSz();}
+function setStd(){szV={'39':1,'40':2,'41':3,'42':3,'43':2,'44':1};renderSz();showToast('Pontaj standard aplicat!');}
+function renderSz(){
+  const g=document.getElementById('szGrid');if(!g)return;
+  g.innerHTML=SZ.map(s=>`<div class="szc"><div class="snr">Nr. ${s}</div><div class="sct"><button class="sbtn" onclick="adjSz('${s}',-1)">−</button><span class="sv" id="sv_${s}">${szV[s]}</span><button class="sbtn" onclick="adjSz('${s}',1)">+</button></div></div>`).join('');
+}
+function adjSz(s,d){szV[s]=Math.max(0,szV[s]+d);document.getElementById('sv_'+s).textContent=szV[s];}
 
-// ── ARTICOLE ──────────────────────────────────────────────────────────────────
-function addArt() {
-  const mid  = document.getElementById('artMod').value;
-  const col  = document.getElementById('artCol').value.trim();
-  const pr   = parseFloat(document.getElementById('artPr').value) || 0;
-  const obs  = document.getElementById('artObs').value.trim();
-  const prod = prods.find(p => p.id === mid);
-  if (!mid || !col) { showToast('Selectează modelul și culoarea!'); return; }
-  const pt = {}; let tot = 0;
-  SZ.forEach(s => { if (szV[s] > 0) { pt[s] = szV[s]; tot += szV[s]; } });
-  if (!tot) { showToast('Adaugă cel puțin o pereche!'); return; }
-  arts.push({ product_id:mid, code:prod?.code||'—', color:col, ponytage:pt, total_pairs:tot, unit_price:pr, notes:obs });
-  document.getElementById('artCol').value = '';
-  document.getElementById('artPr').value = '';
-  document.getElementById('artObs').value = '';
-  document.getElementById('artMod').value = '';
-  resetSz(); renderArtList();
-  document.getElementById('s2next').disabled = arts.length === 0;
+// ── ARTICOLE ──────────────────────────────────────────────────
+function addArt(){
+  const mid=document.getElementById('artMod').value;
+  const col=document.getElementById('artCol').value.trim();
+  const pr=parseFloat(document.getElementById('artPr').value)||0;
+  const obs=document.getElementById('artObs').value.trim();
+  const prod=prods.find(p=>p.id===mid);
+  if(!mid||!col){showToast('Selectează modelul și culoarea!');return;}
+  const pt={};let tot=0;SZ.forEach(s=>{if(szV[s]>0){pt[s]=szV[s];tot+=szV[s];}});
+  if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
+  arts.push({product_id:mid,code:prod?.code||'—',color:col,ponytage:pt,total_pairs:tot,unit_price:pr,notes:obs});
+  document.getElementById('artCol').value='';document.getElementById('artPr').value='';document.getElementById('artObs').value='';
+  document.getElementById('artMod').value='';document.getElementById('artModInput').value='';
+  document.getElementById('artModDrop').style.display='none';
+  resetSz();renderArtList();document.getElementById('s2next').disabled=arts.length===0;
   showToast(`Art. ${prod?.code||'—'} adăugat!`);
 }
-
-function renderArtList() {
-  document.getElementById('artCnt').textContent = `Articole: ${arts.length}`;
-  document.getElementById('s2next').disabled = arts.length === 0;
-  document.getElementById('artList').innerHTML = arts.map((a, i) => `
+function renderArtList(){
+  document.getElementById('artCnt').textContent=`Articole: ${arts.length}`;
+  document.getElementById('s2next').disabled=arts.length===0;
+  document.getElementById('artList').innerHTML=arts.map((a,i)=>`
     <div class="card al" style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
           <div style="font-size:15px;font-weight:700">Art. ${a.code} · ${a.color}</div>
-          <div style="font-size:12px;color:#9A9088;margin-top:2px">${a.total_pairs} per. ${a.unit_price ? '· '+a.unit_price+' RON/per.' : ''}</div>
+          <div style="font-size:12px;color:#9A9088;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
           <div style="font-size:11px;color:#C8C0B8;margin-top:3px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>`${s}×${q}`).join('  ')}</div>
         </div>
         <button onclick="remArt(${i})" style="background:none;border:none;color:#C8C0B8;font-size:20px;cursor:pointer;padding:0 4px;flex-shrink:0">×</button>
       </div>
     </div>`).join('');
 }
-function remArt(i) { arts.splice(i, 1); renderArtList(); }
+function remArt(i){arts.splice(i,1);renderArtList();}
 
-// ── SUMAR ─────────────────────────────────────────────────────────────────────
-function renderSum() {
-  const tl = { '5z':'5 zile','10z':'10 zile','15z':'15 zile','30z':'30 zile','prelungit':'Prelungit' };
-  document.getElementById('sumCl').textContent = selClient?.company_name || selClient?.name || '—';
-  document.getElementById('sumT').textContent = `Termen: ${tl[curTermen]} · Plată: ${document.getElementById('plata').value}`;
-  const tp = arts.reduce((s,a) => s + a.total_pairs, 0);
-  const tv = arts.reduce((s,a) => s + (a.unit_price||0) * a.total_pairs, 0);
-  document.getElementById('sumP').textContent = tp + ' per.';
-  document.getElementById('sumV').textContent = tv.toLocaleString('ro-RO') + ' RON';
-  document.getElementById('sumArt').innerHTML = arts.map(a => `
+// ── SUMAR ─────────────────────────────────────────────────────
+function renderSum(){
+  const tl={'5z':'5 zile','10z':'10 zile','15z':'15 zile','30z':'30 zile','prelungit':'Prelungit'};
+  document.getElementById('sumCl').textContent=selClient?.company_name||selClient?.name||'—';
+  document.getElementById('sumT').textContent=`Termen: ${tl[curTermen]} · Plată: ${document.getElementById('plata').value}`;
+  const tp=arts.reduce((s,a)=>s+a.total_pairs,0);
+  const tv=arts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
+  document.getElementById('sumP').textContent=tp+' per.';
+  document.getElementById('sumV').textContent=tv.toLocaleString('ro-RO')+' RON';
+  document.getElementById('sumArt').innerHTML=arts.map(a=>`
     <div class="card" style="margin-bottom:6px;padding:12px 14px">
       <div style="font-size:14px;font-weight:700">Art. ${a.code} · ${a.color}</div>
-      <div style="font-size:12px;color:#9A9088;margin-top:2px">${a.total_pairs} per. ${a.unit_price ? '· '+a.unit_price+' RON/per.' : ''}</div>
+      <div style="font-size:12px;color:#9A9088;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
       <div style="font-size:11px;color:#C8C0B8;margin-top:3px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>`${s}×${q}`).join('  ')}</div>
     </div>`).join('');
 }
 
-// ── SAVE ORDER ────────────────────────────────────────────────────────────────
-async function saveOrder() {
-  document.getElementById('saveBtn').disabled = true;
+// ── SAVE ORDER ────────────────────────────────────────────────
+async function saveOrder(){
+  document.getElementById('saveBtn').disabled=true;
   showLov('Salvează comanda...');
-  const tp = arts.reduce((s,a) => s + a.total_pairs, 0);
-  const tv = arts.reduce((s,a) => s + (a.unit_price||0) * a.total_pairs, 0);
-
-  const { data: ord, error: ordErr } = await sb.from('orders').insert({
-    client_id:       selClient.id,
-    agent_id:        CU.id,
-    status:          'nou',
-    delivery_date:   calcDD(curTermen),
-    delivery_preset: curTermen,
-    plata:           document.getElementById('plata').value,
-    total_pairs:     tp,
-    total_value:     tv,
-    notes:           document.getElementById('ordObs').value.trim(),
+  const tp=arts.reduce((s,a)=>s+a.total_pairs,0);
+  const tv=arts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
+  const{data:ord,error:ordErr}=await sb.from('orders').insert({
+    client_id:selClient.id,agent_id:CU.id,status:'nou',
+    delivery_date:calcDD(curTermen),delivery_preset:curTermen,
+    plata:document.getElementById('plata').value,
+    total_pairs:tp,total_value:tv,
+    notes:document.getElementById('ordObs').value.trim(),
   }).select().single();
-
-  if (ordErr) {
-    hideLov();
-    showToast('Eroare comandă: ' + ordErr.message);
-    document.getElementById('saveBtn').disabled = false;
-    return;
-  }
-
-  // Inserează liniile comenzii
-  const { error: linesErr } = await sb.from('order_lines').insert(
-    arts.map(a => ({
-      order_id:    ord.id,
-      product_id:  a.product_id,
-      color:       a.color,
-      ponytage:    a.ponytage,
-      total_pairs: a.total_pairs,
-      unit_price:  a.unit_price || null,
-      notes:       a.notes || null,
-    }))
+  if(ordErr){hideLov();showToast('Eroare: '+ordErr.message);document.getElementById('saveBtn').disabled=false;return;}
+  const{error:lErr}=await sb.from('order_lines').insert(
+    arts.map(a=>({order_id:ord.id,product_id:a.product_id,color:a.color,ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null,notes:a.notes||null}))
   );
-
-  if (linesErr) console.error('Lines error:', linesErr);
-
+  if(lErr)console.error('Lines error:',lErr);
   hideLov();
-  lastSavedOrderId = ord.id;
-
-  // Buton PDF pe ecranul de succes
-  const pdfBtn = document.getElementById('succPDF');
-  pdfBtn.onclick = () => genPDF(ord.id);
-
-  // Arată success
-  for (let i = 0; i <= 3; i++) document.getElementById('s'+i).style.display = 'none';
+  document.getElementById('succPDF').onclick=()=>genPDF(ord.id);
+  for(let i=0;i<=3;i++)document.getElementById('s'+i).style.display='none';
   document.getElementById('succSc').classList.add('show');
-  document.getElementById('succNo').textContent = ord.order_no || ord.id.slice(0,8);
-  document.getElementById('saveBtn').disabled = false;
+  document.getElementById('succNo').textContent=ord.order_no||ord.id.slice(0,8);
+  document.getElementById('saveBtn').disabled=false;
 }
 
-// ── STOC ──────────────────────────────────────────────────────────────────────
-async function loadStoc() {
-  const { data: bx } = await sb.from('stock_operational').select('*,products(code,name)').eq('stock_type','bax_gata');
-  const { data: ft } = await sb.from('stock_operational').select('*,products(code,name)').eq('stock_type','fete');
-  const ri = (item, c) => `
-    <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="font-size:15px;font-weight:700">Art. ${item.products?.code||'—'} · ${item.color||''}</div>
-        <div style="font-size:12px;color:#9A9088">${item.products?.name||''}</div>
-      </div>
-      <div style="text-align:center">
-        <div style="font-size:26px;font-weight:700;color:${c};font-family:'Georgia',serif">${item.qty_available}</div>
-        <div style="font-size:10px;color:#9A9088">${item.stock_type==='bax_gata'?'baxuri':'per.'}</div>
-      </div>
-    </div>`;
-  document.getElementById('stBax').innerHTML  = bx?.length  ? bx.map(b => ri(b,'#365A43')).join('') : '<div class="emp" style="padding:20px 0"><div class="ei">📦</div><div class="et">Niciun bax în stoc</div></div>';
-  document.getElementById('stFete').innerHTML = ft?.length  ? ft.map(f => ri(f,'#2F4A63')).join('') : '<div class="emp" style="padding:20px 0"><div class="ei">🧶</div><div class="et">Nicio FEȚE disponibilă</div></div>';
+// ── STOC ──────────────────────────────────────────────────────
+async function loadStoc(){
+  const{data:bx}=await sb.from('stock_operational').select('*,products(code,name)').eq('stock_type','bax_gata');
+  const{data:ft}=await sb.from('stock_operational').select('*,products(code,name)').eq('stock_type','fete');
+  const ri=(item,c)=>`<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:700">Art. ${item.products?.code||'—'} · ${item.color||''}</div></div><div style="text-align:center"><div style="font-size:26px;font-weight:700;color:${c};font-family:'Georgia',serif">${item.qty_available}</div><div style="font-size:10px;color:#9A9088">${item.stock_type==='bax_gata'?'baxuri':'per.'}</div></div></div>`;
+  document.getElementById('stBax').innerHTML=bx?.length?bx.map(b=>ri(b,'#365A43')).join(''):'<div class="emp" style="padding:20px 0"><div class="ei">📦</div><div class="et">Niciun bax în stoc</div></div>';
+  document.getElementById('stFete').innerHTML=ft?.length?ft.map(f=>ri(f,'#2F4A63')).join(''):'<div class="emp" style="padding:20px 0"><div class="ei">🧶</div><div class="et">Nicio FEȚE disponibilă</div></div>';
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function showLov(t) { document.getElementById('lt').textContent = t || 'Se încarcă...'; document.getElementById('lov').classList.add('show'); }
-function hideLov() { document.getElementById('lov').classList.remove('show'); }
-function showToast(m) { const e = document.getElementById('toast'); e.textContent = m; e.classList.add('show'); setTimeout(() => e.classList.remove('show'), 2500); }
+// ── UTILS ─────────────────────────────────────────────────────
+function showLov(t){document.getElementById('lt').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
+function hideLov(){document.getElementById('lov').classList.remove('show');}
+function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
 </script>
 </body>
 </html>
