@@ -271,11 +271,11 @@ async function loadLots(){
   showLov('Se încarcă loturile...');
   const{data,error}=await sb.from('production_lots')
     .select(`id,lot_no,stage,qty_planned,qty_done,has_issue,issue_notes,started_at,completed_at,created_at,
-      orders(order_no,clients(name,company_name)),
+      orders(id,order_no,clients(name,company_name)),
       products(code,name),
       order_lines(ponytage,color),
       talpi(name)`)
-    .in('stage',['la_croit','fete_gata_cusut','nou'])
+    .in('stage',['nou','la_croit','fete_gata_cusut'])
     .order('created_at',{ascending:true});
 
   // Loturi finalizate azi pentru istoric
