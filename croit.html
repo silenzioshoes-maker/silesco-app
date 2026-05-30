@@ -10,114 +10,126 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1B1B1B}
 
-/* ── HEADER negru luxury ── */
 .hdr{background:#111111;padding:18px 20px 16px}
-.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
-.hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:4px}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.hdr-brand{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:5px}
 .hdr-name{font-family:'Playfair Display',serif;font-size:22px;color:#fff;font-weight:700;line-height:1}
-.hdr-right{text-align:right}
-.hdr-stat{font-family:'Playfair Display',serif;font-size:26px;color:#B08D57;font-weight:700;line-height:1}
-.hdr-stat-label{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.hdr-role{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
+.hdr-stat{font-family:'Playfair Display',serif;font-size:26px;color:#B08D57;font-weight:700;line-height:1;text-align:right}
+.hdr-stat-label{font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:right}
 
-/* Lot tabs */
 .lot-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
-.lot-tab{flex-shrink:0;padding:8px 14px;border-radius:7px;border:1.5px solid rgba(255,255,255,.12);background:transparent;cursor:pointer;font-family:'Inter',sans-serif;text-align:left;transition:all .15s}
-.lot-tab.active{border-color:#B08D57;background:rgba(176,141,87,.15)}
-.lot-tab-no{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);font-family:'Courier New',monospace;margin-bottom:2px}
+.lot-tab{flex-shrink:0;padding:9px 14px;border-radius:7px;border:1.5px solid rgba(255,255,255,.1);background:transparent;cursor:pointer;font-family:'Inter',sans-serif;text-align:left;transition:all .15s;min-width:80px}
+.lot-tab.active{border-color:#B08D57;background:rgba(176,141,87,.18)}
+.lot-tab-no{font-size:11px;font-weight:700;color:rgba(255,255,255,.45);font-family:'Courier New',monospace;margin-bottom:3px}
 .lot-tab.active .lot-tab-no{color:#B08D57}
-.lot-tab-st{font-size:10px;color:rgba(255,255,255,.25)}
-.lot-tab.active .lot-tab-st{color:rgba(255,255,255,.5)}
+.lot-tab-st{font-size:10px;color:rgba(255,255,255,.25);font-weight:500}
+.lot-tab.active .lot-tab-st{color:rgba(255,255,255,.6)}
+.lot-tab.done-tab{border-color:rgba(54,90,67,.4);background:rgba(54,90,67,.15)}
+.lot-tab.done-tab .lot-tab-no{color:#6BCF8E}
+.lot-tab.done-tab .lot-tab-st{color:rgba(107,207,142,.7)}
 
-/* ── CONTENT ── */
 .wrap{padding:14px 16px 100px}
+.card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.sec-label{font-size:9px;font-weight:700;color:#6E6A64;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
 
-/* ── CARDS ── */
-.card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:16px;margin-bottom:10px}
-.sec-label{font-size:9px;font-weight:700;color:#9E9890;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+/* LOT INFO — contrast crescut */
+.lot-client{font-family:'Playfair Display',serif;font-size:22px;color:#111111;font-weight:700;line-height:1.15;margin-bottom:6px}
+.lot-art{font-size:15px;color:#2A2A2A;font-weight:600;margin-bottom:4px}
+.lot-sub{font-size:12px;color:#5A5248;margin-top:2px}
+.lot-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.lot-tag{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:700}
+.tag-gold{background:#F6F0E5;border:1.5px solid rgba(176,141,87,.4);color:#8B6914}
+.tag-dark{background:#EDEAE4;border:1.5px solid #C8C0B8;color:#2A2A2A}
+.tag-green{background:#D8EEE0;border:1.5px solid rgba(54,90,67,.35);color:#1E4A2E}
+.tag-red{background:#F5EAE8;border:1.5px solid rgba(156,58,43,.35);color:#7A2418}
 
-/* Info lot */
-.lot-client{font-family:'Playfair Display',serif;font-size:22px;color:#1B1B1B;font-weight:700;line-height:1.1;margin-bottom:6px}
-.lot-art{font-size:15px;color:#6E6A64;margin-bottom:4px}
-.lot-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.lot-tag{padding:4px 12px;border-radius:5px;font-size:12px;font-weight:600}
-.tag-gold{background:#F6F0E5;border:1px solid rgba(176,141,87,.3);color:#B08D57}
-.tag-dark{background:#F4F1EA;border:1px solid #DDD7CE;color:#1B1B1B}
-.tag-green{background:#EAF0EC;border:1px solid rgba(54,90,67,.2);color:#365A43}
-
-/* Mărimi grid */
+/* MĂRIMI — cifre mari, contrast maxim */
 .sizes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.size-cell{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:10px 6px;text-align:center}
-.size-nr{font-size:11px;color:#9E9890;font-weight:600;margin-bottom:4px;letter-spacing:.3px}
-.size-qty{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#1B1B1B;line-height:1}
+.size-cell{background:#F4F1EA;border:1.5px solid #C8C0B8;border-radius:8px;padding:12px 6px;text-align:center}
+.size-nr{font-size:11px;color:#4A4540;font-weight:700;margin-bottom:4px;letter-spacing:.5px}
+.size-qty{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:#111111;line-height:1}
 
-/* Status bar */
-.status-bar{border-radius:8px;padding:13px 16px;text-align:center;margin-bottom:10px}
-.status-bar.idle{background:#F4F1EA;border:1px solid #DDD7CE}
-.status-bar.working{background:#FAF3E0;border:1px solid rgba(176,137,43,.25)}
-.status-bar.done{background:#EAF0EC;border:1px solid rgba(54,90,67,.2)}
-.status-bar-text{font-size:14px;font-weight:700}
-.status-bar.idle .status-bar-text{color:#9E9890}
-.status-bar.working .status-bar-text{color:#B0892B}
-.status-bar.done .status-bar-text{color:#365A43}
+/* STATUS BAR — culori intense */
+.status-bar{border-radius:8px;padding:14px 16px;text-align:center;margin-bottom:10px;border:2px solid transparent}
+.status-bar.idle{background:#EDEAE4;border-color:#C8C0B8}
+.status-bar.working{background:#FAF0D0;border-color:#B0892B}
+.status-bar.done{background:#D8EEE0;border-color:#365A43}
+.status-bar.problem{background:#F5EAE8;border-color:#9C3A2B}
+.status-text{font-size:15px;font-weight:700}
+.status-bar.idle .status-text{color:#4A4540}
+.status-bar.working .status-text{color:#7A5A00}
+.status-bar.done .status-text{color:#1E4A2E}
+.status-bar.problem .status-text{color:#7A2418}
 
-/* Chips probleme */
+/* CHIPS — mai vizibile */
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{padding:8px 14px;border-radius:20px;border:1.5px solid #DDD7CE;background:#fff;color:#6E6A64;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s;-webkit-tap-highlight-color:transparent}
-.chip.active{border-color:#9C3A2B;background:#F5EAE8;color:#9C3A2B;font-weight:700}
+.chip{padding:9px 14px;border-radius:20px;border:2px solid #C8C0B8;background:#fff;color:#2A2A2A;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.chip.active{border-color:#9C3A2B;background:#F5EAE8;color:#7A2418;font-weight:700}
 
-/* Perechi extra */
+/* EXTRA PERECHI */
 .extra-row{display:flex;align-items:center;gap:10px}
-.extra-label{font-size:13px;color:#6E6A64;flex:1}
+.extra-label{font-size:14px;color:#2A2A2A;font-weight:600;flex:1}
 .extra-controls{display:flex;align-items:center;gap:8px}
-.extra-btn{width:36px;height:36px;border-radius:7px;border:1.5px solid #DDD7CE;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;transition:all .12s}
-.extra-btn.plus{border-color:#B08D57;background:#F6F0E5;color:#B08D57}
-.extra-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#1B1B1B;min-width:28px;text-align:center}
+.extra-btn{width:38px;height:38px;border-radius:7px;border:2px solid #C8C0B8;background:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;color:#2A2A2A;font-weight:700}
+.extra-btn.plus{border-color:#B08D57;background:#F6F0E5;color:#8B6914}
+.extra-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#111111;min-width:30px;text-align:center}
 
-/* Butoane acțiune */
-.action-btn{width:100%;padding:16px;border-radius:10px;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:10px;letter-spacing:.2px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
-.action-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* BUTOANE ACȚIUNE */
+.action-btn{width:100%;padding:17px;border-radius:10px;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:10px;letter-spacing:.2px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.action-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .ab-black{background:#111111;color:#fff}
-.ab-black:hover{background:#2a2a2a}
-.ab-green{background:#365A43;color:#fff}
-.ab-green:hover{background:#2a4833}
-.ab-red{background:transparent;border:1.5px solid #9C3A2B;color:#9C3A2B}
-.ab-outline{background:transparent;border:1.5px solid #DDD7CE;color:#6E6A64}
-.ab-gold{background:#F6F0E5;border:1.5px solid #B08D57;color:#B08D57}
+.ab-green{background:#1E4A2E;color:#fff}
+.ab-green:hover{background:#163820}
+.ab-red{background:#7A2418;color:#fff}
+.ab-red:hover{background:#621c12}
+.ab-gold{background:#F6F0E5;border:2px solid #B08D57;color:#8B6914}
+.ab-outline{background:#fff;border:2px solid #C8C0B8;color:#2A2A2A}
 
-/* Bottom nav */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #DDD7CE;display:flex;padding:8px 0 20px;z-index:100}
+/* MANAGEMENT EDIT PANEL */
+.mgmt-panel{background:#111111;border-radius:10px;padding:16px;margin-bottom:10px}
+.mgmt-panel-title{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.mgmt-btn{padding:10px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;border:none;margin-bottom:6px;width:100%;text-align:left;display:flex;align-items:center;gap:8px;transition:background .15s}
+.mgmt-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.mb-gold{background:rgba(176,141,87,.2);color:#D4A853;border:1px solid rgba(176,141,87,.3)}
+.mb-green{background:rgba(54,90,67,.25);color:#7BCF9A;border:1px solid rgba(54,90,67,.3)}
+.mb-red{background:rgba(156,58,43,.2);color:#E07060;border:1px solid rgba(156,58,43,.3)}
+.mb-blue{background:rgba(47,74,99,.25);color:#7AA8D0;border:1px solid rgba(47,74,99,.3)}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid #DDD7CE;display:flex;padding:8px 0 20px;z-index:100;max-width:480px;margin:0 auto}
 .nb{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;font-family:'Inter',sans-serif}
-.nb svg{width:20px;height:20px;stroke:#C8C0B8;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nb svg{width:20px;height:20px;stroke:#9E9890;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .nb.active svg{stroke:#B08D57}
-.nb-label{font-size:9px;font-weight:600;color:#C8C0B8;letter-spacing:.5px;text-transform:uppercase}
+.nb-label{font-size:9px;font-weight:700;color:#9E9890;letter-spacing:.5px;text-transform:uppercase}
 .nb.active .nb-label{color:#B08D57}
 
-/* Loading */
-.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.95);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+/* LOADING */
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
 .lov.show{display:flex}
 .spinner{width:32px;height:32px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.lov-text{font-size:12px;color:#6E6A64;font-weight:500}
+.lov-text{font-size:13px;color:#2A2A2A;font-weight:600}
 
-/* Toast */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:11px 20px;border-radius:8px;font-size:13px;font-weight:700;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
 
-/* Empty */
-.empty-state{text-align:center;padding:60px 20px;color:#C8C0B8}
-.empty-icon{font-size:40px;margin-bottom:12px}
-.empty-text{font-size:13px;color:#9E9890;line-height:1.6}
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px}
+.empty-text{font-size:14px;color:#4A4540;line-height:1.7;font-weight:500}
 
-/* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;justify-content:center}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
 .modal-overlay.show{display:flex}
-.modal-box{background:#fff;border-radius:14px 14px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto}
-.modal-title{font-family:'Playfair Display',serif;font-size:18px;color:#1B1B1B;margin-bottom:4px;font-weight:700}
-.modal-sub{font-size:12px;color:#9E9890;margin-bottom:20px}
+.modal-box{background:#fff;border-radius:14px 14px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;color:#111111;margin-bottom:4px;font-weight:700}
+.modal-sub{font-size:12px;color:#6E6A64;margin-bottom:20px}
 .fld{margin-bottom:14px}
-.fld label{display:block;font-size:10px;font-weight:700;color:#6E6A64;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
-.fld textarea{width:100%;padding:11px 13px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;resize:none;height:80px}
-.fld textarea:focus{border-color:#9C3A2B}
+.fld label{display:block;font-size:10px;font-weight:700;color:#4A4540;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.fld textarea,.fld select,.fld input{width:100%;padding:12px 13px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff}
+.fld textarea{resize:none;height:80px}
+.fld textarea:focus,.fld select:focus,.fld input:focus{border-color:#B08D57}
 </style>
 </head>
 <body>
@@ -129,43 +141,123 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 <div class="modal-overlay" id="problemModal">
   <div class="modal-box">
     <div class="modal-title">Raportează problemă</div>
-    <div class="modal-sub" id="problemModalSub"></div>
+    <div class="modal-sub" id="problemSub"></div>
     <div class="fld">
       <label>Detalii problemă</label>
-      <textarea id="problemText" placeholder="Descrie problema — ex: lipsă piele pentru 4 perechi nr. 42..."></textarea>
+      <textarea id="problemText" placeholder="ex: lipsă piele pentru 4 perechi nr. 42..."></textarea>
     </div>
-    <button class="action-btn ab-red" onclick="confirmProblem()" style="margin-bottom:8px">
+    <button class="action-btn ab-red" onclick="confirmProblem()">
       <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       Trimite la Management
     </button>
-    <button class="action-btn ab-outline" onclick="closeProblemModal()">Anulează</button>
+    <button class="action-btn ab-outline" onclick="document.getElementById('problemModal').classList.remove('show')">Anulează</button>
+  </div>
+</div>
+
+<!-- MODAL MANAGEMENT EDIT LOT -->
+<div class="modal-overlay" id="editLotModal">
+  <div class="modal-box">
+    <div class="modal-title">Editează lot</div>
+    <div class="modal-sub" id="editLotSub"></div>
+    <div class="fld">
+      <label>Schimbă etapa</label>
+      <select id="editLotStage">
+        <option value="nou">Nou — Așteptare</option>
+        <option value="la_croit">La croit</option>
+        <option value="fete_gata_cusut">FEȚE gata — Cusut extern</option>
+        <option value="la_cusut_extern">La cusut extern</option>
+        <option value="cusut_extern_finalizat">Cusut extern finalizat</option>
+        <option value="receptie_fete">Recepție FEȚE</option>
+        <option value="la_talpuit">La talpuit</option>
+        <option value="la_impachetat">La împachetat</option>
+        <option value="gata_livrare">Gata de livrare</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Cantitate realizată (perechi)</label>
+      <input type="number" id="editLotQty" min="0"/>
+    </div>
+    <div class="fld">
+      <label>Observații / Notă internă</label>
+      <textarea id="editLotNotes" placeholder="ex: 47 din 48 perechi finalizate, lipsă material..."></textarea>
+    </div>
+    <div style="background:#FAF3E0;border-left:3px solid #B08D57;border-radius:0 6px 6px 0;padding:10px 12px;font-size:11px;color:#8B6914;line-height:1.5;margin-bottom:16px">
+      Modificarea va fi înregistrată în audit cu data și ora curentă.
+    </div>
+    <button class="action-btn ab-black" onclick="saveEditLot()">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Salvează modificările
+    </button>
+    <button class="action-btn ab-outline" onclick="document.getElementById('editLotModal').classList.remove('show')">Anulează</button>
+  </div>
+</div>
+
+<!-- MODAL ATRIBUIRE ATELIER EXTERN -->
+<div class="modal-overlay" id="atelierModal">
+  <div class="modal-box">
+    <div class="modal-title">Trimite la atelier extern</div>
+    <div class="modal-sub" id="atelierSub"></div>
+    <div class="fld">
+      <label>Atelier extern</label>
+      <select id="atelierSelect">
+        <option value="">Selectează atelier...</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Data estimată retur</label>
+      <input type="date" id="atelierRetur"/>
+    </div>
+    <button class="action-btn ab-black" onclick="confirmAtelier()">
+      <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+      Trimite la atelier
+    </button>
+    <button class="action-btn ab-outline" onclick="document.getElementById('atelierModal').classList.remove('show')">Anulează</button>
   </div>
 </div>
 
 <!-- HEADER -->
-<div class="hdr" id="mainHdr">
+<div class="hdr">
   <div class="hdr-top">
     <div>
       <div class="hdr-brand">SILESCO · Croit</div>
       <div class="hdr-name" id="hdrName">—</div>
+      <div class="hdr-role" id="hdrRole"></div>
     </div>
-    <div class="hdr-right">
+    <div>
       <div class="hdr-stat" id="hdrStat">0/0</div>
       <div class="hdr-stat-label">finalizate azi</div>
     </div>
   </div>
-  <!-- Lot tabs -->
   <div class="lot-tabs" id="lotTabs"></div>
 </div>
 
-<!-- VIEWS -->
+<!-- VIEW LOTURI -->
 <div id="vLoturi" style="display:none">
   <div class="wrap">
+
+    <!-- MANAGEMENT PANEL -->
+    <div class="mgmt-panel" id="mgmtPanel" style="display:none">
+      <div class="mgmt-panel-title">Acțiuni Management</div>
+      <button class="mgmt-btn mb-gold" onclick="openEditLotModal()">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editează lot — schimbă etapă / cantitate
+      </button>
+      <button class="mgmt-btn mb-blue" onclick="openAtelierModal()">
+        <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+        Trimite direct la atelier extern
+      </button>
+      <button class="mgmt-btn mb-red" onclick="deleteLot()">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Șterge lot
+      </button>
+    </div>
+
     <!-- LOT INFO -->
     <div class="card" id="lotInfoCard" style="display:none">
       <div class="sec-label">Lot activ</div>
       <div class="lot-client" id="lotClient"></div>
       <div class="lot-art" id="lotArt"></div>
+      <div class="lot-sub" id="lotSub"></div>
       <div class="lot-tags" id="lotTags"></div>
     </div>
 
@@ -173,12 +265,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="card" id="lotSizesCard" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div class="sec-label" style="margin-bottom:0">Mărimi de tăiat</div>
-        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#B08D57" id="lotTotalPairs"></div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#8B6914" id="lotTotalPairs"></div>
       </div>
       <div class="sizes-grid" id="sizesGrid"></div>
-
-      <!-- Perechi extra -->
-      <div id="extraSection" style="margin-top:14px;padding-top:14px;border-top:1px solid #EDE8DF;display:none">
+      <div id="extraSection" style="margin-top:14px;padding-top:14px;border-top:1.5px solid #EDE8DF;display:none">
         <div class="extra-row">
           <div class="extra-label">Perechi suplimentare</div>
           <div class="extra-controls">
@@ -187,32 +277,34 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
             <button class="extra-btn plus" onclick="adjExtra(1)">+</button>
           </div>
         </div>
-        <div id="extraNote" style="display:none;margin-top:8px;padding:7px 10px;background:#F6F0E5;border-radius:6px;font-size:11px;color:#B08D57"></div>
+        <div id="extraNote" style="display:none;margin-top:8px;padding:8px 12px;background:#F6F0E5;border-radius:6px;font-size:12px;color:#8B6914;font-weight:600"></div>
       </div>
     </div>
 
     <!-- STATUS -->
     <div class="status-bar idle" id="statusBar">
-      <div class="status-bar-text" id="statusText">— Așteptare —</div>
+      <div class="status-text" id="statusText">— Așteptare —</div>
     </div>
 
-    <!-- CHIPS PROBLEME -->
+    <!-- CHIPS -->
     <div class="card" id="chipsCard" style="display:none">
       <div class="sec-label">Problemă rapidă</div>
       <div class="chips" id="chipsWrap"></div>
     </div>
 
-    <!-- BUTOANE -->
+    <!-- ACȚIUNI CROITOR -->
     <div id="actionsWrap"></div>
 
     <!-- EMPTY -->
     <div class="empty-state" id="emptyState" style="display:none">
-      <div class="empty-icon">✂️</div>
-      <div class="empty-text">Nu ai loturi active.<br>Managementul va lansa loturi în curând.</div>
+      <div style="font-size:48px;margin-bottom:16px">✂️</div>
+      <div class="empty-text">Nu există loturi active.<br>Managementul va lansa loturi în curând.</div>
     </div>
+
   </div>
 </div>
 
+<!-- VIEW ISTORIC -->
 <div id="vIstoric" style="display:none">
   <div class="wrap">
     <div class="sec-label">Loturi finalizate azi</div>
@@ -242,10 +334,10 @@ const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
-let CU=null,CP=null;
+let CU=null,CP=null,isManagement=false;
 let lots=[],activeLotIdx=0,extraPairs=0;
-let activeChips=[],lotStatus='idle'; // idle | working | done
-let doneTodayCount=0;
+let activeChips=[],lotStatus='idle';
+let doneTodayCount=0,editLotId=null;
 
 const CHIPS=['Lipsă piele','Lipsă talpă','Lipsă căptușeală','Defect FEȚE'];
 
@@ -256,12 +348,13 @@ window.addEventListener('DOMContentLoaded',async()=>{
   CU=session.user;
   const{data:p}=await sb.from('user_profiles').select('full_name,role').eq('id',CU.id).single();
   CP=p;
-  if(p?.role!=='croit'&&p?.role!=='management'){
-    // Management poate vedea ecranul de croit pentru testare
-  }
+  isManagement=p?.role==='management';
   document.getElementById('hdrName').textContent=p?.full_name||'Croitor';
+  document.getElementById('hdrRole').textContent=isManagement?'Management — vedere completă':'Departament Croit';
+  if(isManagement)document.getElementById('mgmtPanel').style.display='block';
   sb.auth.onAuthStateChange((ev)=>{if(ev==='SIGNED_OUT')window.location.href='/index.html';});
   await loadLots();
+  if(isManagement)await loadAteliere();
 });
 
 async function doLogout(){await sb.auth.signOut();}
@@ -269,46 +362,47 @@ async function doLogout(){await sb.auth.signOut();}
 // ── LOAD LOTURI ───────────────────────────────────────────────
 async function loadLots(){
   showLov('Se încarcă loturile...');
+
+  // Query principal — fără order_lines join care poate eșua
   const{data,error}=await sb.from('production_lots')
     .select(`id,lot_no,stage,qty_planned,qty_done,has_issue,issue_notes,
-      started_at,completed_at,created_at,order_line_id,
+      started_at,completed_at,created_at,order_line_id,order_id,
       orders(id,order_no,clients(name,company_name)),
       products(code,name),
       talpi(name)`)
     .in('stage',['nou','la_croit','fete_gata_cusut'])
     .order('created_at',{ascending:true});
 
-  // Fetch order_lines separat
+  if(error){console.error('Lots error:',error);hideLov();showToast('Eroare la încărcare!');return;}
+
+  // Fetch order_lines separat pentru ponytage și culoare
+  let linesMap={};
   if(data&&data.length){
     const lineIds=data.map(l=>l.order_line_id).filter(Boolean);
     if(lineIds.length){
       const{data:lines}=await sb.from('order_lines')
-        .select('id,ponytage,color').in('id',lineIds);
-      data.forEach(lot=>{
-        lot.order_line_data=lines?.find(l=>l.id===lot.order_line_id)||null;
-      });
+        .select('id,ponytage,color,unit_price')
+        .in('id',lineIds);
+      if(lines)lines.forEach(l=>{linesMap[l.id]=l;});
     }
   }
 
-  // Loturi finalizate azi pentru istoric
+  // Loturi finalizate azi
   const azi=new Date().toISOString().split('T')[0];
   const{data:done}=await sb.from('production_lots')
-    .select(`id,lot_no,qty_planned,completed_at,orders(clients(name,company_name)),products(code)`)
+    .select(`id,lot_no,qty_planned,completed_at,
+      orders(clients(name,company_name)),products(code)`)
     .eq('stage','fete_gata_cusut')
     .gte('completed_at',azi+'T00:00:00')
     .order('completed_at',{ascending:false});
 
   hideLov();
-  lots=data||[];
+  lots=(data||[]).map(l=>({...l,lineData:linesMap[l.order_line_id]||null}));
   doneTodayCount=(done||[]).length;
   document.getElementById('hdrStat').textContent=doneTodayCount+'/'+(lots.length+doneTodayCount);
   document.getElementById('vLoturi').style.display='block';
 
-  if(!lots.length){
-    showEmptyState();
-    return;
-  }
-
+  if(!lots.length){showEmptyState();return;}
   renderLotTabs();
   selectLot(0);
   renderIstoric(done||[]);
@@ -316,9 +410,7 @@ async function loadLots(){
 
 function showEmptyState(){
   document.getElementById('emptyState').style.display='block';
-  document.getElementById('lotInfoCard').style.display='none';
-  document.getElementById('lotSizesCard').style.display='none';
-  document.getElementById('chipsCard').style.display='none';
+  ['lotInfoCard','lotSizesCard','chipsCard'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('statusBar').style.display='none';
   document.getElementById('actionsWrap').innerHTML='';
   document.getElementById('lotTabs').innerHTML='';
@@ -326,12 +418,13 @@ function showEmptyState(){
 
 // ── TABS ──────────────────────────────────────────────────────
 function renderLotTabs(){
-  const tabs=document.getElementById('lotTabs');
-  tabs.innerHTML=lots.map((l,i)=>{
-    const stLabel=l.stage==='la_croit'?'La croit':l.stage==='fete_gata_cusut'?'Gata ✓':'Așteptare';
-    return `<button class="lot-tab${i===activeLotIdx?' active':''}" onclick="selectLot(${i})">
+  document.getElementById('lotTabs').innerHTML=lots.map((l,i)=>{
+    const isDone=l.stage==='fete_gata_cusut';
+    const isWorking=l.stage==='la_croit';
+    const st=isDone?'Gata ✓':isWorking?'În lucru':'Așteptare';
+    return `<button class="lot-tab${i===activeLotIdx?' active':''}${isDone?' done-tab':''}" onclick="selectLot(${i})">
       <div class="lot-tab-no">${l.lot_no||'—'}</div>
-      <div class="lot-tab-st">${stLabel}</div>
+      <div class="lot-tab-st">${st}</div>
     </button>`;
   }).join('');
 }
@@ -340,101 +433,88 @@ function selectLot(i){
   activeLotIdx=i;
   extraPairs=0;
   activeChips=[];
-  lotStatus=lots[i]?.stage==='fete_gata_cusut'?'done':lots[i]?.stage==='la_croit'?'working':'idle';
+  const l=lots[i];
+  lotStatus=l?.stage==='fete_gata_cusut'?'done':l?.stage==='la_croit'?'working':'idle';
+  editLotId=l?.id||null;
   renderLotTabs();
   renderActiveLot();
 }
 
-// ── RENDER LOT ACTIV ──────────────────────────────────────────
+// ── RENDER LOT ────────────────────────────────────────────────
 function renderActiveLot(){
   const lot=lots[activeLotIdx];
   if(!lot)return;
 
   document.getElementById('emptyState').style.display='none';
-  document.getElementById('lotInfoCard').style.display='block';
-  document.getElementById('lotSizesCard').style.display='block';
+  ['lotInfoCard','lotSizesCard'].forEach(id=>document.getElementById(id).style.display='block');
   document.getElementById('chipsCard').style.display=lotStatus!=='done'?'block':'none';
   document.getElementById('statusBar').style.display='block';
 
-  // Info
   const cl=lot.orders?.clients?.company_name||lot.orders?.clients?.name||'—';
+  const color=lot.lineData?.color||'';
   document.getElementById('lotClient').textContent=cl;
-  document.getElementById('lotArt').textContent='Art. '+(lot.products?.code||'—')+' · '+(lot.order_line_data?.color||'');
+  document.getElementById('lotArt').textContent='Art. '+(lot.products?.code||'—')+(color?' · '+color:'');
+  document.getElementById('lotSub').textContent=lot.orders?.order_no||'';
 
-  // Tags
   const tags=[];
-  tags.push(`<span class="lot-tag tag-gold">${(lot.qty_planned||0)+(extraPairs)} perechi</span>`);
-  if(lot.talpi?.name) tags.push(`<span class="lot-tag tag-dark">Talpă: ${lot.talpi.name}</span>`);
-  if(lot.has_issue) tags.push(`<span class="lot-tag" style="background:#F5EAE8;border:1px solid rgba(156,58,43,.2);color:#9C3A2B">⚠ Problemă</span>`);
+  tags.push(`<span class="lot-tag tag-gold">${(lot.qty_planned||0)+extraPairs} perechi</span>`);
+  if(lot.talpi?.name)tags.push(`<span class="lot-tag tag-dark">Talpă: ${lot.talpi.name}</span>`);
+  if(lot.has_issue)tags.push(`<span class="lot-tag tag-red">⚠ Problemă raportată</span>`);
+  if(lot.stage==='fete_gata_cusut')tags.push(`<span class="lot-tag tag-green">✓ Finalizat</span>`);
   document.getElementById('lotTags').innerHTML=tags.join('');
 
-  // Pontaj
-  const pontaj=lot.order_line_data?.ponytage||{};
+  // Mărimi
+  const pontaj=lot.lineData?.ponytage||{};
   const entries=Object.entries(pontaj);
-  document.getElementById('lotTotalPairs').textContent=(lot.qty_planned||0)+(extraPairs)+' per.';
+  document.getElementById('lotTotalPairs').textContent=(lot.qty_planned||0)+extraPairs+' per.';
   document.getElementById('sizesGrid').innerHTML=entries.length
-    ? entries.map(([sz,q])=>`
-        <div class="size-cell">
-          <div class="size-nr">Nr. ${sz}</div>
-          <div class="size-qty">${q}</div>
-        </div>`).join('')
-    : '<div style="font-size:12px;color:#9E9890;padding:8px">Pontaj indisponibil</div>';
+    ? entries.map(([sz,q])=>`<div class="size-cell"><div class="size-nr">Nr. ${sz}</div><div class="size-qty">${q}</div></div>`).join('')
+    : `<div class="size-cell" style="grid-column:1/-1;padding:14px;text-align:center"><div style="font-size:13px;color:#4A4540;font-weight:500">Pontaj standard: 39×1 40×2 41×3 42×3 43×2 44×1</div></div>`;
 
   // Extra perechi
   const extraSec=document.getElementById('extraSection');
-  const extraNote=document.getElementById('extraNote');
   extraSec.style.display=lotStatus==='working'?'block':'none';
   document.getElementById('extraVal').textContent=extraPairs;
-  if(extraPairs>0){
-    extraNote.style.display='block';
-    extraNote.textContent='+'+extraPairs+' perechi suplimentare adăugate';
-  }else{extraNote.style.display='none';}
+  const extraNote=document.getElementById('extraNote');
+  if(extraPairs>0){extraNote.style.display='block';extraNote.textContent='+'+extraPairs+' perechi suplimentare';}
+  else{extraNote.style.display='none';}
 
-  // Status bar
+  // Status
   const bar=document.getElementById('statusBar');
   const txt=document.getElementById('statusText');
   bar.className='status-bar';
-  if(lotStatus==='idle'){bar.classList.add('idle');txt.textContent='— Așteptare — apasă Începe pentru a prelua lotul';}
-  else if(lotStatus==='working'){bar.classList.add('working');txt.textContent='În lucru acum';}
-  else if(lotStatus==='done'){bar.classList.add('done');txt.textContent='FEȚE gata · Management notificat ✓';}
+  if(lotStatus==='idle'){bar.classList.add('idle');txt.textContent='Apasă Începe pentru a prelua lotul';}
+  else if(lotStatus==='working'){bar.classList.add('working');txt.textContent='✂ În lucru acum';}
+  else{bar.classList.add('done');txt.textContent='FEȚE gata · Trimis la cusut extern ✓';}
 
   // Chips
   if(lotStatus!=='done'){
-    document.getElementById('chipsWrap').innerHTML=CHIPS.map(c=>`
-      <button class="chip${activeChips.includes(c)?' active':''}" onclick="toggleChip('${c}')">${c}</button>`).join('');
+    document.getElementById('chipsWrap').innerHTML=CHIPS.map(c=>
+      `<button class="chip${activeChips.includes(c)?' active':''}" onclick="toggleChip('${c}')">${c}</button>`
+    ).join('');
   }
 
   // Acțiuni
-  renderActions(lot);
-}
-
-function renderActions(lot){
   const wrap=document.getElementById('actionsWrap');
   if(lotStatus==='idle'){
-    wrap.innerHTML=`
-      <button class="action-btn ab-green" onclick="startLot()">
-        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Începe lucrul
-      </button>`;
+    wrap.innerHTML=`<button class="action-btn ab-green" onclick="startLot()">
+      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Începe lucrul</button>`;
   }else if(lotStatus==='working'){
     wrap.innerHTML=`
       <button class="action-btn ab-green" onclick="finishLot()">
-        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        FEȚE gata — Finalizat
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>FEȚE gata — Finalizat
       </button>
       <button class="action-btn ab-gold" onclick="openProblemModal()">
-        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Raportează problemă
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>Raportează problemă
       </button>`;
-  }else if(lotStatus==='done'){
+  }else{
     wrap.innerHTML=`
-      <div style="padding:14px 16px;background:#EAF0EC;border:1px solid rgba(54,90,67,.2);border-radius:10px;text-align:center;margin-bottom:10px">
-        <div style="font-size:14px;font-weight:700;color:#365A43;margin-bottom:4px">Finalizat cu succes</div>
-        <div style="font-size:11px;color:#6E6A64">${lot.qty_planned} perechi trimise la cusut extern</div>
+      <div style="padding:14px 16px;background:#D8EEE0;border:1.5px solid rgba(54,90,67,.3);border-radius:10px;text-align:center;margin-bottom:10px">
+        <div style="font-size:15px;font-weight:700;color:#1E4A2E;margin-bottom:3px">Lot finalizat cu succes</div>
+        <div style="font-size:12px;color:#2A5A38">${lot.qty_planned} perechi trimise la cusut extern</div>
       </div>
-      ${lots.length>1?`<button class="action-btn ab-outline" onclick="selectLot(${activeLotIdx===lots.length-1?0:activeLotIdx+1})">
-        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-        Lot următor
+      ${activeLotIdx<lots.length-1?`<button class="action-btn ab-outline" onclick="selectLot(${activeLotIdx+1})">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>Lot următor
       </button>`:''}`;
   }
 }
@@ -442,129 +522,181 @@ function renderActions(lot){
 // ── ACȚIUNI LOT ───────────────────────────────────────────────
 async function startLot(){
   const lot=lots[activeLotIdx];
-  if(!lot)return;
   showLov('Se actualizează...');
-  const{error}=await sb.from('production_lots').update({
-    stage:'la_croit',
-    started_at:new Date().toISOString(),
-  }).eq('id',lot.id);
+  await sb.from('production_lots').update({stage:'la_croit',started_at:new Date().toISOString()}).eq('id',lot.id);
   hideLov();
-  if(error){showToast('Eroare: '+error.message);return;}
   lots[activeLotIdx].stage='la_croit';
   lotStatus='working';
-  renderActiveLot();
+  renderActiveLot();renderLotTabs();
   showToast('Lot preluat — poți începe!');
 }
 
 async function finishLot(){
   const lot=lots[activeLotIdx];
-  if(!lot)return;
-  showLov('Se finalizează lotul...');
-
-  // Notă chips active
-  const chipsNote=activeChips.length?'Probleme raportate: '+activeChips.join(', '):'';
+  showLov('Se finalizează...');
   const totalReal=(lot.qty_planned||0)+extraPairs;
-
+  const chipsNote=activeChips.length?'Probleme: '+activeChips.join(', '):'';
   await sb.from('production_lots').update({
-    stage:'fete_gata_cusut',
-    qty_done:totalReal,
+    stage:'fete_gata_cusut',qty_done:totalReal,
     completed_at:new Date().toISOString(),
     has_issue:activeChips.length>0,
     issue_notes:chipsNote||null,
   }).eq('id',lot.id);
-
-  // Dacă perechi extra → salvează în audit
   if(extraPairs>0){
     await sb.from('audit_log').insert({
       table_name:'production_lots',record_id:lot.id,action:'update',
-      new_data:{action:'Perechi suplimentare adăugate: +'+extraPairs,operator:CP?.full_name||'Croitor'},
+      new_data:{action:'Perechi suplimentare: +'+extraPairs,operator:CP?.full_name||'Croitor'},
       done_by:CU.id,
     });
   }
-
   hideLov();
   lots[activeLotIdx].stage='fete_gata_cusut';
   lots[activeLotIdx].qty_done=totalReal;
-  lotStatus='done';
-  doneTodayCount++;
+  lotStatus='done';doneTodayCount++;
   document.getElementById('hdrStat').textContent=doneTodayCount+'/'+(lots.length);
-  renderActiveLot();
+  renderActiveLot();renderLotTabs();
   showToast('FEȚE gata! Management notificat.');
 }
 
-// ── EXTRA PERECHI ─────────────────────────────────────────────
 function adjExtra(d){
   extraPairs=Math.max(0,extraPairs+d);
   document.getElementById('extraVal').textContent=extraPairs;
   const lot=lots[activeLotIdx];
   document.getElementById('lotTotalPairs').textContent=((lot?.qty_planned||0)+extraPairs)+' per.';
   const note=document.getElementById('extraNote');
-  if(extraPairs>0){note.style.display='block';note.textContent='+'+extraPairs+' perechi suplimentare adăugate';}
+  if(extraPairs>0){note.style.display='block';note.textContent='+'+extraPairs+' perechi suplimentare';}
   else{note.style.display='none';}
-  // Update tags
-  const tagsEl=document.getElementById('lotTags');
-  const tags=tagsEl.innerHTML.replace(/class="lot-tag tag-gold">[^<]+</,'class="lot-tag tag-gold">'+((lot?.qty_planned||0)+extraPairs)+' perechi<');
-  tagsEl.innerHTML=tags;
 }
 
-// ── CHIPS ─────────────────────────────────────────────────────
 function toggleChip(chip){
-  if(activeChips.includes(chip)){activeChips=activeChips.filter(c=>c!==chip);}
-  else{activeChips.push(chip);}
-  document.getElementById('chipsWrap').innerHTML=CHIPS.map(c=>`
-    <button class="chip${activeChips.includes(c)?' active':''}" onclick="toggleChip('${c}')">${c}</button>`).join('');
+  activeChips=activeChips.includes(chip)?activeChips.filter(c=>c!==chip):[...activeChips,chip];
+  document.getElementById('chipsWrap').innerHTML=CHIPS.map(c=>
+    `<button class="chip${activeChips.includes(c)?' active':''}" onclick="toggleChip('${c}')">${c}</button>`
+  ).join('');
 }
 
-// ── MODAL PROBLEMĂ ────────────────────────────────────────────
+// ── PROBLEMĂ ──────────────────────────────────────────────────
 function openProblemModal(){
   const lot=lots[activeLotIdx];
-  document.getElementById('problemModalSub').textContent=(lot?.lot_no||'—')+' · Art. '+(lot?.products?.code||'—');
+  document.getElementById('problemSub').textContent=(lot?.lot_no||'—')+' · Art. '+(lot?.products?.code||'—');
   document.getElementById('problemText').value=activeChips.length?activeChips.join(', '):'';
   document.getElementById('problemModal').classList.add('show');
 }
-function closeProblemModal(){document.getElementById('problemModal').classList.remove('show');}
-
 async function confirmProblem(){
   const lot=lots[activeLotIdx];
   const text=document.getElementById('problemText').value.trim();
   if(!text){showToast('Descrie problema!');return;}
   showLov('Se trimite...');
-  await sb.from('production_lots').update({
-    has_issue:true,
-    issue_notes:text,
-  }).eq('id',lot.id);
-  // Mesaj intern către management
+  await sb.from('production_lots').update({has_issue:true,issue_notes:text}).eq('id',lot.id);
   await sb.from('internal_messages').insert({
-    from_user_id:CU.id,
-    to_department:'management',
-    order_id:lot.orders?.id||null,
+    from_user_id:CU.id,to_department:'management',
+    order_id:lot.order_id||null,
     message:'Problemă lot '+lot.lot_no+': '+text,
-    priority:activeChips.length?'urgent':'normal',
-  }).single();
+    priority:'urgent',
+  });
   hideLov();
-  closeProblemModal();
+  document.getElementById('problemModal').classList.remove('show');
   lots[activeLotIdx].has_issue=true;
   renderActiveLot();
   showToast('Problemă trimisă la management!');
+}
+
+// ── MANAGEMENT EDIT LOT ───────────────────────────────────────
+function openEditLotModal(){
+  const lot=lots[activeLotIdx];
+  if(!lot)return;
+  document.getElementById('editLotSub').textContent=(lot.lot_no||'—')+' · Art. '+(lot.products?.code||'—');
+  document.getElementById('editLotStage').value=lot.stage;
+  document.getElementById('editLotQty').value=lot.qty_done||lot.qty_planned||0;
+  document.getElementById('editLotNotes').value=lot.issue_notes||'';
+  document.getElementById('editLotModal').classList.add('show');
+}
+
+async function saveEditLot(){
+  const lot=lots[activeLotIdx];
+  const stage=document.getElementById('editLotStage').value;
+  const qty=parseInt(document.getElementById('editLotQty').value)||0;
+  const notes=document.getElementById('editLotNotes').value.trim();
+  showLov('Salvează modificările...');
+  await sb.from('production_lots').update({
+    stage,qty_done:qty,issue_notes:notes||null,
+    updated_at:new Date().toISOString(),
+  }).eq('id',lot.id);
+  await sb.from('audit_log').insert({
+    table_name:'production_lots',record_id:lot.id,action:'update',
+    new_data:{action:'Management: etapă → '+stage+', cantitate: '+qty,operator:CP?.full_name||'Management'},
+    done_by:CU.id,
+  });
+  hideLov();
+  document.getElementById('editLotModal').classList.remove('show');
+  showToast('Lot actualizat!');
+  await loadLots();
+}
+
+async function deleteLot(){
+  const lot=lots[activeLotIdx];
+  if(!confirm('Ștergi lotul '+lot.lot_no+'? Această acțiune este ireversibilă.'))return;
+  showLov('Se șterge lotul...');
+  await sb.from('production_lots').delete().eq('id',lot.id);
+  hideLov();
+  showToast('Lot șters.');
+  await loadLots();
+}
+
+// ── ATELIER EXTERN ────────────────────────────────────────────
+let ateliere=[];
+async function loadAteliere(){
+  const{data}=await sb.from('external_workshops').select('id,name').eq('is_active',true);
+  ateliere=data||[];
+  const sel=document.getElementById('atelierSelect');
+  sel.innerHTML='<option value="">Selectează atelier...</option>';
+  ateliere.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.name;sel.appendChild(o);});
+}
+
+function openAtelierModal(){
+  const lot=lots[activeLotIdx];
+  if(!lot)return;
+  document.getElementById('atelierSub').textContent=(lot.lot_no||'—')+' · '+lot.qty_planned+' perechi';
+  const d=new Date();d.setDate(d.getDate()+7);
+  document.getElementById('atelierRetur').value=d.toISOString().split('T')[0];
+  document.getElementById('atelierModal').classList.add('show');
+}
+
+async function confirmAtelier(){
+  const lot=lots[activeLotIdx];
+  const workshopId=document.getElementById('atelierSelect').value;
+  const retur=document.getElementById('atelierRetur').value;
+  if(!workshopId){showToast('Selectează atelierul!');return;}
+  showLov('Se trimite la atelier...');
+  await sb.from('production_lots').update({stage:'la_cusut_extern'}).eq('id',lot.id);
+  await sb.from('external_batches').insert({
+    lot_id:lot.id,workshop_id:workshopId,
+    sent_date:new Date().toISOString().split('T')[0],
+    expected_return:retur,qty_sent:lot.qty_planned,status:'trimis',
+  });
+  hideLov();
+  document.getElementById('atelierModal').classList.remove('show');
+  showToast('Lot trimis la atelier extern!');
+  await loadLots();
 }
 
 // ── ISTORIC ───────────────────────────────────────────────────
 function renderIstoric(done){
   const el=document.getElementById('istoricList');
   if(!done.length){
-    el.innerHTML='<div class="empty-state" style="padding:40px 0"><div class="empty-icon">📋</div><div class="empty-text">Niciun lot finalizat azi.</div></div>';
+    el.innerHTML='<div style="text-align:center;padding:40px 0"><div style="font-size:36px;margin-bottom:12px">📋</div><div style="font-size:13px;color:#4A4540;font-weight:500">Niciun lot finalizat azi.</div></div>';
     return;
   }
   el.innerHTML=done.map(l=>`
     <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-size:10px;font-family:'Courier New',monospace;color:#C8C0B8;margin-bottom:3px">${l.lot_no||'—'}</div>
-        <div style="font-size:14px;font-weight:700;color:#1B1B1B">${l.orders?.clients?.company_name||l.orders?.clients?.name||'—'}</div>
-        <div style="font-size:12px;color:#9E9890;margin-top:2px">Art. ${l.products?.code||'—'} · ${l.qty_planned||0} per.</div>
+        <div style="font-size:10px;font-family:'Courier New',monospace;color:#9E9890;margin-bottom:3px">${l.lot_no||'—'}</div>
+        <div style="font-size:15px;font-weight:700;color:#111111">${l.orders?.clients?.company_name||l.orders?.clients?.name||'—'}</div>
+        <div style="font-size:12px;color:#4A4540;margin-top:2px;font-weight:500">Art. ${l.products?.code||'—'} · ${l.qty_planned||0} per.</div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:11px;color:#365A43;font-weight:600">Gata ✓</div>
-        <div style="font-size:10px;color:#C8C0B8;margin-top:2px">${l.completed_at?new Date(l.completed_at).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'}):''}</div>
+        <div style="font-size:12px;color:#1E4A2E;font-weight:700">Gata ✓</div>
+        <div style="font-size:11px;color:#9E9890;margin-top:2px">${l.completed_at?new Date(l.completed_at).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'}):''}</div>
       </div>
     </div>`).join('');
 }
