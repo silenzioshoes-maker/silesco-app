@@ -333,14 +333,22 @@ async function loadOrders(){
 
 async function loadLots(){
   const{data}=await sb.from('production_lots')
-    .select(`id,lot_no,stage,qty_planned,qty_done,created_at,
+    .select(`id,lot_no,stage,qty_planned,qty_done,created_at,talpa_used_id,
       orders(order_no,clients(company_name,name)),
-      products(code,name),
-      talpi(name)`)
+      products(code,name)`)
     .neq('stage','gata_livrare')
     .order('created_at',{ascending:false})
     .limit(50);
-  renderLots(data||[]);
+  // Fetch talpi separat
+  let talpiMap={};
+  if(data&&data.length){
+    const talpaIds=data.map(l=>l.talpa_used_id).filter(Boolean);
+    if(talpaIds.length){
+      const{data:tp}=await sb.from('talpi').select('id,name').in('id',talpaIds);
+      if(tp)tp.forEach(t=>{talpiMap[t.id]=t;});
+    }
+  }
+  renderLots((data||[]).map(l=>({...l,talpaData:talpiMap[l.talpa_used_id]||null})));
 }
 
 // ── KPIs ──────────────────────────────────────────────────────
@@ -622,7 +630,7 @@ function renderLots(lots){
         <div class="order-no-cell">${l.lot_no||'—'}</div>
         <div>
           <div class="order-client-cell">${cl}</div>
-          <div class="order-agent-cell">Art. ${l.products?.code||'—'} · Talpă: ${l.talpi?.name||'—'}</div>
+          <div class="order-agent-cell">Art. ${l.products?.code||'—'} · Talpă: ${l.talpaData?.name||'—'}</div>
         </div>
         <div class="order-pairs-cell">${l.qty_planned||0} per.</div>
         <span class="status-pill" style="color:${stageColor};background:${stageColor}15">
