@@ -1415,10 +1415,10 @@ async function openAgentReply(parentId){
   const text=prompt('Răspunsul tău:');
   if(!text)return;
   showLov('Se trimite...');
-  await sb.from('internal_messages').insert({
-    from_user_id:CU.id,to_department:'management',
-    message:text,priority:'normal',is_read:false,parent_id:parentId
-  });
+  await sb.from('internal_messages').update({
+    reply:text,
+    replied_at:new Date().toISOString()
+  }).eq('id',parentId);
   hideLov();showToast('Răspuns trimis!');loadAgentMessages();
 }
 
