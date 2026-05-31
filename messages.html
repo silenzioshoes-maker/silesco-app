@@ -328,7 +328,7 @@ function renderInbox(){
       :t.toLocaleDateString('ro-RO');
     const isUrgent=m.priority==='urgent';
     const orderTag=m.orders?`<div class="msg-order-tag">${m.orders.order_no}</div>`:'';
-    const deptTag=`<span style="font-size:9px;color:#5A5248;font-weight:600;text-transform:uppercase;letter-spacing:.5px">${isMine?'→ '+DEPT_LABELS[m.to_department]:'De la: '+sender}</span>`;
+    const deptTag=`<span style="font-size:9px;color:#5A5248;font-weight:600;text-transform:uppercase;letter-spacing:.5px">${isMine?'→ Către: '+DEPT_LABELS[m.to_department]:'De la: '+sender+' ('+DEPT_LABELS[m.user_profiles?.role||'agent']+')'}</span>`;
     return `<div class="msg-item${isUnread?' unread':''}${m.id===activeThreadId?' active':''}" onclick="openThread('${m.id}')">
       ${isUnread?'<div class="unread-dot"></div>':''}
       ${orderTag}
