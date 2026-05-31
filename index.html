@@ -714,12 +714,14 @@ function quickAddFromStock(model,color,price,pontaj){
   document.getElementById('artCol').value=color;
   document.getElementById('artPr').value=price||'';
   const pt=typeof pontaj==='object'?pontaj:JSON.parse(pontaj||'{}');
-  SZ.forEach(s=>szV[s]=0);
-  Object.entries(pt).forEach(([s,q])=>{szV[s]=parseInt(q)||0;});
+  agentSizeList=Object.keys(pt).sort((a,b)=>parseInt(a)-parseInt(b));
+  SZ.forEach(s=>{if(!agentSizeList.includes(s))agentSizeList.push(s);});
+  agentSizeList.sort((a,b)=>parseInt(a)-parseInt(b));
+  agentSizeList.forEach(s=>szV[s]=parseInt(pt[s])||0);
   renderSz();
-  // Scroll la formular
-  document.querySelector('.card').scrollIntoView({behavior:'smooth'});
-  showToast('Pre-completat din stoc — verifică și adaugă!');
+  window._fromStock=true;
+  document.querySelector('#s2 .card').scrollIntoView({behavior:'smooth'});
+  showToast('📦 Din stoc — verifică și apasă Adaugă articol!');
 }
 
 // ── AUTOSUGGESTION MODEL ──────────────────────────────────────
@@ -1410,16 +1412,19 @@ function addArt(){
   const prod=mid?prods.find(p=>p.id===mid):null;
   const code=prod?.code||modText; // dacă nu e din catalog, folosim textul liber
   const{pretFinal,discount,discountText}=calcDiscount(pr,discTip,discVal);
+  const fromStock=window._fromStock||false;
+  window._fromStock=false;
   arts.push({
     product_id:mid||null,
-    free_model:mid?null:modText, // salvăm ca text liber dacă nu e din catalog
+    free_model:mid?null:modText,
     code,color:col,
     ponytage:pt,total_pairs:tot,
     unit_price:pr,pret_final:pretFinal,
     discount,discount_tip:discTip,
     discount_val:parseFloat(discVal)||0,
     discount_text:discountText,
-    notes:obs
+    notes:obs,
+    from_stock:fromStock,
   });
   document.getElementById('artCol').value='';
   document.getElementById('artPr').value='';
@@ -1438,9 +1443,10 @@ function renderArtList(){
   document.getElementById('artCnt').textContent='Articole: '+arts.length;
   document.getElementById('s2next').disabled=arts.length===0;
   document.getElementById('artList').innerHTML=arts.map((a,i)=>`
-    <div class="card card-accent" style="margin-bottom:8px">
+    <div class="card card-accent" style="margin-bottom:8px;border-left-color:${a.from_stock?'#2F4A63':'#B08D57'}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
+          ${a.from_stock?'<div style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">📦 Din stoc — nu produce</div>':''}
           <div style="font-size:14px;font-weight:700;color:#1B1B1B">Art. ${a.code} · ${a.color}</div>
           <div style="font-size:11px;color:#4A4540;margin-top:2px">
             ${a.total_pairs} per.
@@ -1495,6 +1501,7 @@ async function saveOrder(){
     ponytage:a.ponytage,
     total_pairs:a.total_pairs,
     unit_price:a.pret_final||a.unit_price||null,
+    from_stock:a.from_stock||false,
     notes:a.notes?`${a.discount_text?'[Discount: '+a.discount_text+'] ':''}${a.notes}`:a.discount_text?'[Discount: '+a.discount_text+']':null,
   })));
   hideLov();
