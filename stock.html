@@ -106,13 +106,18 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="modal-title" id="baxModalTitle">Adaugă Bax</div>
     <div class="fld ac-wrap">
       <label>Model</label>
-      <input type="text" id="baxModel" placeholder="ex: Art. 140 sau scrie liber..." oninput="filterBaxModels(this.value)" onfocus="filterBaxModels(this.value)" autocomplete="off"/>
+      <input type="text" id="baxModel" placeholder="ex: Art. 140 sau scrie liber..." oninput="filterBaxModels(this.value);checkSimilarBax()" onfocus="filterBaxModels(this.value)" autocomplete="off"/>
       <input type="hidden" id="baxProductId"/>
       <div class="ac-drop" id="baxModelDrop"></div>
     </div>
     <div class="fld">
       <label>Culoare / Piele</label>
-      <input type="text" id="baxColor" placeholder="ex: Negru Lac"/>
+      <input type="text" id="baxColor" placeholder="ex: Negru Lac" oninput="checkSimilarBax()"/>
+    </div>
+    <!-- Articole similare în stoc -->
+    <div id="similarBaxSection" style="display:none;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:#8B6914;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Ai deja în stoc — adaugă baxuri la cel existent:</div>
+      <div id="similarBaxList"></div>
     </div>
     <div class="fld">
       <label>Număr baxuri</label>
@@ -477,6 +482,56 @@ async function saveFete(){
 async function deleteFete(id){if(!confirm('Ștergi aceste FEȚE din stoc?'))return;showLov('Se șterge...');await sb.from('stock_fete').delete().eq('id',id);hideLov();showToast('Șters.');await loadFete();}
 
 // ── HELPERS ───────────────────────────────────────────────────
+let similarTimer=null;
+async function checkSimilarBax(){
+  clearTimeout(similarTimer);
+  similarTimer=setTimeout(async()=>{
+    const model=document.getElementById('baxModel').value.trim().toLowerCase();
+    const color=document.getElementById('baxColor').value.trim().toLowerCase();
+    if(!model&&!color){document.getElementById('similarBaxSection').style.display='none';return;}
+    const{data}=await sb.from('stock_baxuri').select('id,free_model,color,ponytage,total_pairs,num_baxuri,price_per_pair,products(code)').order('created_at',{ascending:false});
+    const similar=(data||[]).filter(b=>{
+      const bModel=(b.products?.code||b.free_model||'').toLowerCase();
+      const bColor=(b.color||'').toLowerCase();
+      return (model&&bModel.includes(model))||(color&&bColor.includes(color));
+    });
+    const section=document.getElementById('similarBaxSection');
+    const list=document.getElementById('similarBaxList');
+    if(!similar.length){section.style.display='none';return;}
+    section.style.display='block';
+    list.innerHTML=similar.map(b=>{
+      const bModel=b.products?.code?'Art. '+b.products.code:b.free_model||'—';
+      const entries=b.ponytage?Object.entries(b.ponytage).filter(([,q])=>q>0):[];
+      const pt=entries.map(([s,q])=>s+'×'+q).join(' ');
+      return `<div style="background:#F6F0E5;border:1.5px solid rgba(176,141,87,.3);border-radius:7px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#111111">${bModel} · ${b.color}</div>
+          <div style="font-size:10px;color:#5A5248;font-family:monospace;margin-top:2px">${pt}</div>
+          <div style="font-size:11px;color:#8B6914;margin-top:2px">${b.num_baxuri||1} bax${(b.num_baxuri||1)>1?'uri':''} · ${b.total_pairs} per.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="addToExistingBax('${b.id}',${b.num_baxuri||1})" style="padding:5px 10px;border-radius:5px;border:none;background:#111111;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+1 bax</button>
+          <button onclick="loadFromExisting('${b.id}')" style="padding:5px 10px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Editează</button>
+        </div>
+      </div>`;
+    }).join('');
+  },400);
+}
+
+async function addToExistingBax(id,currentNum){
+  const newNum=(currentNum||1)+1;
+  showLov('Se actualizează...');
+  const{data:b}=await sb.from('stock_baxuri').select('ponytage').eq('id',id).single();
+  const perBax=Object.values(b.ponytage||{}).reduce((s,q)=>s+q,0);
+  await sb.from('stock_baxuri').update({num_baxuri:newNum,total_pairs:newNum*perBax,updated_at:new Date().toISOString()}).eq('id',id);
+  hideLov();showToast('+1 bax adăugat!');await loadBaxuri();checkSimilarBax();
+}
+
+async function loadFromExisting(id){
+  closeModal('baxModal');
+  await editBax(id);
+}
+
 function filterBaxModels(q){
   const d=document.getElementById('baxModelDrop');
   const f=q.trim()?prods.filter(p=>p.code.toLowerCase().includes(q.toLowerCase())||p.name.toLowerCase().includes(q.toLowerCase())):prods;
