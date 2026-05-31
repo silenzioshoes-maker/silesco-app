@@ -28,68 +28,87 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column}
 .topbar{background:#fff;border-bottom:1px solid #DDD7CE;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
 .page-title{font-family:'Playfair Display',serif;font-size:20px;color:#111111;font-weight:700}
-.content{padding:24px 28px;flex:1;display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+.content{padding:0;flex:1;display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 57px)}
 
-/* INBOX LIST */
-.inbox-wrap{background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden}
-.inbox-header{padding:14px 16px;border-bottom:1px solid #DDD7CE;display:flex;justify-content:space-between;align-items:center}
-.inbox-title{font-size:13px;font-weight:700;color:#111111}
-.inbox-tabs{display:flex;gap:4px;padding:10px 10px 0}
-.inbox-tab{flex:1;padding:8px;border-radius:6px 6px 0 0;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:#F4F1EA;color:#5A5248;border-bottom:2px solid transparent;transition:all .12s}
-.inbox-tab.active{background:#fff;color:#B08D57;border-bottom-color:#B08D57}
-.msg-item{padding:14px 16px;border-bottom:1px solid #EDE8DF;cursor:pointer;transition:background .1s;position:relative}
-.msg-item:hover{background:#FAFAF8}
-.msg-item.active{background:#F6F0E5;border-left:3px solid #B08D57}
-.msg-item.unread{background:#FFF9F0}
-.unread-dot{width:7px;height:7px;border-radius:50%;background:#9C3A2B;position:absolute;top:16px;right:16px;flex-shrink:0}
-.msg-from{font-size:12px;font-weight:700;color:#111111;margin-bottom:2px}
-.msg-preview{font-size:11px;color:#5A5248;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
-.msg-time{font-size:10px;color:#9E9890;margin-top:3px}
-.msg-order-tag{display:inline-block;font-size:9px;font-weight:700;color:#8B6914;background:#F6F0E5;border:1px solid rgba(176,141,87,.3);padding:1px 6px;border-radius:3px;margin-bottom:3px;font-family:'Courier New',monospace}
-.priority-urgent{color:#7A2418;background:#F5EAE8;border-color:rgba(156,58,43,.3)}
+/* CONVERSATIONS LIST */
+.conv-list{background:#fff;border-right:1px solid #DDD7CE;overflow-y:auto;display:flex;flex-direction:column}
+.conv-list-header{padding:14px 16px;border-bottom:1px solid #DDD7CE;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:10}
+.conv-list-title{font-size:13px;font-weight:700;color:#111111}
+.conv-search{width:100%;padding:8px 12px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;outline:none;margin:10px 16px;width:calc(100% - 32px)}
+.conv-search:focus{border-color:#B08D57}
 
-/* THREAD */
-.thread-wrap{background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden;min-height:400px;display:flex;flex-direction:column}
-.thread-header{padding:16px 20px;border-bottom:1px solid #DDD7CE}
-.thread-subject{font-family:'Playfair Display',serif;font-size:16px;color:#111111;font-weight:700;margin-bottom:4px}
-.thread-meta{font-size:11px;color:#5A5248}
-.thread-msgs{flex:1;padding:16px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
-.bubble{max-width:80%;padding:12px 14px;border-radius:10px;position:relative}
+/* CONVERSATION ITEM */
+.conv-item{padding:14px 16px;border-bottom:1px solid #EDE8DF;cursor:pointer;transition:background .1s;position:relative}
+.conv-item:hover{background:#FAFAF8}
+.conv-item.active{background:#F6F0E5;border-left:3px solid #B08D57}
+.conv-item.unread{background:#FFF9F0}
+.conv-order{font-size:10px;font-weight:700;color:#8B6914;font-family:'Courier New',monospace;margin-bottom:3px}
+.conv-client{font-size:14px;font-weight:700;color:#111111;margin-bottom:2px}
+.conv-preview{font-size:12px;color:#5A5248;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.conv-meta{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.conv-time{font-size:10px;color:#9E9890}
+.conv-badge{background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:1px 6px}
+.conv-dept{font-size:9px;color:#5A5248;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.conv-actions{display:none;position:absolute;top:8px;right:8px;gap:4px}
+.conv-item:hover .conv-actions{display:flex}
+.conv-del{background:#F5EAE8;border:1px solid rgba(156,58,43,.2);border-radius:5px;color:#9C3A2B;font-size:10px;font-weight:700;cursor:pointer;padding:3px 7px;font-family:'Inter',sans-serif}
+
+/* GENERAL NOTIFS */
+.notif-item{padding:12px 16px;border-bottom:1px solid #EDE8DF;cursor:pointer;transition:background .1s}
+.notif-item:hover{background:#FAFAF8}
+.notif-item.active{background:#F6F0E5;border-left:3px solid #B08D57}
+.notif-badge-urgent{font-size:9px;font-weight:700;color:#7A2418;background:#F5EAE8;border:1px solid rgba(156,58,43,.2);padding:1px 6px;border-radius:3px}
+
+/* CHAT VIEW */
+.chat-view{display:flex;flex-direction:column;height:100%}
+.chat-header{background:#fff;border-bottom:1px solid #DDD7CE;padding:14px 20px;display:flex;justify-content:space-between;align-items:flex-start}
+.chat-header-info{flex:1}
+.chat-order-no{font-size:10px;font-weight:700;color:#8B6914;font-family:'Courier New',monospace;margin-bottom:3px}
+.chat-client{font-family:'Playfair Display',serif;font-size:16px;color:#111111;font-weight:700}
+.chat-dept{font-size:11px;color:#5A5248;margin-top:2px}
+.chat-del-conv{background:none;border:none;cursor:pointer;padding:6px;color:#C8C0B8}
+.chat-del-conv:hover{color:#9C3A2B}
+.chat-del-conv svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;background:#F4F1EA}
+.bubble{max-width:75%;padding:11px 14px;border-radius:12px;position:relative}
 .bubble.sent{align-self:flex-end;background:#111111;color:#fff;border-bottom-right-radius:3px}
-.bubble.received{align-self:flex-start;background:#F4F1EA;color:#111111;border-bottom-left-radius:3px}
-.bubble.system{align-self:center;background:#E8EFF6;color:#23394F;font-size:11px;padding:8px 14px;border-radius:20px;font-style:italic}
+.bubble.received{align-self:flex-start;background:#fff;border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .bubble-from{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;opacity:.6}
 .bubble-text{font-size:13px;line-height:1.5}
 .bubble.sent .bubble-text{color:#fff}
-.bubble-time{font-size:9px;opacity:.5;margin-top:5px;text-align:right}
-.thread-compose{padding:16px 20px;border-top:1px solid #DDD7CE;background:#fff}
-.compose-row{display:flex;gap:8px;align-items:flex-end}
-.compose-input{flex:1;padding:10px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;height:60px;max-height:120px}
-.compose-input:focus{border-color:#B08D57}
-.compose-send{padding:10px 18px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;height:60px}
+.bubble-time{font-size:9px;opacity:.5;margin-top:5px}
+.bubble-del{position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;opacity:0;color:rgba(255,255,255,.6);font-size:14px;transition:opacity .15s;font-family:'Inter',sans-serif}
+.bubble:hover .bubble-del{opacity:1}
+.bubble.received .bubble-del{color:rgba(0,0,0,.3)}
+.chat-compose{background:#fff;border-top:1px solid #DDD7CE;padding:14px 20px;display:flex;gap:10px;align-items:flex-end}
+.compose-textarea{flex:1;padding:10px 14px;border:1.5px solid #C8C0B8;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;min-height:44px;max-height:120px;line-height:1.5}
+.compose-textarea:focus{border-color:#B08D57}
+.compose-send{width:44px;height:44px;border-radius:10px;border:none;background:#111111;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
 .compose-send:hover{background:#2a2a2a}
-.empty-thread{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#9E9890;padding:40px}
-.empty-thread svg{width:36px;height:36px;stroke:#DDD7CE;fill:none;stroke-width:1.5}
+.compose-send svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.compose-dept{font-size:11px;color:#5A5248;margin-bottom:6px}
+.compose-dept select{padding:4px 8px;border-radius:5px;border:1px solid #DDD7CE;font-size:11px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff}
+
+/* EMPTY */
+.chat-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#F4F1EA;color:#9E9890}
+.chat-empty svg{width:40px;height:40px;stroke:#DDD7CE;fill:none;stroke-width:1.5}
 
 /* NEW MSG MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex}
-.modal-box{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal-box{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
 .modal-title{font-family:'Playfair Display',serif;font-size:20px;color:#111111;margin-bottom:20px;font-weight:700}
 .fld{margin-bottom:14px}
 .fld label{display:block;font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
 .fld select,.fld input,.fld textarea{width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff}
-.fld textarea{resize:none;height:100px}
+.fld textarea{resize:none;height:90px}
 .fld select:focus,.fld input:focus,.fld textarea:focus{border-color:#B08D57}
-.btn{padding:11px 20px;border-radius:7px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
-.btn-black{background:#111111;color:#fff;width:100%;margin-bottom:8px}
-.btn-outline{background:#fff;border:1.5px solid #C8C0B8;color:#2A2A2A;width:100%}
 .ac-wrap{position:relative}
-.ac-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #B08D57;border-top:none;border-radius:0 0 7px 7px;z-index:50;max-height:160px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.1)}
-.ac-item{padding:10px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid #F4F1EA;display:flex;gap:8px;align-items:center}
+.ac-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #B08D57;border-top:none;border-radius:0 0 7px 7px;z-index:50;max-height:180px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.ac-item{padding:10px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid #F4F1EA;display:flex;gap:8px}
 .ac-item:hover{background:#F6F0E5}
-
-/* LOADING / TOAST */
+.btn-send{width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px}
+.btn-cancel{width:100%;padding:12px;border-radius:8px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
 .lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
 .lov.show{display:flex}
 .spinner{width:32px;height:32px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
@@ -97,20 +116,8 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .lov-text{font-size:13px;color:#2A2A2A;font-weight:600}
 .toast{position:fixed;bottom:24px;right:24px;background:#111111;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
-
-/* MOBILE */
-.mobile-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:6px}
-.mobile-menu-btn svg{width:22px;height:22px;stroke:#111;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
-.sidebar-overlay.show{display:block}
-@media(max-width:900px){
-  .sidebar{transform:translateX(-100%);transition:transform .25s}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0}
-  .mobile-menu-btn{display:inline-flex}
-  .content{grid-template-columns:1fr;padding:16px}
-  .thread-wrap{min-height:300px}
-}
+@media(max-width:900px){.sidebar{transform:translateX(-100%);transition:transform .25s}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.content{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -125,38 +132,31 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="fld">
       <label>Către departament</label>
       <select id="nmDept">
-        <option value="agent">Agenți</option>
+        <option value="agent">Agent</option>
         <option value="croit">Croit</option>
         <option value="talpuit">Talpuit</option>
         <option value="impachetat">Împachetat</option>
         <option value="birou">Birou</option>
-        <option value="management">Management</option>
         <option value="all">Toate departamentele</option>
       </select>
     </div>
-    <div class="fld">
-      <label>Prioritate</label>
-      <select id="nmPriority">
-        <option value="normal">Normală</option>
-        <option value="urgent">Urgentă</option>
-      </select>
+    <div class="fld"><label>Prioritate</label>
+      <select id="nmPriority"><option value="normal">Normală</option><option value="urgent">Urgentă ⚡</option></select>
     </div>
     <div class="fld ac-wrap">
       <label>Comandă asociată <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
-      <input type="text" id="nmOrderInput" placeholder="Caută după număr sau client..." oninput="filterOrders(this.value)" onfocus="filterOrders(this.value)" autocomplete="off"/>
+      <input type="text" id="nmOrderInput" placeholder="Caută după număr sau client..." oninput="filterOrdersAc(this.value)" onfocus="filterOrdersAc(this.value)" autocomplete="off"/>
       <input type="hidden" id="nmOrderId"/>
       <div class="ac-drop" id="nmOrderDrop"></div>
     </div>
-    <div class="fld">
-      <label>Subiect <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
-      <input type="text" id="nmSubject" placeholder="ex: Atenție program prelungit azi"/>
+    <div class="fld"><label>Subiect <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+      <input type="text" id="nmSubject" placeholder="ex: Urgență la croit"/>
     </div>
-    <div class="fld">
-      <label>Mesaj</label>
+    <div class="fld"><label>Mesaj</label>
       <textarea id="nmMessage" placeholder="Scrie mesajul..."></textarea>
     </div>
-    <button class="btn btn-black" onclick="sendNewMsg()">Trimite mesajul</button>
-    <button class="btn btn-outline" onclick="closeModal('newMsgModal')">Anulează</button>
+    <button class="btn-send" onclick="sendNewMsg()">Trimite mesajul</button>
+    <button class="btn-cancel" onclick="closeModal('newMsgModal')">Anulează</button>
   </div>
 </div>
 
@@ -175,11 +175,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="nav-item active">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Mesaje</span>
-      <span class="nav-badge" id="sidebarBadge" style="display:none">0</span>
     </div>
   </div>
   <div class="sidebar-bottom">
-    <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center">
       <svg style="width:14px;height:14px;stroke:rgba(255,255,255,.5);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </div>
     <div><div class="user-name" id="userName">—</div><div class="user-role">Management</div></div>
@@ -193,57 +192,61 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 <div class="main">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:8px">
-      <button class="mobile-menu-btn" onclick="toggleSidebar(true)">
-        <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
       <div class="page-title">Mesaje</div>
     </div>
     <div style="display:flex;gap:8px">
-      <button onclick="loadMessages()" style="padding:8px 14px;border-radius:7px;border:1.5px solid #C8C0B8;background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px">
-        <svg style="width:13px;height:13px;stroke:#3A3530;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        Reîncarcă
-      </button>
-      <button onclick="openNewMsg()" style="padding:8px 16px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px">
-        <svg style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Mesaj nou
-      </button>
+      <button onclick="loadAll()" style="padding:8px 14px;border-radius:7px;border:1.5px solid #C8C0B8;background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Reîncarcă</button>
+      <button onclick="openNewMsg()" style="padding:8px 16px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Mesaj nou</button>
     </div>
   </div>
-
   <div class="content">
-    <!-- INBOX -->
-    <div class="inbox-wrap">
-      <div class="inbox-header">
-        <div class="inbox-title">Inbox</div>
-        <span id="unreadCount" style="font-size:11px;color:#5A5248;font-weight:600"></span>
+    <!-- LISTA CONVERSAȚII -->
+    <div class="conv-list">
+      <div class="conv-list-header">
+        <div class="conv-list-title">Conversații</div>
+        <span id="unreadBadge" style="font-size:11px;color:#5A5248;font-weight:600"></span>
       </div>
-      <div class="inbox-tabs">
-        <button class="inbox-tab active" onclick="setTab('all',this)">Toate</button>
-        <button class="inbox-tab" onclick="setTab('unread',this)">Necitite</button>
-        <button class="inbox-tab" onclick="setTab('sent',this)">Trimise</button>
-      </div>
-      <div id="inboxList" style="max-height:600px;overflow-y:auto"></div>
+      <input class="conv-search" id="convSearch" placeholder="Caută..." oninput="filterConvs(this.value)"/>
+      <div id="convList"></div>
     </div>
-
-    <!-- THREAD -->
-    <div class="thread-wrap" id="threadWrap">
-      <div class="empty-thread" id="emptyThread">
+    <!-- CHAT -->
+    <div class="chat-view" id="chatView">
+      <div class="chat-empty" id="chatEmpty">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <div style="font-size:13px;font-weight:600;color:#9E9890">Selectează un mesaj</div>
-        <div style="font-size:11px;color:#C8C0B8;text-align:center">sau trimite unul nou din butonul de sus</div>
+        <div style="font-size:14px;font-weight:600">Selectează o conversație</div>
+        <div style="font-size:12px;color:#C8C0B8">sau trimite un mesaj nou</div>
       </div>
-      <div id="threadContent" style="display:none;flex:1;flex-direction:column;overflow:hidden">
-        <div class="thread-header">
-          <div class="thread-subject" id="threadSubject"></div>
-          <div class="thread-meta" id="threadMeta"></div>
-        </div>
-        <div class="thread-msgs" id="threadMsgs"></div>
-        <div class="thread-compose">
-          <div style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap" id="replyTargets"></div>
-          <div class="compose-row">
-            <textarea class="compose-input" id="replyInput" placeholder="Scrie răspunsul..." onkeydown="if(event.ctrlKey&&event.key==='Enter')sendReply()"></textarea>
-            <button class="compose-send" onclick="sendReply()">Trimite<br><span style="font-size:10px;opacity:.6">Ctrl+Enter</span></button>
+      <div id="chatContent" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+        <div class="chat-header">
+          <div class="chat-header-info">
+            <div class="chat-order-no" id="chatOrderNo"></div>
+            <div class="chat-client" id="chatClient"></div>
+            <div class="chat-dept" id="chatDept"></div>
           </div>
+          <button class="chat-del-conv" onclick="deleteConversation()" title="Șterge conversația">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-compose">
+          <div style="flex:1">
+            <div class="compose-dept">
+              Răspunde ca: Management → 
+              <select id="replyDept" style="padding:3px 8px;border-radius:5px;border:1px solid #DDD7CE;font-size:11px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff">
+                <option value="agent">Agent</option>
+                <option value="croit">Croit</option>
+                <option value="talpuit">Talpuit</option>
+                <option value="impachetat">Împachetat</option>
+                <option value="all">Toate</option>
+              </select>
+            </div>
+            <textarea class="compose-textarea" id="replyInput" placeholder="Scrie răspunsul... (Enter = trimite, Shift+Enter = linie nouă)"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}"
+              oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+          </div>
+          <button class="compose-send" onclick="sendReply()">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -256,10 +259,9 @@ const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
-let CU=null,CP=null,allMessages=[],filteredMessages=[],orders=[];
-let activeTab='all',activeThreadId=null;
-
-const DEPT_LABELS={agent:'Agent',croit:'Croit',talpuit:'Talpuit',impachetat:'Împachetat',birou:'Birou',management:'Management',all:'Toate departamentele'};
+let CU=null,CP=null,allMsgs=[],filteredConvs=[],orders=[];
+let activeOrderId=null,activeGeneralId=null;
+const DEPT={agent:'Agent',croit:'Croit',talpuit:'Talpuit',impachetat:'Împachetat',birou:'Birou',management:'Management',all:'Toate'};
 
 window.addEventListener('DOMContentLoaded',async()=>{
   const{data:{session}}=await sb.auth.getSession();
@@ -273,27 +275,15 @@ window.addEventListener('DOMContentLoaded',async()=>{
   document.addEventListener('click',e=>{
     if(!e.target.closest('#nmOrderDrop')&&e.target.id!=='nmOrderInput')document.getElementById('nmOrderDrop').style.display='none';
   });
-  await Promise.all([loadMessages(),loadOrders()]);
+  await loadAll();
 });
 async function doLogout(){await sb.auth.signOut();}
-function toggleSidebar(open){document.getElementById('sidebar').classList.toggle('open',open);document.getElementById('sidebarOverlay').classList.toggle('show',open);}
+function toggleSidebar(o){document.getElementById('sidebar').classList.toggle('open',o);document.getElementById('sidebarOverlay').classList.toggle('show',o);}
 
-// LOAD
-async function loadMessages(){
-  showLov('Se încarcă mesajele...');
-  const{data}=await sb.from('internal_messages')
-    .select(`id,from_user_id,to_department,to_user_id,order_id,message,subject,priority,is_read,read_at,reply,replied_at,created_at,parent_id,
-      user_profiles!internal_messages_from_user_id_fkey(full_name,role),
-      orders(order_no,clients!orders_client_id_fkey(name,company_name))`)
-    .is('parent_id',null)
-    .order('created_at',{ascending:false});
+async function loadAll(){
+  showLov('Se încarcă...');
+  await Promise.all([loadMsgs(),loadOrders()]);
   hideLov();
-  allMessages=data||[];
-  const unread=allMessages.filter(m=>!m.is_read&&m.from_user_id!==CU.id).length;
-  document.getElementById('unreadCount').textContent=unread>0?unread+' necitite':'';
-  const badge=document.getElementById('sidebarBadge');
-  if(unread>0){badge.style.display='inline';badge.textContent=unread;}else{badge.style.display='none';}
-  applyTab();
 }
 
 async function loadOrders(){
@@ -301,127 +291,277 @@ async function loadOrders(){
   orders=data||[];
 }
 
-// TABS
-function setTab(t,el){activeTab=t;document.querySelectorAll('.inbox-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');applyTab();}
-function applyTab(){
-  if(activeTab==='all')filteredMessages=allMessages;
-  else if(activeTab==='unread')filteredMessages=allMessages.filter(m=>!m.is_read&&m.from_user_id!==CU.id);
-  else if(activeTab==='sent')filteredMessages=allMessages.filter(m=>m.from_user_id===CU.id);
-  renderInbox();
+async function loadMsgs(){
+  // Încarcă toate mesajele root (parent_id null)
+  const{data}=await sb.from('internal_messages')
+    .select(`id,from_user_id,to_department,order_id,message,subject,priority,is_read,created_at,parent_id,
+      user_profiles!internal_messages_from_user_id_fkey(full_name,role),
+      orders(order_no,clients!orders_client_id_fkey(name,company_name))`)
+    .is('parent_id',null)
+    .order('created_at',{ascending:false});
+  allMsgs=data||[];
+
+  // Grupează pe order_id sau ca generale
+  buildConversations();
 }
 
-// RENDER INBOX
-function renderInbox(){
-  const el=document.getElementById('inboxList');
-  if(!filteredMessages.length){
-    el.innerHTML='<div style="padding:32px;text-align:center;color:#9E9890;font-size:12px;font-weight:500">Niciun mesaj.</div>';
+// Construiește conversații grupate pe comandă
+let conversations=[];
+function buildConversations(){
+  const byOrder={};
+  const general=[];
+  allMsgs.forEach(m=>{
+    if(m.order_id){
+      if(!byOrder[m.order_id])byOrder[m.order_id]=[];
+      byOrder[m.order_id].push(m);
+    }else{
+      general.push(m);
+    }
+  });
+  conversations=[];
+  // Conversații per comandă
+  Object.entries(byOrder).forEach(([orderId,msgs])=>{
+    const latest=msgs[0];
+    const unread=msgs.filter(m=>!m.is_read&&m.from_user_id!==CU.id).length;
+    conversations.push({
+      type:'order',orderId,
+      orderNo:latest.orders?.order_no||'—',
+      client:latest.orders?.clients?.company_name||latest.orders?.clients?.name||'—',
+      lastMsg:latest.message,lastTime:latest.created_at,
+      dept:latest.to_department,unread,msgs,
+    });
+  });
+  // Mesaje generale (fără comandă)
+  general.forEach(m=>{
+    const unread=!m.is_read&&m.from_user_id!==CU.id?1:0;
+    conversations.push({
+      type:'general',id:m.id,
+      subject:m.subject||m.message.slice(0,50),
+      lastMsg:m.message,lastTime:m.created_at,
+      dept:m.to_department,unread,
+      from:m.user_profiles?.full_name||'—',
+      isMine:m.from_user_id===CU.id,
+    });
+  });
+  // Sortează după data ultimului mesaj
+  conversations.sort((a,b)=>new Date(b.lastTime)-new Date(a.lastTime));
+  filteredConvs=[...conversations];
+  renderUnread();
+  renderConvList();
+}
+
+function renderUnread(){
+  const total=conversations.reduce((s,c)=>s+c.unread,0);
+  document.getElementById('unreadBadge').textContent=total>0?total+' necitite':'';
+}
+
+function filterConvs(q){
+  const qt=q.toLowerCase().trim();
+  filteredConvs=qt?conversations.filter(c=>{
+    const s=(c.orderNo||'')+(c.client||'')+(c.subject||'')+(c.lastMsg||'');
+    return s.toLowerCase().includes(qt);
+  }):[...conversations];
+  renderConvList();
+}
+
+function renderConvList(){
+  const el=document.getElementById('convList');
+  if(!filteredConvs.length){
+    el.innerHTML='<div style="padding:32px;text-align:center;color:#9E9890;font-size:12px;font-weight:500">Nicio conversație.</div>';
     return;
   }
-  el.innerHTML=filteredMessages.map(m=>{
-    const isMine=m.from_user_id===CU.id;
-    const isUnread=!m.is_read&&!isMine;
-    const sender=m.user_profiles?.full_name||(isMine?'Tu':'—');
-    const preview=m.message.length>60?m.message.slice(0,60)+'...':m.message;
-    const t=new Date(m.created_at);
+  el.innerHTML=filteredConvs.map((c,i)=>{
+    const t=new Date(c.lastTime);
     const timeStr=t.toLocaleDateString('ro-RO')===new Date().toLocaleDateString('ro-RO')
       ?t.toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'})
       :t.toLocaleDateString('ro-RO');
-    const isUrgent=m.priority==='urgent';
-    const orderTag=m.orders?`<div class="msg-order-tag">${m.orders.order_no}</div>`:'';
-    const deptTag=`<span style="font-size:9px;color:#5A5248;font-weight:600;text-transform:uppercase;letter-spacing:.5px">${isMine?'→ Către: '+DEPT_LABELS[m.to_department]:'De la: '+sender+' ('+DEPT_LABELS[m.user_profiles?.role||'agent']+')'}</span>`;
-    return `<div class="msg-item${isUnread?' unread':''}${m.id===activeThreadId?' active':''}" onclick="openThread('${m.id}')">
-      ${isUnread?'<div class="unread-dot"></div>':''}
-      ${orderTag}
-      <div class="msg-from" style="${isUrgent?'color:#7A2418':''}">${m.subject||m.message.slice(0,40)||'Mesaj'}${isUrgent?' ⚡':''}</div>
-      <div style="margin-bottom:3px">${deptTag}</div>
-      <div class="msg-preview">${preview}</div>
-      <div class="msg-time">${timeStr}</div>
-    </div>`;
+    const isActive=c.type==='order'?c.orderId===activeOrderId:c.id===activeGeneralId;
+    if(c.type==='order'){
+      return `<div class="conv-item${c.unread?' unread':''}${isActive?' active':''}" onclick="openOrderConv('${c.orderId}')">
+        <div class="conv-order">${c.orderNo}</div>
+        <div class="conv-client">${c.client}</div>
+        <div class="conv-preview">${c.lastMsg}</div>
+        <div class="conv-meta">
+          <span class="conv-dept">${DEPT[c.dept]||c.dept}</span>
+          <span class="conv-time">${timeStr}</span>
+          ${c.unread?`<span class="conv-badge">${c.unread}</span>`:''}
+        </div>
+        <div class="conv-actions">
+          <button class="conv-del" onclick="deleteOrderConv(event,'${c.orderId}')">Șterge tot</button>
+        </div>
+      </div>`;
+    }else{
+      return `<div class="conv-item${c.unread?' unread':''}${isActive?' active':''}" onclick="openGeneralMsg('${c.id}')">
+        <div class="conv-client">${c.isMine?'Tu → '+DEPT[c.dept]:c.from}</div>
+        <div class="conv-preview">${c.subject||c.lastMsg}</div>
+        <div class="conv-meta">
+          <span class="conv-dept">${c.isMine?'→ '+DEPT[c.dept]:'General'}</span>
+          <span class="conv-time">${timeStr}</span>
+          ${c.unread?`<span class="conv-badge">${c.unread}</span>`:''}
+        </div>
+        <div class="conv-actions">
+          <button class="conv-del" onclick="deleteMsg(event,'${c.id}')">Șterge</button>
+        </div>
+      </div>`;
+    }
   }).join('');
 }
 
-// OPEN THREAD
-async function openThread(id){
-  activeThreadId=id;
-  renderInbox(); // actualizează selecția
-  const root=allMessages.find(m=>m.id===id);
-  if(!root)return;
+// ── OPEN ORDER CONVERSATION ───────────────────────────────────
+async function openOrderConv(orderId){
+  activeOrderId=orderId;activeGeneralId=null;
+  renderConvList();
   showLov('Se încarcă conversația...');
-  // Marchează ca citit
-  if(!root.is_read&&root.from_user_id!==CU.id){
-    await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('id',id);
-    root.is_read=true;
-    applyTab();
-  }
-  // Fetch replies
-  const{data:replies}=await sb.from('internal_messages')
-    .select(`id,from_user_id,to_department,message,priority,created_at,is_read,
+  // Fetch toate mesajele legate de comandă (root + replies)
+  const{data:root}=await sb.from('internal_messages')
+    .select(`id,from_user_id,to_department,message,subject,priority,is_read,created_at,parent_id,
       user_profiles!internal_messages_from_user_id_fkey(full_name,role)`)
-    .eq('parent_id',id)
+    .eq('order_id',orderId).is('parent_id',null)
     .order('created_at',{ascending:true});
+  // Fetch replies pentru fiecare
+  const rootIds=(root||[]).map(m=>m.id);
+  let replies=[];
+  if(rootIds.length){
+    const{data:rep}=await sb.from('internal_messages')
+      .select(`id,from_user_id,to_department,message,created_at,parent_id,
+        user_profiles!internal_messages_from_user_id_fkey(full_name,role)`)
+      .in('parent_id',rootIds).order('created_at',{ascending:true});
+    replies=rep||[];
+  }
+  // Combină și sortează cronologic
+  const allThread=[...(root||[]),...replies].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
   hideLov();
-  document.getElementById('emptyThread').style.display='none';
-  const tc=document.getElementById('threadContent');tc.style.display='flex';tc.style.flexDirection='column';
-  // Subject + meta
-  const cl=root.orders?.clients?.company_name||root.orders?.clients?.name||'';
-  document.getElementById('threadSubject').textContent=root.subject||(root.orders?root.orders.order_no+' · '+cl:root.message.slice(0,60));
-  const dept=DEPT_LABELS[root.to_department]||root.to_department;
-  document.getElementById('threadMeta').textContent='Către: '+dept+(cl?' · '+cl:'')+(root.priority==='urgent'?' · ⚡ Urgent':'');
-  // Mesaje
-  const msgs=[root,...(replies||[])];
-  document.getElementById('threadMsgs').innerHTML=msgs.map(m=>{
+  // Marchează ca citite
+  const unreadIds=(root||[]).filter(m=>!m.is_read&&m.from_user_id!==CU.id).map(m=>m.id);
+  if(unreadIds.length)await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).in('id',unreadIds);
+  // Header
+  const conv=conversations.find(c=>c.orderId===orderId);
+  document.getElementById('chatOrderNo').textContent=conv?.orderNo||'—';
+  document.getElementById('chatClient').textContent=conv?.client||'—';
+  document.getElementById('chatDept').textContent='Conversație despre comandă';
+  // Set reply dept
+  if(conv?.dept)document.getElementById('replyDept').value=conv.dept==='management'?'agent':conv.dept;
+  renderChat(allThread);
+  await loadMsgs(); // refresh badges
+}
+
+// ── OPEN GENERAL MSG ──────────────────────────────────────────
+async function openGeneralMsg(id){
+  activeGeneralId=id;activeOrderId=null;
+  renderConvList();
+  showLov('Se încarcă...');
+  const{data:root}=await sb.from('internal_messages')
+    .select(`id,from_user_id,to_department,message,subject,priority,is_read,created_at,parent_id,
+      user_profiles!internal_messages_from_user_id_fkey(full_name,role)`)
+    .eq('id',id).single();
+  const{data:replies}=await sb.from('internal_messages')
+    .select(`id,from_user_id,to_department,message,created_at,parent_id,
+      user_profiles!internal_messages_from_user_id_fkey(full_name,role)`)
+    .eq('parent_id',id).order('created_at',{ascending:true});
+  const allThread=[root,...(replies||[])];
+  hideLov();
+  if(!root.is_read&&root.from_user_id!==CU.id)
+    await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('id',id);
+  document.getElementById('chatOrderNo').textContent='';
+  document.getElementById('chatClient').textContent=root.subject||root.message.slice(0,50);
+  document.getElementById('chatDept').textContent='Mesaj general → '+(DEPT[root.to_department]||root.to_department);
+  document.getElementById('replyDept').value=root.to_department==='management'?'agent':root.to_department;
+  renderChat(allThread);
+  await loadMsgs();
+}
+
+function renderChat(msgs){
+  document.getElementById('chatEmpty').style.display='none';
+  const cc=document.getElementById('chatContent');cc.style.display='flex';cc.style.flexDirection='column';
+  const el=document.getElementById('chatMsgs');
+  el.innerHTML=msgs.map(m=>{
     const isMine=m.from_user_id===CU.id;
-    const sender=m.user_profiles?.full_name||(isMine?'Tu':'—');
-    const role=m.user_profiles?.role||'';
+    const sender=isMine?'Tu (Management)':m.user_profiles?.full_name||'—'+(m.user_profiles?.role?' · '+m.user_profiles.role:'');
     const t=new Date(m.created_at).toLocaleString('ro-RO');
-    const replyHTML=m.reply?`
-      <div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,.1);border-radius:6px;border-left:2px solid rgba(255,255,255,.3)">
-        <div style="font-size:9px;opacity:.6;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Răspuns · ${m.replied_at?new Date(m.replied_at).toLocaleString('ro-RO'):''}</div>
-        <div style="font-size:12px">${m.reply}</div>
-      </div>`:'';
+    const isUrgent=m.priority==='urgent';
     return `<div class="bubble ${isMine?'sent':'received'}">
-      <div class="bubble-from">${isMine?'Tu':sender+(role?' · '+role:'')}</div>
+      <button class="bubble-del" onclick="deleteSingleMsg('${m.id}')" title="Șterge">×</button>
+      <div class="bubble-from">${sender}${isUrgent?' ⚡':''}</div>
       <div class="bubble-text">${m.message}</div>
-      ${replyHTML}
       <div class="bubble-time">${t}</div>
     </div>`;
   }).join('');
-  // Scroll jos
-  const tm=document.getElementById('threadMsgs');tm.scrollTop=tm.scrollHeight;
-  // Reply targets
-  document.getElementById('replyTargets').innerHTML=`
-    <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;align-self:center">Răspunde la:</div>
-    ${['agent','croit','talpuit','management','all'].map(d=>`
-      <button onclick="setReplyDept('${d}',this)" class="dept-btn" data-dept="${d}" style="padding:5px 12px;border-radius:5px;border:1.5px solid ${d===root.to_department||d===root.from_user_id?'#B08D57':'#C8C0B8'};background:${d===root.to_department?'#F6F0E5':'#fff'};color:${d===root.to_department?'#8B6914':'#3A3530'};font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">${DEPT_LABELS[d]}</button>`).join('')}`;
+  setTimeout(()=>{el.scrollTop=el.scrollHeight;},50);
   document.getElementById('replyInput').value='';
-  // Set default reply dept
-  document.querySelector(`[data-dept="${root.to_department}"]`)?.click();
 }
 
-let replyDept='agent';
-function setReplyDept(d,el){replyDept=d;document.querySelectorAll('.dept-btn').forEach(b=>{b.style.borderColor='#C8C0B8';b.style.background='#fff';b.style.color='#3A3530';});el.style.borderColor='#B08D57';el.style.background='#F6F0E5';el.style.color='#8B6914';}
-
+// ── SEND REPLY ────────────────────────────────────────────────
 async function sendReply(){
   const text=document.getElementById('replyInput').value.trim();
-  if(!text){showToast('Scrie un mesaj!');return;}
-  if(!activeThreadId)return;
-  const root=allMessages.find(m=>m.id===activeThreadId);
+  if(!text)return;
+  const dept=document.getElementById('replyDept').value;
   showLov('Se trimite...');
-  await sb.from('internal_messages').insert({
-    from_user_id:CU.id,to_department:replyDept,
-    order_id:root?.order_id||null,
-    message:text,priority:'normal',parent_id:activeThreadId,is_read:false,
-  });
-  hideLov();document.getElementById('replyInput').value='';
-  showToast('Răspuns trimis!');
-  await openThread(activeThreadId);
+  if(activeOrderId){
+    // Trimite ca mesaj nou în conversația comenzii
+    const depts=dept==='all'?['agent','croit','talpuit','impachetat','birou']:[dept];
+    await Promise.all(depts.map(d=>sb.from('internal_messages').insert({
+      from_user_id:CU.id,to_department:d,order_id:activeOrderId,
+      message:text,priority:'normal',is_read:false,
+    })));
+    hideLov();document.getElementById('replyInput').value='';
+    await openOrderConv(activeOrderId);
+  }else if(activeGeneralId){
+    await sb.from('internal_messages').insert({
+      from_user_id:CU.id,to_department:dept,
+      message:text,priority:'normal',is_read:false,parent_id:activeGeneralId,
+    });
+    hideLov();document.getElementById('replyInput').value='';
+    await openGeneralMsg(activeGeneralId);
+  }
+  showToast('Mesaj trimis!');
 }
 
-// NEW MSG
-function openNewMsg(){
-  ['nmOrderInput','nmOrderId','nmSubject','nmMessage'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('nmDept').value='croit';
+// ── ȘTERGERE ──────────────────────────────────────────────────
+async function deleteSingleMsg(id){
+  if(!confirm('Ștergi acest mesaj?'))return;
+  showLov('Se șterge...');
+  await sb.from('internal_messages').delete().eq('id',id);
+  hideLov();showToast('Mesaj șters.');
+  if(activeOrderId)await openOrderConv(activeOrderId);
+  else if(activeGeneralId)await openGeneralMsg(activeGeneralId);
+  await loadMsgs();
+}
+
+async function deleteOrderConv(e,orderId){
+  e.stopPropagation();
+  if(!confirm('Ștergi toată conversația despre această comandă?'))return;
+  showLov('Se șterge...');
+  await sb.from('internal_messages').delete().eq('order_id',orderId);
+  hideLov();
+  if(activeOrderId===orderId){activeOrderId=null;document.getElementById('chatEmpty').style.display='flex';document.getElementById('chatContent').style.display='none';}
+  showToast('Conversație ștearsă.');await loadMsgs();
+}
+
+async function deleteMsg(e,id){
+  e.stopPropagation();
+  if(!confirm('Ștergi acest mesaj?'))return;
+  showLov('Se șterge...');
+  // Șterge și replies
+  await sb.from('internal_messages').delete().eq('parent_id',id);
+  await sb.from('internal_messages').delete().eq('id',id);
+  hideLov();showToast('Mesaj șters.');
+  if(activeGeneralId===id){activeGeneralId=null;document.getElementById('chatEmpty').style.display='flex';document.getElementById('chatContent').style.display='none';}
+  await loadMsgs();
+}
+
+async function deleteConversation(){
+  if(activeOrderId){await deleteOrderConv({stopPropagation:()=>{}},activeOrderId);}
+  else if(activeGeneralId){await deleteMsg({stopPropagation:()=>{}},activeGeneralId);}
+}
+
+// ── NEW MSG ───────────────────────────────────────────────────
+function openNewMsg(orderId=null,orderNo=null){
+  document.getElementById('nmDept').value='agent';
   document.getElementById('nmPriority').value='normal';
+  document.getElementById('nmOrderInput').value=orderNo||'';
+  document.getElementById('nmOrderId').value=orderId||'';
+  document.getElementById('nmSubject').value='';
+  document.getElementById('nmMessage').value='';
   document.getElementById('newMsgModal').classList.add('show');
 }
 async function sendNewMsg(){
@@ -432,25 +572,23 @@ async function sendNewMsg(){
   const message=document.getElementById('nmMessage').value.trim();
   if(!message){showToast('Scrie mesajul!');return;}
   showLov('Se trimite...');
-  if(dept==='all'){
-    // Trimite la toate departamentele
-    const depts=['agent','croit','talpuit','impachetat','birou'];
-    await Promise.all(depts.map(d=>sb.from('internal_messages').insert({from_user_id:CU.id,to_department:d,order_id:orderId,subject,message,priority,is_read:false})));
-  }else{
-    await sb.from('internal_messages').insert({from_user_id:CU.id,to_department:dept,order_id:orderId,subject,message,priority,is_read:false});
-  }
-  hideLov();closeModal('newMsgModal');showToast('Mesaj trimis!');await loadMessages();
+  const depts=dept==='all'?['agent','croit','talpuit','impachetat','birou']:[dept];
+  await Promise.all(depts.map(d=>sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:d,order_id:orderId,subject,message,priority,is_read:false,
+  })));
+  hideLov();closeModal('newMsgModal');showToast('Mesaj trimis!');
+  await loadMsgs();
+  if(orderId)await openOrderConv(orderId);
 }
 
-// ORDER AUTOCOMPLETE
-function filterOrders(q){
+function filterOrdersAc(q){
   const d=document.getElementById('nmOrderDrop');
   const f=q.trim()?orders.filter(o=>(o.order_no||'').toLowerCase().includes(q.toLowerCase())||(o.clients?.company_name||o.clients?.name||'').toLowerCase().includes(q.toLowerCase())):orders;
   if(!f.length){d.style.display='none';return;}
   d.style.display='block';
-  d.innerHTML=f.slice(0,8).map(o=>`<div class="ac-item" onclick="selOrder('${o.id}','${o.order_no}')"><span style="font-weight:700;font-family:monospace;font-size:12px">${o.order_no}</span><span style="font-size:11px;color:#5A5248">${o.clients?.company_name||o.clients?.name||''}</span></div>`).join('');
+  d.innerHTML=f.slice(0,8).map(o=>`<div class="ac-item" onclick="selOrderAc('${o.id}','${o.order_no}')"><span style="font-weight:700;font-family:monospace;font-size:12px">${o.order_no}</span><span style="font-size:11px;color:#5A5248">${o.clients?.company_name||o.clients?.name||''}</span></div>`).join('');
 }
-function selOrder(id,no){document.getElementById('nmOrderId').value=id;document.getElementById('nmOrderInput').value=no;document.getElementById('nmOrderDrop').style.display='none';}
+function selOrderAc(id,no){document.getElementById('nmOrderId').value=id;document.getElementById('nmOrderInput').value=no;document.getElementById('nmOrderDrop').style.display='none';}
 
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
