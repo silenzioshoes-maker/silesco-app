@@ -453,6 +453,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
   <!-- MESAJE AGENT - redirect la pagina dedicată -->
   <div id="vMesaje" style="display:none"></div>
 
+  <!-- STOC AGENT -->
+  <div id="vStoc" style="display:none">
+    <div class="wrap">
+      <div class="sec-label">Baxuri disponibile</div>
+      <div style="font-size:11px;color:#5A5248;margin-bottom:12px;line-height:1.5">Selectează un articol din stoc pentru a-l adăuga rapid la o comandă nouă.</div>
+      <div id="stBaxList"></div>
+      <div class="sec-label" style="margin-top:20px">FEȚE disponibile</div>
+      <div id="stFeteList"></div>
+    </div>
+  </div>
+
   <!-- NAV -->
   <div class="bnav">
     <button class="nb active" id="n_orders" onclick="showV('orders')">
@@ -463,10 +474,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
       <svg class="nb-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span class="nb-label">Nou</span>
     </button>
+    <button class="nb" id="n_stoc" onclick="showV('stoc')">
+      <svg class="nb-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <span class="nb-label">Stoc</span>
+    </button>
     <button class="nb" id="n_mesaje" onclick="window.location.href='/agent-messages.html'" style="position:relative">
       <svg class="nb-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span class="nb-label">Mesaje</span>
-      <span id="agentMsgBadge" style="display:none;position:absolute;top:2px;right:18px;background:#9C3A2B;color:#fff;font-size:8px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center">0</span>
+      <span id="agentMsgBadge" style="display:none;position:absolute;top:2px;right:10px;background:#9C3A2B;color:#fff;font-size:8px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center">0</span>
     </button>
   </div>
 </div>
@@ -564,7 +579,7 @@ function showV(n){
     startNew();
   }else if(n==='stoc'){
     document.getElementById('vStoc').style.display='block';
-    document.getElementById('n_stoc')?.classList.add('active');
+    document.getElementById('n_stoc').classList.add('active');
     document.getElementById('hTitle').textContent='Stoc disponibil';
     loadStoc();
   }else if(n==='mesaje'){
@@ -1520,11 +1535,67 @@ async function loadAgentMsgBadge(){
 
 // ── STOC ──────────────────────────────────────────────────────
 async function loadStoc(){
-  const{data:bx}=await sb.from('stock_operational').select('*,products(code,name)').eq('stock_type','bax_gata');
-  const{data:ft}=await sb.from('stock_operational').select('*,products(code,name)').eq('stock_type','fete');
-  const ri=(item,c)=>`<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px;font-weight:700;color:#1B1B1B">Art. ${item.products?.code||'—'} · ${item.color||''}</div></div><div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:${c}">${item.qty_available}</div><div style="font-size:9px;color:#4A4540;text-transform:uppercase;letter-spacing:.5px">${item.stock_type==='bax_gata'?'baxuri':'per.'}</div></div></div>`;
-  document.getElementById('stBax').innerHTML=bx?.length?bx.map(b=>ri(b,'#365A43')).join(''):'<div class="empty-state" style="padding:20px 0"><svg class="empty-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><div class="empty-text">Niciun bax în stoc</div></div>';
-  document.getElementById('stFete').innerHTML=ft?.length?ft.map(f=>ri(f,'#2F4A63')).join(''):'<div class="empty-state" style="padding:20px 0"><div class="empty-text">Nicio FEȚE disponibilă</div></div>';
+  const[{data:baxuri},{data:fete}]=await Promise.all([
+    sb.from('stock_baxuri').select('*,products(code,name)').order('created_at',{ascending:false}),
+    sb.from('stock_fete').select('*').order('created_at',{ascending:false}),
+  ]);
+  const baxEl=document.getElementById('stBaxList');
+  if(!baxuri?.length){baxEl.innerHTML='<div style="text-align:center;padding:20px;color:#9E9890;font-size:13px;font-weight:500">Niciun bax în stoc.</div>';}
+  else{baxEl.innerHTML=(baxuri||[]).map(b=>{
+    const model=b.products?.code?'Art. '+b.products.code:b.free_model||'—';
+    const entries=b.ponytage?Object.entries(b.ponytage).filter(([,q])=>q>0):[];
+    const pontajStr=entries.map(([s,q])=>s+'×'+q).join('  ');
+    const pontajJSON=JSON.stringify(b.ponytage||{});
+    return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
+      ${b.photo_url?`<img src="${b.photo_url}" style="width:100%;height:160px;object-fit:cover" onerror="this.style.display='none'"/>`:''}
+      <div style="padding:14px">
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111111">${model}</div>
+        <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${b.color||'—'}</div>
+        <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#1E4A2E">${b.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per.</span></div>
+          ${b.price_per_pair?`<span style="font-size:14px;font-weight:700;color:#8B6914">${b.price_per_pair} RON/per.</span>`:''}
+        </div>
+        ${b.notes?`<div style="font-size:11px;color:#5A5248;font-style:italic;margin-top:4px">${b.notes}</div>`:''}
+        <button onclick='addFromStock("${b.id}","${model.replace(/"/g,"&quot;")}","${b.color||''}",${b.price_per_pair||0},${pontajJSON})' style="width:100%;margin-top:12px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+          + Adaugă la comandă
+        </button>
+      </div>
+    </div>`;
+  }).join('');}
+  const feteEl=document.getElementById('stFeteList');
+  if(!fete?.length){feteEl.innerHTML='<div style="text-align:center;padding:20px;color:#9E9890;font-size:13px;font-weight:500">Nicio FEȚE în stoc.</div>';}
+  else{feteEl.innerHTML=(fete||[]).map(f=>{
+    const entries=f.ponytage?Object.entries(f.ponytage).filter(([,q])=>q>0):[];
+    const pontajStr=entries.map(([s,q])=>s+'×'+q).join('  ');
+    return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
+      ${f.photo_url?`<img src="${f.photo_url}" style="width:100%;height:160px;object-fit:cover" onerror="this.style.display='none'"/>`:''}
+      <div style="padding:14px">
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111111">${f.model_name}</div>
+        <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${f.color||'—'}</div>
+        <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
+        <div style="margin-top:10px"><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#2F4A63">${f.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per. FEȚE</span></div>
+        ${f.notes?`<div style="font-size:11px;color:#5A5248;font-style:italic;margin-top:4px">${f.notes}</div>`:''}
+        <div style="margin-top:10px;padding:8px 10px;background:#E8EFF6;border-radius:6px;font-size:11px;color:#23394F;font-weight:500">FEȚE — discută cu clientul și plasează comanda manual.</div>
+      </div>
+    </div>`;
+  }).join('');}
+}
+
+function addFromStock(stockId,model,color,price,pontaj){
+  showV('new');
+  setTimeout(()=>{
+    document.getElementById('artModInput').value=model;
+    document.getElementById('artMod').value='';
+    document.getElementById('artCol').value=color;
+    document.getElementById('artPr').value=price||'';
+    const pt=typeof pontaj==='object'?pontaj:(JSON.parse(pontaj||'{}'));
+    SZ.forEach(s=>szV[s]=0);
+    Object.entries(pt).forEach(([s,q])=>{szV[s]=parseInt(q)||0;});
+    renderSz();
+    goStep(2);
+    showToast('Articol din stoc pre-completat! Ajustează dacă e nevoie.');
+  },250);
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
