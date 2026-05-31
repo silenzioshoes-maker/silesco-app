@@ -450,42 +450,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
     </div>
   </div>
 
-  <!-- MESAJE AGENT -->
-  <div id="vMesaje" style="display:none">
-    <div class="wrap">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="sec-label" style="margin-bottom:0">Mesaje</div>
-        <button onclick="openNewAgentMsg()" style="padding:7px 14px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Mesaj nou</button>
-      </div>
-      <div id="agentMsgList"></div>
-    </div>
-  </div>
-
-  <!-- MODAL MESAJ NOU AGENT -->
-  <div class="modal-overlay" id="agentMsgModal">
-    <div class="modal-box">
-      <div class="modal-title" id="amTitle">Mesaj nou</div>
-      <div class="modal-sub" id="amSub">Trimite un mesaj către un departament</div>
-      <div class="fld">
-        <label>Către</label>
-        <select id="amDept" style="width:100%;padding:12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff">
-          <option value="management">Management</option>
-          <option value="croit">Croit</option>
-          <option value="talpuit">Talpuit</option>
-          <option value="impachetat">Împachetat</option>
-        </select>
-      </div>
-      <div class="fld" id="amOrderWrap">
-        <label>Comandă <span style="color:#5A5248;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
-        <select id="amOrderSel" style="width:100%;padding:12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff">
-          <option value="">Fără comandă specifică</option>
-        </select>
-      </div>
-      <div class="fld"><label>Mesaj</label><textarea style="width:100%;padding:12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;height:90px" id="amText" placeholder="Scrie mesajul..."></textarea></div>
-      <button style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px" onclick="sendAgentMsg()">Trimite</button>
-      <button style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #DDD7CE;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif" onclick="closeAgentMsgModal()">Anulează</button>
-    </div>
-  </div>
+  <!-- MESAJE AGENT - redirect la pagina dedicată -->
+  <div id="vMesaje" style="display:none"></div>
 
   <!-- NAV -->
   <div class="bnav">
@@ -511,7 +477,7 @@ const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const {createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
-let CU=null,CP=null,selClient=null,curTermen='10z',arts=[],prods=[];
+let CU=null,CP=null,selClient=null,curTermen='10z',arts=[],prods=[],allOrders=[];
 let editOrderId=null,delOrderId=null,editArts=[];
 let dismissedNotif=false;
 const SZ=['39','40','41','42','43','44'];
@@ -602,10 +568,7 @@ function showV(n){
     document.getElementById('hTitle').textContent='Stoc disponibil';
     loadStoc();
   }else if(n==='mesaje'){
-    document.getElementById('vMesaje').style.display='block';
-    document.getElementById('n_mesaje').classList.add('active');
-    document.getElementById('hTitle').textContent='Mesaje';
-    loadAgentMessages();
+    window.location.href='/agent-messages.html';
   }
 }
 
@@ -731,8 +694,9 @@ async function loadOrders(){
     .eq('agent_id',CU.id)
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
-  renderOrders(orders||[]);
-  const active=(orders||[]).filter(o=>o.status!=='livrat'&&o.status!=='anulat').length;
+  allOrders=orders||[];
+  renderOrders(allOrders);
+  const active=allOrders.filter(o=>o.status!=='livrat'&&o.status!=='anulat').length;
   document.getElementById('hBadge').textContent=active+' active';
 }
 
