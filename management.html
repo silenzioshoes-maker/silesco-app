@@ -463,6 +463,22 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <!-- ORDERS -->
     <div id="sectionOrders">
       <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- MESAJE RECENTE -->
+      <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:20px;overflow:hidden">
+        <div style="padding:11px 20px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:13px;font-weight:700;color:#111111;display:flex;align-items:center;gap:8px">
+            <svg style="width:14px;height:14px;stroke:#111111;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Mesaje recente
+            <span id="msgPanelBadge" style="display:none;background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:2px 7px">0</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button onclick="loadMsgPanel()" style="padding:5px 10px;border-radius:5px;border:1px solid #DDD7CE;background:#fff;font-size:11px;color:#3A3530;cursor:pointer;font-family:'Inter',sans-serif">↻</button>
+            <button onclick="window.location.href='/messages.html'" style="padding:5px 12px;border-radius:5px;border:none;background:#111111;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Toate mesajele →</button>
+          </div>
+        </div>
+        <div id="msgPanelList" style="max-height:180px;overflow-y:auto"></div>
+      </div>
       <div class="filters">
         <button class="filter-btn active" onclick="setFilter('toate',this)">Toate</button>
         <button class="filter-btn" onclick="setFilter('nou',this)">Noi</button>
@@ -527,9 +543,53 @@ async function doLogout(){await sb.auth.signOut();}
 // LOAD
 async function loadAll(){
   showLov('Se încarcă datele...');
-  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadMsgBadge()]);
+  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadMsgBadge(),loadMsgPanel()]);
   hideLov();
 }
+async function loadMsgPanel(){
+  const{data}=await sb.from('internal_messages')
+    .select(`id,from_user_id,to_department,order_id,message,subject,priority,is_read,created_at,
+      user_profiles!internal_messages_from_user_id_fkey(full_name,role),
+      orders(order_no,clients!orders_client_id_fkey(name,company_name))`)
+    .is('parent_id',null)
+    .order('created_at',{ascending:false})
+    .limit(8);
+  const msgs=data||[];
+  const unread=msgs.filter(m=>!m.is_read&&m.from_user_id!==CU.id).length;
+  const badge=document.getElementById('msgPanelBadge');
+  if(badge){if(unread>0){badge.style.display='inline';badge.textContent=unread;}else{badge.style.display='none';}}
+  // Update topbar badge too
+  const tb=document.getElementById('topbarMsgBadge');
+  if(tb){if(unread>0){tb.style.display='inline';tb.textContent=unread;}else{tb.style.display='none';}}
+  const el=document.getElementById('msgPanelList');
+  if(!el)return;
+  if(!msgs.length){el.innerHTML='<div style="padding:20px;text-align:center;color:#9E9890;font-size:12px">Niciun mesaj.</div>';return;}
+  const DEPT2={agent:'Agent',croit:'Croit',talpuit:'Talpuit',impachetat:'Împachetat',birou:'Birou',management:'Management',all:'Toate'};
+  el.innerHTML=msgs.map(m=>{
+    const isMine=m.from_user_id===CU.id;
+    const isUnread=!m.is_read&&!isMine;
+    const isUrgent=m.priority==='urgent';
+    const sender=isMine?'Tu → '+(DEPT2[m.to_department]||m.to_department):m.user_profiles?.full_name||'—';
+    const order=m.orders?m.orders.order_no+' · '+(m.orders.clients?.company_name||m.orders.clients?.name||''):'';
+    const t=new Date(m.created_at);
+    const timeStr=t.toLocaleDateString('ro-RO')===new Date().toLocaleDateString('ro-RO')
+      ?t.toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'})
+      :t.toLocaleDateString('ro-RO');
+    return `<div style="padding:10px 20px;border-bottom:1px solid #EDE8DF;cursor:pointer;background:${isUnread?'#FFF9F0':'#fff'};display:flex;gap:12px;align-items:flex-start"
+      onclick="window.location.href='/messages.html'">
+      ${isUnread?'<div style="width:7px;height:7px;border-radius:50%;background:#9C3A2B;flex-shrink:0;margin-top:5px"></div>':'<div style="width:7px;height:7px;flex-shrink:0"></div>'}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <div style="font-size:12px;font-weight:700;color:${isUrgent?'#7A2418':'#111111'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sender}${isUrgent?' ⚡':''}</div>
+          <div style="font-size:10px;color:#9E9890;flex-shrink:0">${timeStr}</div>
+        </div>
+        ${order?`<div style="font-size:10px;font-weight:700;color:#8B6914;font-family:'Courier New',monospace;margin:1px 0">${order}</div>`:''}
+        <div style="font-size:12px;color:#5A5248;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px">${m.subject||m.message}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 async function loadMsgBadge(){
   const{data}=await sb.from('internal_messages')
     .select('id,from_user_id,user_profiles!internal_messages_from_user_id_fkey(full_name)')
