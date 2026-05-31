@@ -1171,7 +1171,8 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
   const fasii=lines.filter(l=>!l.from_stock).map(l=>{
     const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`<span style="display:inline-block;margin-right:14px;font-size:15px"><strong>${s}</strong>×${q}</span>`).join(''):'';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||'—');
-    const detailsText=[l.notes,o.notes].filter(Boolean).join(' | ');
+    const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
+    const detailsText=[notesClean,o.notes].filter(Boolean).join(' | ');
     return `<div style="border:2px dashed #999;border-radius:4px;padding:14px 18px;margin-bottom:10px;page-break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div style="font-size:18px;font-weight:700">${cl}</div>
@@ -1179,7 +1180,8 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
       </div>
       <div style="font-size:16px;font-weight:700;margin-bottom:6px;color:#1A1814">${modName} · ${l.color||'—'} · ${l.total_pairs} perechi</div>
       <div style="margin-bottom:8px;padding:8px 0;border-top:1px solid #eee;border-bottom:1px solid #eee">${pt}</div>
-      ${detailsText?`<div style="font-size:13px;color:#333;margin-top:4px"><strong>Observații:</strong> ${detailsText}</div>`:''}
+      ${notesClean?`<div style="font-size:13px;color:#333;margin-top:4px;background:#FFF9EC;border-left:3px solid #B08D57;padding:6px 10px;border-radius:0 4px 4px 0"><strong>Obs. articol:</strong> ${notesClean}</div>`:''}
+      ${o.notes?`<div style="font-size:12px;color:#555;margin-top:4px;padding:5px 10px;background:#F5F5F5;border-radius:4px"><strong>Obs. generale:</strong> ${o.notes}</div>`:''}
       <div style="text-align:right;font-size:11px;color:#aaa;margin-top:8px">✂ — — — taie aici — — —</div>
     </div>`;
   }).join('');
