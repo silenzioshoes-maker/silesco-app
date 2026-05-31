@@ -764,7 +764,7 @@ function renderOrders(orders){
     }).join('');
 
     return `<div class="ocard${wasEdited?' modified':''}">
-      <div onclick="togDet(${i})" style="cursor:pointer;user-select:none">
+      <div onclick="togDet(${i},'${o.id}')" style="cursor:pointer;user-select:none">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
@@ -851,15 +851,15 @@ function goToMsgs(orderId,orderNo){
   window.location.href='/agent-messages.html?order='+orderId+'&no='+encodeURIComponent(orderNo);
 }
 
-function togDet(i){
+function togDet(i, orderId){
   const d=document.getElementById('det'+i);
   const a=document.getElementById('arr'+i);
   const open=d.style.display==='block';
   d.style.display=open?'none':'block';
   if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
-  if(!open){
-    const o=allOrders[i];
-    if(o){loadOrderMsgs(o.id);loadOrderHistory(o.id);}
+  if(!open&&orderId){
+    loadOrderMsgs(orderId);
+    loadOrderHistory(orderId);
   }
 }
 
