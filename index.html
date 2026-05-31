@@ -682,7 +682,7 @@ function selectEditModel(id,code){
 async function loadOrders(){
   const{data:orders,error}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,
-      clients(id,name,company_name,cui,phone,delivery_address),
+      clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,products(code,name))`)
     .eq('agent_id',CU.id)
     .order('created_at',{ascending:false});
@@ -816,7 +816,7 @@ function togDet(i){
 async function openEditModal(id){
   editOrderId=id;
   showLov('Se încarcă comanda...');
-  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*,products(code,name))').eq('id',id).single();
+  const{data:o}=await sb.from('orders').select('*,clients!orders_client_id_fkey(*),order_lines(*,products(code,name))').eq('id',id).single();
   const{data:history}=await sb.from('audit_log').select('*').eq('record_id',id).order('created_at',{ascending:false}).limit(10);
   hideLov();
 
@@ -1015,7 +1015,7 @@ async function confirmDelete(){
 // ── PDF FIȘĂ CLIENT ───────────────────────────────────────────
 async function genPDF(oid){
   showLov('Se generează fișa...');
-  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*,products(code,name))').eq('id',oid).single();
+  const{data:o}=await sb.from('orders').select('*,clients!orders_client_id_fkey(*),order_lines(*,products(code,name))').eq('id',oid).single();
   hideLov();
   if(!o){showToast('Eroare!');return;}
   const cl=o.clients?.company_name||o.clients?.name||'—';
