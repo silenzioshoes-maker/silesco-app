@@ -374,9 +374,15 @@ async function openThread(id){
     const sender=m.user_profiles?.full_name||(isMine?'Tu':'—');
     const role=m.user_profiles?.role||'';
     const t=new Date(m.created_at).toLocaleString('ro-RO');
+    const replyHTML=m.reply?`
+      <div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,.1);border-radius:6px;border-left:2px solid rgba(255,255,255,.3)">
+        <div style="font-size:9px;opacity:.6;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Răspuns · ${m.replied_at?new Date(m.replied_at).toLocaleString('ro-RO'):''}</div>
+        <div style="font-size:12px">${m.reply}</div>
+      </div>`:'';
     return `<div class="bubble ${isMine?'sent':'received'}">
       <div class="bubble-from">${isMine?'Tu':sender+(role?' · '+role:'')}</div>
       <div class="bubble-text">${m.message}</div>
+      ${replyHTML}
       <div class="bubble-time">${t}</div>
     </div>`;
   }).join('');
