@@ -493,7 +493,7 @@ async function loadAteliere(){
 async function loadOrders(){
   const{data,error}=await sb.from('orders')
     .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,
-      clients(id,name,company_name,cui,phone,delivery_address),
+      clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       user_profiles!orders_agent_id_fkey(full_name),
       order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,products(id,code,name,default_sole_id))`)
     .order('created_at',{ascending:false});
@@ -752,7 +752,7 @@ function openNewOrder(){omEditId=null;omArts=[];omEditingArtIdx=null;omSizeList=
   renderOmSizes();renderOmArts();document.getElementById('orderModal').classList.add('show');}
 
 async function openEditOrder(id,e){e.stopPropagation();showLov('Se încarcă...');
-  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*,products(code,name))').eq('id',id).single();hideLov();
+  const{data:o}=await sb.from('orders').select('*,clients!orders_client_id_fkey(*),order_lines(*,products(code,name))').eq('id',id).single();hideLov();
   omEditId=id;omEditingArtIdx=null;omSizeList=[...SZ];SZ.forEach(s=>omSzV[s]=0);omModMode=null;
   document.getElementById('orderModalTitle').textContent='Editează comanda';
   document.getElementById('orderModalSub').textContent=o.order_no+' · '+(o.is_stock&&!o.allocated_to_client?'STOC':(o.clients?.company_name||o.clients?.name||'—'));
@@ -887,7 +887,7 @@ function calcDD(t){const d=new Date();const z={'5z':5,'10z':10,'15z':15,'30z':30
 
 // ── FIȘĂ DE PRODUCȚIE (fâșii tăiabile) ────────────────────────
 async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează fișa...');
-  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*,products(code,name))').eq('id',id).single();hideLov();if(!o)return;
+  const{data:o}=await sb.from('orders').select('*,clients!orders_client_id_fkey(*),order_lines(*,products(code,name))').eq('id',id).single();hideLov();if(!o)return;
   const cl=o.clients?.company_name||o.clients?.name||'—';
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const azi=new Date().toLocaleDateString('ro-RO');
@@ -943,7 +943,7 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
 
 // ── FIȘĂ CLIENT (cu prețuri) ──────────────────────────────────
 async function genFisaClient(id,e){e.stopPropagation();showLov('Se generează...');
-  const{data:o}=await sb.from('orders').select('*,clients(*),order_lines(*,products(code,name))').eq('id',id).single();hideLov();if(!o)return;
+  const{data:o}=await sb.from('orders').select('*,clients!orders_client_id_fkey(*),order_lines(*,products(code,name))').eq('id',id).single();hideLov();if(!o)return;
   const cl=o.clients?.company_name||o.clients?.name||'—';
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const azi=new Date().toLocaleDateString('ro-RO');
