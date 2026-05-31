@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SILESCO · Stoc</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#111111}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:#111111;display:flex;flex-direction:column;z-index:100}
+.sidebar-logo{padding:24px 20px 18px}
+.sidebar-brand{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
+.sidebar-title{font-family:'Playfair Display',serif;font-size:18px;color:#fff;font-weight:700}
+.sidebar-divider{height:1px;background:rgba(255,255,255,.08);margin:0 16px 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;border-radius:6px;margin:1px 8px;cursor:pointer;transition:background .15s}
+.nav-item:hover{background:rgba(255,255,255,.06)}
+.nav-item.active{background:rgba(176,141,87,.18)}
+.nav-item svg{width:15px;height:15px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nav-item.active svg{stroke:#B08D57}
+.nav-item span{font-size:12px;color:rgba(255,255,255,.5);font-weight:500}
+.nav-item.active span{color:#fff;font-weight:600}
+.sidebar-bottom{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.user-name{font-size:12px;color:rgba(255,255,255,.7);font-weight:600}
+.user-role{font-size:10px;color:rgba(255,255,255,.3)}
+.main{margin-left:220px;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #DDD7CE;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.page-title{font-family:'Playfair Display',serif;font-size:20px;color:#111111;font-weight:700}
+.content{padding:24px 28px}
+
+/* TABS */
+.stock-tabs{display:flex;gap:0;background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden;margin-bottom:24px}
+.stock-tab{flex:1;padding:14px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;color:#5A5248;border-right:1px solid #DDD7CE;transition:all .15s}
+.stock-tab:last-child{border-right:none}
+.stock-tab.active{background:#111111;color:#fff}
+.stock-tab:hover:not(.active){background:#F4F1EA}
+
+/* GRID */
+.stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.stock-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden;transition:box-shadow .15s}
+.stock-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.stock-photo{width:100%;height:160px;object-fit:cover;background:#F4F1EA;display:flex;align-items:center;justify-content:center;color:#C8C0B8;font-size:12px}
+.stock-photo img{width:100%;height:160px;object-fit:cover}
+.stock-photo-placeholder{width:100%;height:160px;background:#F4F1EA;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#C8C0B8}
+.stock-photo-placeholder svg{width:32px;height:32px;stroke:#C8C0B8;fill:none;stroke-width:1.5}
+.stock-body{padding:14px}
+.stock-model{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#111111;margin-bottom:3px}
+.stock-color{font-size:13px;color:#5A5248;margin-bottom:8px}
+.stock-pontaj{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.pontaj-chip{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;color:#111111}
+.stock-meta{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #EDE8DF}
+.stock-pairs{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#1E4A2E}
+.stock-pairs-label{font-size:10px;color:#5A5248;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stock-price{font-size:14px;font-weight:700;color:#8B6914}
+.stock-actions{display:flex;gap:6px;margin-top:10px}
+.btn-edit{flex:1;padding:8px;border-radius:7px;border:1.5px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-del{padding:8px 12px;border-radius:7px;border:1.5px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.stock-notes{font-size:11px;color:#5A5248;margin-top:6px;font-style:italic}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px;color:#9E9890}
+.empty-state svg{width:40px;height:40px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 16px;display:block}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;color:#111111;margin-bottom:20px;font-weight:700}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.fld input,.fld select,.fld textarea{width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff}
+.fld textarea{resize:none;height:60px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#B08D57}
+.sizes-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:6px}
+.size-cell{background:#F4F1EA;border:1.5px solid #C8C0B8;border-radius:7px;padding:8px 4px;text-align:center}
+.size-nr{font-size:10px;color:#3A3530;font-weight:700;margin-bottom:4px}
+.size-controls{display:flex;align-items:center;justify-content:center;gap:3px}
+.size-btn{width:22px;height:22px;border-radius:4px;border:1.5px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+.size-val{font-size:15px;font-weight:700;color:#111111;min-width:16px;text-align:center;font-family:'Playfair Display',serif}
+.add-size-btn{width:100%;padding:8px;border-radius:6px;border:1.5px dashed #C8C0B8;background:#fff;color:#5A5248;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:6px}
+.btn-save{width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px}
+.btn-cancel{width:100%;padding:12px;border-radius:8px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.photo-preview{width:100%;height:140px;object-fit:cover;border-radius:7px;margin-top:8px;display:none}
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.lov.show{display:flex}
+.spinner{width:32px;height:32px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lov-text{font-size:13px;color:#2A2A2A;font-weight:600}
+.toast{position:fixed;bottom:24px;right:24px;background:#111111;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.ac-wrap{position:relative}
+.ac-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #B08D57;border-top:none;border-radius:0 0 7px 7px;z-index:50;max-height:160px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.ac-item{padding:10px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid #F4F1EA;display:flex;gap:8px}
+.ac-item:hover{background:#F6F0E5}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.content{padding:16px}}
+</style>
+</head>
+<body>
+<div class="lov" id="lov"><div class="spinner"></div><div class="lov-text" id="lovText">Se încarcă...</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL ADAUGĂ/EDITEAZĂ BAX -->
+<div class="modal-overlay" id="baxModal">
+  <div class="modal-box">
+    <div class="modal-title" id="baxModalTitle">Adaugă Bax</div>
+    <div class="fld ac-wrap">
+      <label>Model</label>
+      <input type="text" id="baxModel" placeholder="ex: Art. 140 sau scrie liber..." oninput="filterBaxModels(this.value)" onfocus="filterBaxModels(this.value)" autocomplete="off"/>
+      <input type="hidden" id="baxProductId"/>
+      <div class="ac-drop" id="baxModelDrop"></div>
+    </div>
+    <div class="fld">
+      <label>Culoare / Piele</label>
+      <input type="text" id="baxColor" placeholder="ex: Negru Lac"/>
+    </div>
+    <div class="fld">
+      <label>Preț per pereche (RON)</label>
+      <input type="number" id="baxPrice" placeholder="190" min="0"/>
+    </div>
+    <div class="fld">
+      <label>Pontaj pe mărimi</label>
+      <div class="sizes-grid" id="baxSizesGrid"></div>
+      <button class="add-size-btn" onclick="addBaxCustomSize()">+ Adaugă mărime</button>
+    </div>
+    <div class="fld">
+      <label>Link poză <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+      <input type="url" id="baxPhoto" placeholder="https://..." oninput="previewPhoto('baxPhoto','baxPhotoPreview')"/>
+      <img id="baxPhotoPreview" class="photo-preview"/>
+    </div>
+    <div class="fld">
+      <label>Observații</label>
+      <textarea id="baxNotes" placeholder="ex: sezon primăvară-vară..."></textarea>
+    </div>
+    <button class="btn-save" onclick="saveBax()">Salvează</button>
+    <button class="btn-cancel" onclick="closeModal('baxModal')">Anulează</button>
+  </div>
+</div>
+
+<!-- MODAL ADAUGĂ/EDITEAZĂ FEȚE -->
+<div class="modal-overlay" id="feteModal">
+  <div class="modal-box">
+    <div class="modal-title" id="feteModalTitle">Adaugă FEȚE</div>
+    <div class="fld">
+      <label>Model / Denumire</label>
+      <input type="text" id="feteModel" placeholder="ex: Oxford 140, Derby special..."/>
+    </div>
+    <div class="fld">
+      <label>Culoare / Piele</label>
+      <input type="text" id="feteColor" placeholder="ex: Negru Lac"/>
+    </div>
+    <div class="fld">
+      <label>Pontaj pe mărimi</label>
+      <div class="sizes-grid" id="feteSizesGrid"></div>
+      <button class="add-size-btn" onclick="addFeteCustomSize()">+ Adaugă mărime</button>
+    </div>
+    <div class="fld">
+      <label>Link poză <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+      <input type="url" id="fetePhoto" placeholder="https://..." oninput="previewPhoto('fetePhoto','fetePhotoPreview')"/>
+      <img id="fetePhotoPreview" class="photo-preview"/>
+    </div>
+    <div class="fld">
+      <label>Observații</label>
+      <textarea id="feteNotes" placeholder="ex: potrivit pentru modele derby..."></textarea>
+    </div>
+    <button class="btn-save" onclick="saveFete()">Salvează</button>
+    <button class="btn-cancel" onclick="closeModal('feteModal')">Anulează</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo"><div class="sidebar-brand">SILESCO</div><div class="sidebar-title">Management</div></div>
+  <div class="sidebar-divider"></div>
+  <div style="padding:0 8px;flex:1;overflow-y:auto">
+    <div class="nav-item" onclick="window.location.href='/management.html'">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span>Comenzi</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/messages.html'">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Mesaje</span>
+    </div>
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <span>Stoc</span>
+    </div>
+  </div>
+  <div class="sidebar-bottom">
+    <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center">
+      <svg style="width:14px;height:14px;stroke:rgba(255,255,255,.5);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div><div class="user-name" id="userName">—</div><div class="user-role">Management</div></div>
+    <button onclick="doLogout()" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:4px">
+      <svg style="width:14px;height:14px;stroke:rgba(255,255,255,.35);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">Gestiune Stoc</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="loadAll()" style="padding:8px 14px;border-radius:7px;border:1.5px solid #C8C0B8;background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">↻ Reîncarcă</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="stock-tabs">
+      <div class="stock-tab active" onclick="showTab('baxuri',this)">
+        📦 Baxuri gata (<span id="baxCount">0</span>)
+      </div>
+      <div class="stock-tab" onclick="showTab('fete',this)">
+        ✂️ FEȚE în casă (<span id="feteCount">0</span>)
+      </div>
+    </div>
+
+    <!-- BAXURI -->
+    <div id="tabBaxuri">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#5A5248" id="baxStats"></div>
+        <button onclick="openBaxModal()" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă bax</button>
+      </div>
+      <div class="stock-grid" id="baxGrid"></div>
+    </div>
+
+    <!-- FEȚE -->
+    <div id="tabFete" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#5A5248" id="feteStats"></div>
+        <button onclick="openFeteModal()" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă FEȚE</button>
+      </div>
+      <div class="stock-grid" id="feteGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+const{createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+let CU=null,prods=[],baxEditId=null,feteEditId=null;
+const SZ=['39','40','41','42','43','44'];
+let baxSizes=[...SZ],baxSzV={};SZ.forEach(s=>baxSzV[s]=0);
+let feteSizes=[...SZ],feteSzV={};SZ.forEach(s=>feteSzV[s]=0);
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/index.html';return;}
+  CU=session.user;
+  const{data:p}=await sb.from('user_profiles').select('full_name,role').eq('id',CU.id).single();
+  if(p?.role!=='management'){window.location.href='/index.html';return;}
+  document.getElementById('userName').textContent=p?.full_name||'Management';
+  sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT')window.location.href='/index.html';});
+  document.addEventListener('click',e=>{if(!e.target.closest('#baxModelDrop')&&e.target.id!=='baxModel')document.getElementById('baxModelDrop').style.display='none';});
+  const{data:pd}=await sb.from('products').select('id,code,name').eq('is_active',true).order('code');
+  prods=pd||[];
+  await loadAll();
+});
+async function doLogout(){await sb.auth.signOut();}
+
+async function loadAll(){
+  showLov('Se încarcă...');
+  await Promise.all([loadBaxuri(),loadFete()]);
+  hideLov();
+}
+
+async function loadBaxuri(){
+  const{data}=await sb.from('stock_baxuri').select('*,products(code,name)').order('created_at',{ascending:false});
+  const baxuri=data||[];
+  document.getElementById('baxCount').textContent=baxuri.length;
+  const totalPairs=baxuri.reduce((s,b)=>s+b.total_pairs,0);
+  document.getElementById('baxStats').textContent=baxuri.length+' articole · '+totalPairs+' perechi total';
+  const el=document.getElementById('baxGrid');
+  if(!baxuri.length){el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><div>Niciun bax în stoc.<br>Apasă + pentru a adăuga.</div></div>`;return;}
+  el.innerHTML=baxuri.map(b=>{
+    const model=b.products?.code?'Art. '+b.products.code:b.free_model||'—';
+    const entries=b.ponytage?Object.entries(b.ponytage).filter(([,q])=>q>0):[];
+    const pontajHTML=entries.map(([s,q])=>`<span class="pontaj-chip">${s}×${q}</span>`).join('');
+    return `<div class="stock-card">
+      ${b.photo_url?`<div class="stock-photo"><img src="${b.photo_url}" alt="${model}" onerror="this.parentElement.innerHTML='<div class=\\'stock-photo-placeholder\\'><svg viewBox=\\'0 0 24 24\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'/></svg><span>Fără poză</span></div>'"/></div>`
+      :`<div class="stock-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Fără poză</span></div>`}
+      <div class="stock-body">
+        <div class="stock-model">${model}</div>
+        <div class="stock-color">${b.color||'—'}</div>
+        <div class="stock-pontaj">${pontajHTML||'<span style="font-size:11px;color:#C8C0B8">Fără pontaj</span>'}</div>
+        ${b.notes?`<div class="stock-notes">${b.notes}</div>`:''}
+        <div class="stock-meta">
+          <div><div class="stock-pairs">${b.total_pairs}</div><div class="stock-pairs-label">perechi</div></div>
+          ${b.price_per_pair?`<div class="stock-price">${b.price_per_pair} RON/per.</div>`:''}
+        </div>
+        <div class="stock-actions">
+          <button class="btn-edit" onclick="editBax('${b.id}')">Editează</button>
+          <button class="btn-del" onclick="deleteBax('${b.id}')">Șterge</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadFete(){
+  const{data}=await sb.from('stock_fete').select('*').order('created_at',{ascending:false});
+  const fete=data||[];
+  document.getElementById('feteCount').textContent=fete.length;
+  const totalPairs=fete.reduce((s,f)=>s+f.total_pairs,0);
+  document.getElementById('feteStats').textContent=fete.length+' modele · '+totalPairs+' perechi total';
+  const el=document.getElementById('feteGrid');
+  if(!fete.length){el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24"><path d="M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg><div>Nicio FEȚE în stoc.</div></div>`;return;}
+  el.innerHTML=fete.map(f=>{
+    const entries=f.ponytage?Object.entries(f.ponytage).filter(([,q])=>q>0):[];
+    const pontajHTML=entries.map(([s,q])=>`<span class="pontaj-chip">${s}×${q}</span>`).join('');
+    return `<div class="stock-card">
+      ${f.photo_url?`<div class="stock-photo"><img src="${f.photo_url}" alt="${f.model_name}" onerror="this.parentElement.innerHTML='<div class=\\'stock-photo-placeholder\\'><svg viewBox=\\'0 0 24 24\\'><path d=\\'M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z\\'/></svg><span>Fără poză</span></div>'"/></div>`
+      :`<div class="stock-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M20 4 8.12 15.88"/></svg><span>FEȚE</span></div>`}
+      <div class="stock-body">
+        <div class="stock-model">${f.model_name}</div>
+        <div class="stock-color">${f.color||'—'}</div>
+        <div class="stock-pontaj">${pontajHTML||'<span style="font-size:11px;color:#C8C0B8">Fără pontaj</span>'}</div>
+        ${f.notes?`<div class="stock-notes">${f.notes}</div>`:''}
+        <div class="stock-meta">
+          <div><div class="stock-pairs">${f.total_pairs}</div><div class="stock-pairs-label">perechi</div></div>
+        </div>
+        <div class="stock-actions">
+          <button class="btn-edit" onclick="editFete('${f.id}')">Editează</button>
+          <button class="btn-del" onclick="deleteFete('${f.id}')">Șterge</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── BAX MODAL ─────────────────────────────────────────────────
+function openBaxModal(){
+  baxEditId=null;baxSizes=[...SZ];baxSzV={};SZ.forEach(s=>baxSzV[s]=0);
+  document.getElementById('baxModalTitle').textContent='Adaugă Bax';
+  ['baxModel','baxColor','baxPrice','baxPhoto','baxNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('baxProductId').value='';
+  document.getElementById('baxPhotoPreview').style.display='none';
+  renderBaxSizes();
+  document.getElementById('baxModal').classList.add('show');
+}
+async function editBax(id){
+  showLov('Se încarcă...');
+  const{data:b}=await sb.from('stock_baxuri').select('*,products(code)').eq('id',id).single();
+  hideLov();baxEditId=id;
+  document.getElementById('baxModalTitle').textContent='Editează Bax';
+  document.getElementById('baxModel').value=b.products?'Art. '+b.products.code:b.free_model||'';
+  document.getElementById('baxProductId').value=b.product_id||'';
+  document.getElementById('baxColor').value=b.color||'';
+  document.getElementById('baxPrice').value=b.price_per_pair||'';
+  document.getElementById('baxPhoto').value=b.photo_url||'';
+  document.getElementById('baxNotes').value=b.notes||'';
+  baxSizes=Object.keys(b.ponytage||{});if(!baxSizes.length)baxSizes=[...SZ];
+  baxSizes.sort((a,c)=>parseInt(a)-parseInt(c));
+  baxSzV={};baxSizes.forEach(s=>baxSzV[s]=(b.ponytage||{})[s]||0);
+  renderBaxSizes();
+  if(b.photo_url){const img=document.getElementById('baxPhotoPreview');img.src=b.photo_url;img.style.display='block';}
+  document.getElementById('baxModal').classList.add('show');
+}
+function renderBaxSizes(){
+  document.getElementById('baxSizesGrid').innerHTML=baxSizes.map(s=>`
+    <div class="size-cell"><div class="size-nr">${s}</div><div class="size-controls">
+      <button class="size-btn" onclick="adjSz('bax','${s}',-1)">−</button>
+      <span class="size-val" id="bsv_${s}">${baxSzV[s]||0}</span>
+      <button class="size-btn" onclick="adjSz('bax','${s}',1)">+</button>
+    </div></div>`).join('')
+  +`<div class="size-cell" style="border-style:dashed;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center" onclick="addBaxCustomSize()"><div style="font-size:16px;color:#B08D57">+</div><div style="font-size:8px;color:#8B6914;font-weight:700">MĂRIME</div></div>`;
+}
+function addBaxCustomSize(){const n=prompt('Mărime nouă:');if(!n)return;const c=n.trim();if(!c||baxSizes.includes(c)){showToast('Invalidă sau există deja');return;}baxSizes.push(c);baxSizes.sort((a,b)=>parseInt(a)-parseInt(b));baxSzV[c]=0;renderBaxSizes();}
+function adjSz(type,s,d){if(type==='bax'){baxSzV[s]=Math.max(0,(baxSzV[s]||0)+d);document.getElementById('bsv_'+s).textContent=baxSzV[s];}else{feteSzV[s]=Math.max(0,(feteSzV[s]||0)+d);document.getElementById('fsv_'+s).textContent=feteSzV[s];}}
+
+async function saveBax(){
+  const model=document.getElementById('baxModel').value.trim();
+  const productId=document.getElementById('baxProductId').value||null;
+  const color=document.getElementById('baxColor').value.trim();
+  const price=parseFloat(document.getElementById('baxPrice').value)||null;
+  const photo=document.getElementById('baxPhoto').value.trim()||null;
+  const notes=document.getElementById('baxNotes').value.trim()||null;
+  if(!model||!color){showToast('Completează modelul și culoarea!');return;}
+  const pt={};let tot=0;baxSizes.forEach(s=>{if(baxSzV[s]>0){pt[s]=baxSzV[s];tot+=baxSzV[s];}});
+  if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
+  const row={product_id:productId,free_model:productId?null:model,color,ponytage:pt,total_pairs:tot,price_per_pair:price,photo_url:photo,notes,updated_at:new Date().toISOString()};
+  showLov('Se salvează...');
+  if(baxEditId)await sb.from('stock_baxuri').update(row).eq('id',baxEditId);
+  else await sb.from('stock_baxuri').insert(row);
+  hideLov();closeModal('baxModal');showToast(baxEditId?'Bax actualizat!':'Bax adăugat!');await loadBaxuri();
+}
+async function deleteBax(id){if(!confirm('Ștergi acest bax din stoc?'))return;showLov('Se șterge...');await sb.from('stock_baxuri').delete().eq('id',id);hideLov();showToast('Șters.');await loadBaxuri();}
+
+// ── FETE MODAL ────────────────────────────────────────────────
+function openFeteModal(){
+  feteEditId=null;feteSizes=[...SZ];feteSzV={};SZ.forEach(s=>feteSzV[s]=0);
+  document.getElementById('feteModalTitle').textContent='Adaugă FEȚE';
+  ['feteModel','feteColor','fetePhoto','feteNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fetePhotoPreview').style.display='none';
+  renderFeteSizes();
+  document.getElementById('feteModal').classList.add('show');
+}
+async function editFete(id){
+  showLov('Se încarcă...');
+  const{data:f}=await sb.from('stock_fete').select('*').eq('id',id).single();
+  hideLov();feteEditId=id;
+  document.getElementById('feteModalTitle').textContent='Editează FEȚE';
+  document.getElementById('feteModel').value=f.model_name||'';
+  document.getElementById('feteColor').value=f.color||'';
+  document.getElementById('fetePhoto').value=f.photo_url||'';
+  document.getElementById('feteNotes').value=f.notes||'';
+  feteSizes=Object.keys(f.ponytage||{});if(!feteSizes.length)feteSizes=[...SZ];
+  feteSizes.sort((a,c)=>parseInt(a)-parseInt(c));
+  feteSzV={};feteSizes.forEach(s=>feteSzV[s]=(f.ponytage||{})[s]||0);
+  renderFeteSizes();
+  if(f.photo_url){const img=document.getElementById('fetePhotoPreview');img.src=f.photo_url;img.style.display='block';}
+  document.getElementById('feteModal').classList.add('show');
+}
+function renderFeteSizes(){
+  document.getElementById('feteSizesGrid').innerHTML=feteSizes.map(s=>`
+    <div class="size-cell"><div class="size-nr">${s}</div><div class="size-controls">
+      <button class="size-btn" onclick="adjSz('fete','${s}',-1)">−</button>
+      <span class="size-val" id="fsv_${s}">${feteSzV[s]||0}</span>
+      <button class="size-btn" onclick="adjSz('fete','${s}',1)">+</button>
+    </div></div>`).join('')
+  +`<div class="size-cell" style="border-style:dashed;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center" onclick="addFeteCustomSize()"><div style="font-size:16px;color:#B08D57">+</div><div style="font-size:8px;color:#8B6914;font-weight:700">MĂRIME</div></div>`;
+}
+function addFeteCustomSize(){const n=prompt('Mărime nouă:');if(!n)return;const c=n.trim();if(!c||feteSizes.includes(c)){showToast('Invalidă sau există deja');return;}feteSizes.push(c);feteSizes.sort((a,b)=>parseInt(a)-parseInt(b));feteSzV[c]=0;renderFeteSizes();}
+
+async function saveFete(){
+  const model=document.getElementById('feteModel').value.trim();
+  const color=document.getElementById('feteColor').value.trim();
+  const photo=document.getElementById('fetePhoto').value.trim()||null;
+  const notes=document.getElementById('feteNotes').value.trim()||null;
+  if(!model||!color){showToast('Completează modelul și culoarea!');return;}
+  const pt={};let tot=0;feteSizes.forEach(s=>{if(feteSzV[s]>0){pt[s]=feteSzV[s];tot+=feteSzV[s];}});
+  if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
+  const row={model_name:model,color,ponytage:pt,total_pairs:tot,photo_url:photo,notes,updated_at:new Date().toISOString()};
+  showLov('Se salvează...');
+  if(feteEditId)await sb.from('stock_fete').update(row).eq('id',feteEditId);
+  else await sb.from('stock_fete').insert(row);
+  hideLov();closeModal('feteModal');showToast(feteEditId?'FEȚE actualizate!':'FEȚE adăugate!');await loadFete();
+}
+async function deleteFete(id){if(!confirm('Ștergi aceste FEȚE din stoc?'))return;showLov('Se șterge...');await sb.from('stock_fete').delete().eq('id',id);hideLov();showToast('Șters.');await loadFete();}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function filterBaxModels(q){
+  const d=document.getElementById('baxModelDrop');
+  const f=q.trim()?prods.filter(p=>p.code.toLowerCase().includes(q.toLowerCase())||p.name.toLowerCase().includes(q.toLowerCase())):prods;
+  if(!f.length){d.style.display='none';return;}
+  d.style.display='block';
+  d.innerHTML=f.map(p=>`<div class="ac-item" onclick="selBaxModel('${p.id}','${p.code}')"><span style="font-weight:700">Art. ${p.code}</span><span style="font-size:11px;color:#5A5248">${p.name}</span></div>`).join('');
+}
+function selBaxModel(id,code){document.getElementById('baxProductId').value=id;document.getElementById('baxModel').value='Art. '+code;document.getElementById('baxModelDrop').style.display='none';}
+function previewPhoto(inputId,imgId){const url=document.getElementById(inputId).value.trim();const img=document.getElementById(imgId);if(url){img.src=url;img.style.display='block';}else{img.style.display='none';}}
+function showTab(tab,el){
+  document.getElementById('tabBaxuri').style.display=tab==='baxuri'?'block':'none';
+  document.getElementById('tabFete').style.display=tab==='fete'?'block':'none';
+  document.querySelectorAll('.stock-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
+function hideLov(){document.getElementById('lov').classList.remove('show');}
+function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+</script>
+</body>
+</html>
