@@ -179,27 +179,37 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi-card{padding:14px 16px}
   .kpi-val{font-size:24px}
-  .content{padding:16px}
-  .topbar{padding:10px 16px}
-  .search-box{width:130px}
-  .page-title{font-size:17px}
-  /* Tabel devine carduri */
-  .order-row-main{grid-template-columns:1fr auto;gap:8px;padding:14px 16px}
+  .content{padding:12px}
+  .topbar{padding:10px 12px}
+  .search-box{width:120px;font-size:12px}
+  .page-title{font-size:16px}
+  /* Tabel comenzi → carduri */
+  .order-row-main{grid-template-columns:1fr auto;gap:6px;padding:12px 14px}
   .order-row-main .order-no-cell{grid-column:1/-1;margin-bottom:2px}
-  .order-pairs-cell,.order-row-main>div:nth-child(4){display:none}
-  .order-row-main .status-pill{grid-column:1;justify-self:start}
+  .order-pairs-cell{display:none}
+  .order-row-main>div:nth-child(4){display:none}
   .order-row-main>div:nth-child(6){display:none}
-  .expand-row{padding:0 16px 16px}
+  .order-row-main .status-pill{grid-column:1;justify-self:start}
+  .expand-row{padding:0 12px 12px}
   .detail-grid{grid-template-columns:1fr;gap:12px}
-  .modal-box{padding:20px 18px 28px;max-height:92vh}
-  .filters{gap:6px}
-  .filter-btn{padding:6px 11px;font-size:11px}
+  .modal-box{padding:18px 16px 28px;max-height:94vh;border-radius:12px 12px 0 0;position:fixed;bottom:0;left:0;right:0;top:auto;margin:0;max-width:100%}
+  .modal-overlay{align-items:flex-end}
+  .filters{gap:5px;flex-wrap:wrap}
+  .filter-btn{padding:5px 10px;font-size:11px}
   .sizes-grid{grid-template-columns:repeat(4,1fr)}
   .topbar-actions .btn span{display:none}
+  .action-btn{padding:10px 12px;font-size:12px}
+  /* Mesaje panel */
+  #msgPanelList>div{padding:10px 14px}
+  .table-header{padding:12px 14px}
 }
 @media(max-width:480px){
   .kpi-grid{grid-template-columns:1fr 1fr}
   .sizes-grid{grid-template-columns:repeat(3,1fr)}
+  .topbar-actions{gap:4px}
+  .topbar-actions .btn{padding:7px 10px}
+  .search-box{display:none}
+  .content{padding:8px}
 }
 </style>
 </head>
@@ -900,7 +910,7 @@ function renderTimeline(o){
 // APROBARE
 function openApprove(id,e){e.stopPropagation();approveOrderId=id;const o=allOrders.find(x=>x.id===id);if(!o)return;
   document.getElementById('approveSub').textContent=o.order_no+' · '+(o.clients?.company_name||o.clients?.name||'—')+' · '+o.total_pairs+' per.';
-  document.getElementById('approvePreview').innerHTML=(o.order_lines||[]).map(l=>`<div style="background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:#111111">Art. ${l.products?.code||'—'} · ${l.color||'—'}</div><div style="font-size:11px;color:#3A3530;margin-top:2px">${l.total_pairs} per. · Comandă nouă de producție</div></div>`).join('');
+  document.getElementById('approvePreview').innerHTML=(o.order_lines||[]).map(l=>`<div style="background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:#111111">${l.products?.code?'Art. '+l.products.code:l.free_model||'—'} · ${l.color||'—'}</div><div style="font-size:11px;color:#3A3530;margin-top:2px">${l.total_pairs} per. · Comandă nouă de producție</div></div>`).join('');
   approveLines=o.order_lines||[];document.getElementById('approveModal').classList.add('show');}
 async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...');
   await sb.from('orders').update({status:'aprobat'}).eq('id',approveOrderId);
@@ -1216,7 +1226,7 @@ async function genFisaClient(id,e){e.stopPropagation();showLov('Se generează...
     const sr=entries.map(([s])=>`<td style="${cs}font-size:10px;color:#888;font-weight:700">${s}</td>`).join('');
     const qr=entries.map(([,q])=>`<td style="${cs}font-size:14px;font-weight:700">${q}</td>`).join('');
     const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
-    return `<tr><td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top"><div style="font-weight:700;font-size:13px">Art. ${l.products?.code||'—'}</div><div style="font-size:13px;color:#444">${l.color||'—'}</div>${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}</td><td style="border:1px solid #ddd;padding:6px"><table style="border-collapse:collapse;width:100%"><tr>${sr}</tr><tr>${qr}</tr></table></td><td style="border:1px solid #ddd;padding:10px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td><td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:13px">${val}</td></tr>`;
+    return `<tr><td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top"><div style="font-weight:700;font-size:13px">${l.products?.code?'Art. '+l.products.code:l.free_model||'—'}</div><div style="font-size:13px;color:#444">${l.color||'—'}</div>${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}</td><td style="border:1px solid #ddd;padding:6px"><table style="border-collapse:collapse;width:100%"><tr>${sr}</tr><tr>${qr}</tr></table></td><td style="border:1px solid #ddd;padding:10px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td><td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:13px">${val}</td></tr>`;
   }).join('');
   const html=`<html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:28px;max-width:680px;margin:0 auto}h1{font-size:22px;letter-spacing:2px;margin-bottom:3px}.sub{font-size:10px;color:#aaa;margin-bottom:24px;letter-spacing:1px;text-transform:uppercase}.row{display:flex;gap:40px;margin-bottom:24px}.col{flex:1}.lbl{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;font-weight:700}.val{font-size:14px;font-weight:700}.meta{font-size:11px;color:#888;margin-top:3px}table.main{width:100%;border-collapse:collapse;margin:18px 0}table.main th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ddd;text-align:left;background:#f9f9f9}.footer{margin-top:48px;display:flex;gap:60px}.sig{border-top:1.5px solid #1A1814;padding-top:8px;font-size:10px;color:#888;width:220px;min-height:50px}@media print{.noprint{display:none}}</style></head><body>
   <h1>SILESCO</h1><div class="sub">Fișă Client · ${o.order_no||'—'} · ${azi}</div>
