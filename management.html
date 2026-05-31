@@ -922,7 +922,7 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
 async function sendToCroit(id,e){e.stopPropagation();if(!confirm('Lansezi comanda la Croit?'))return;showLov('Se lansează...');
   const{data:lots}=await sb.from('production_lots').select('id').eq('order_id',id);
   if(lots?.length)await sb.from('production_lots').update({stage:'la_croit',started_at:new Date().toISOString()}).in('id',lots.map(l=>l.id));
-  await sb.from('orders').update({status:'in_productie'}).eq('id',id);
+  await sb.from('orders').update({status:'la_croit'}).eq('id',id);
   hideLov();showToast('Comandă lansată la Croit!');await loadAll();}
 
 // PRIORITATE
