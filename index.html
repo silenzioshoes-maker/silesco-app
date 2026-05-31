@@ -1127,24 +1127,24 @@ async function saveEdit(){
   if((original.notes||'')!==notes)
     changes.push('Observații: '+(original.notes||'—')+' → '+(notes||'—'));
 
-  const origLines=original.order_lines||[];
-  if(origLines.length!==editArts.length){
-    changes.push('Articole: '+origLines.length+' → '+editArts.length);
+  const origLines=(original.order_lines||[]).filter(l=>!l.from_stock);
+  const editableArts=editArts.filter(a=>!a.from_stock);
+  if(origLines.length!==editableArts.length){
+    changes.push('Articole: '+origLines.length+' → '+editableArts.length);
   }else{
-    editArts.forEach((a,i)=>{
+    editableArts.forEach((a,i)=>{
       const orig=origLines[i];if(!orig)return;
       if(orig.color!==a.color)
-        changes.push('Art. '+a.code+': culoare '+orig.color+' → '+a.color);
+        changes.push('Art. '+(a.product_id?a.code:a.free_model||a.code)+': culoare '+orig.color+' → '+a.color);
       if(orig.total_pairs!==a.total_pairs)
-        changes.push('Art. '+a.code+': perechi '+orig.total_pairs+' → '+a.total_pairs);
+        changes.push('Art. '+(a.product_id?a.code:a.free_model||a.code)+': perechi '+orig.total_pairs+' → '+a.total_pairs);
       if((orig.unit_price||0)!==(a.unit_price||0))
-        changes.push('Art. '+a.code+': preț '+(orig.unit_price||0)+' → '+(a.unit_price||0)+' RON/per.');
-      // Compară pontajul
+        changes.push('Art. '+(a.product_id?a.code:a.free_model||a.code)+': preț '+(orig.unit_price||0)+' → '+(a.unit_price||0)+' RON/per.');
       const origPt=JSON.stringify(orig.ponytage||{});
       const newPt=JSON.stringify(a.ponytage||{});
       if(origPt!==newPt){
         const ptStr=Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join(' ');
-        changes.push('Art. '+a.code+': pontaj modificat → '+ptStr);
+        changes.push('Art. '+(a.product_id?a.code:a.free_model||a.code)+': pontaj modificat → '+ptStr);
       }
     });
   }
@@ -1157,8 +1157,9 @@ async function saveEdit(){
     changes,
     termen,plata,notes,
     arts:editArts.map(a=>({
-      product_id:a.product_id,color:a.color,
-      ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null
+      product_id:a.product_id,free_model:a.free_model||null,color:a.color,
+      ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null,
+      from_stock:a.from_stock||false,
     })),
     operator:CP?.full_name||'Agent',
     timestamp:new Date().toISOString(),
