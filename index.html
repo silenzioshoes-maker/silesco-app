@@ -1404,7 +1404,9 @@ function addCustomSizeAgent(){
 
 // ── ARTICOLE ──────────────────────────────────────────────────
 function addArt(){
-  const mid=document.getElementById('artMod').value;
+  const midRaw=document.getElementById('artMod').value;
+  const isValidUUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(midRaw);
+  const mid=isValidUUID?midRaw:null;
   const modText=document.getElementById('artModInput').value.trim();
   const col=document.getElementById('artCol').value.trim();
   const pr=parseFloat(document.getElementById('artPr').value)||0;
