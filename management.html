@@ -711,7 +711,8 @@ function renderOrders(){
       const entries=l.ponytage?Object.entries(l.ponytage):[];
       const pt=entries.length?`<div class="pontaj-table">${entries.map(([s,q])=>`<div class="pontaj-col"><div class="pontaj-sz">${s}</div><div class="pontaj-qty">${q}</div></div>`).join('')}</div>`:'—';
       const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||'—');
-      return `<div style="padding:8px 0;border-bottom:1px solid #EDE8DF"><div style="font-size:13px;font-weight:700;color:#111111">${modName} · ${l.color||'—'} · ${l.total_pairs} per.</div>${pt}</div>`;
+      const stockBadge=l.from_stock?'<span style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 7px;border-radius:3px;margin-left:6px;text-transform:uppercase;letter-spacing:.5px">📦 Din stoc</span>':'';
+      return `<div style="padding:8px 0;border-bottom:1px solid #EDE8DF"><div style="font-size:13px;font-weight:700;color:#111111">${modName} · ${l.color||'—'} · ${l.total_pairs} per.${stockBadge}</div>${pt}</div>`;
     }).join('');
 
     let actiuni='';
@@ -1164,18 +1165,18 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
     const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`${s}×${q}`).join('  '):'';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||'—');
     const obs=l.notes?` <em style="color:#888;font-size:11px">${l.notes}</em>`:'';
-    return `<tr>
-      <td style="border:1px solid #ccc;padding:8px 10px;font-weight:700;font-size:13px">${modName} · ${l.color||'—'}${obs}</td>
-      <td style="border:1px solid #ccc;padding:8px 10px;font-family:monospace;font-size:12px">${pt}</td>
+    const stockBadge=l.from_stock?'<span style="background:#E8EFF6;color:#23394F;border:1px solid rgba(47,74,99,.4);font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px">📦 DIN STOC</span>':'';
+    return `<tr${l.from_stock?' style="background:#F0F6FF"':''}>
+      <td style="border:1px solid #ccc;padding:8px 10px;font-weight:700;font-size:13px">${modName} · ${l.color||'—'}${stockBadge}${obs}</td>
+      <td style="border:1px solid #ccc;padding:8px 10px;font-family:monospace;font-size:12px">${l.from_stock?'<strong style="color:#23394F">NU PRODUCE — DIN STOC</strong>':pt}</td>
       <td style="border:1px solid #ccc;padding:8px 10px;text-align:center;font-weight:700">${l.total_pairs} per.</td>
     </tr>`;
   }).join('');
 
-  // Părțile 2-3 - fâșii tăiabile (una per articol)
-  const fasii=lines.map(l=>{
+  // Părțile 2-3 - fâșii tăiabile (doar articolele de produs, nu din stoc)
+  const fasii=lines.filter(l=>!l.from_stock).map(l=>{
     const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`<span style="display:inline-block;margin-right:14px;font-size:15px"><strong>${s}</strong>×${q}</span>`).join(''):'';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||'—');
-    // Combină notes articol + observații generale
     const detailsText=[l.notes,o.notes].filter(Boolean).join(' | ');
     return `<div style="border:2px dashed #999;border-radius:4px;padding:14px 18px;margin-bottom:10px;page-break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
