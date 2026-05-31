@@ -620,7 +620,7 @@ async function loadOrders(){
     .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       user_profiles!orders_agent_id_fkey(full_name),
-      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,products(id,code,name,default_sole_id))`)
+      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,products(id,code,name,default_sole_id))`)
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
   allOrders=data||[];
