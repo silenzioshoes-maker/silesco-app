@@ -209,6 +209,37 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 <div class="toast" id="toast"></div>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
 
+<!-- MODAL MESAJ DIN COMANDĂ -->
+<div class="modal-overlay" id="orderMsgModal">
+  <div class="modal-box">
+    <div class="modal-title" id="orderMsgTitle">Mesaj despre comandă</div>
+    <div class="modal-sub" id="orderMsgSub"></div>
+    <div class="fld"><label>Către departament</label>
+      <select id="orderMsgDept" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff">
+        <option value="agent">Agent</option>
+        <option value="croit">Croit</option>
+        <option value="talpuit">Talpuit</option>
+        <option value="impachetat">Împachetat</option>
+        <option value="birou">Birou</option>
+        <option value="all">Toate departamentele</option>
+      </select>
+    </div>
+    <div class="fld"><label>Prioritate</label>
+      <select id="orderMsgPriority" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff">
+        <option value="normal">Normală</option>
+        <option value="urgent">Urgentă ⚡</option>
+      </select>
+    </div>
+    <div class="fld"><label>Mesaj</label>
+      <textarea id="orderMsgText" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;height:90px" placeholder="Scrie mesajul..."></textarea>
+    </div>
+    <button class="action-btn ab-black" onclick="sendOrderMsg()">
+      <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>Trimite mesajul
+    </button>
+    <button class="action-btn ab-outline" onclick="closeModal('orderMsgModal')">Anulează</button>
+  </div>
+</div>
+
 <!-- MODAL APROBARE -->
 <div class="modal-overlay" id="approveModal">
   <div class="modal-box">
@@ -406,6 +437,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <button class="btn btn-gold" onclick="openNewOrder()">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Comandă nouă
       </button>
+      <button class="btn btn-outline" onclick="window.location.href='/messages.html'" style="position:relative">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span id="topbarMsgBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:16px;text-align:center">0</span>
+      </button>
       <button class="btn btn-outline" onclick="loadAll()">
         <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       </button>
@@ -416,6 +451,13 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="alert-banner" id="alertBanner" style="display:none">
       <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       <span id="alertText"></span>
+    </div>
+    <div id="msgBanner" style="display:none;background:#E8EFF6;border:1.5px solid rgba(47,74,99,.3);border-radius:8px;padding:11px 16px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg style="width:15px;height:15px;stroke:#23394F;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span id="msgBannerText" style="font-size:13px;color:#23394F;font-weight:600"></span>
+      </div>
+      <button onclick="window.location.href='/messages.html'" style="padding:6px 14px;border-radius:6px;border:none;background:#23394F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Vezi mesajele</button>
     </div>
 
     <!-- ORDERS -->
@@ -490,10 +532,23 @@ async function loadAll(){
 }
 async function loadMsgBadge(){
   const{data}=await sb.from('internal_messages')
-    .select('id').eq('to_department','management').eq('is_read',false);
+    .select('id,from_user_id,user_profiles!internal_messages_from_user_id_fkey(full_name)')
+    .eq('to_department','management').eq('is_read',false);
   const n=(data||[]).length;
-  const b=document.getElementById('msgBadge');
-  if(n>0){b.style.display='inline';b.textContent=n;}else{b.style.display='none';}
+  // Sidebar badge
+  const sb2=document.getElementById('msgBadge');
+  if(sb2){if(n>0){sb2.style.display='inline';sb2.textContent=n;}else{sb2.style.display='none';}}
+  // Topbar badge
+  const tb=document.getElementById('topbarMsgBadge');
+  if(tb){if(n>0){tb.style.display='inline';tb.textContent=n;}else{tb.style.display='none';}}
+  // Banner
+  const banner=document.getElementById('msgBanner');
+  if(banner){
+    if(n>0){
+      banner.style.display='flex';
+      document.getElementById('msgBannerText').textContent=n+(n===1?' mesaj nou necitit':' mesaje noi necitite');
+    }else{banner.style.display='none';}
+  }
 }
 async function loadProds(){const{data}=await sb.from('products').select('*').eq('is_active',true).order('code');prods=data||[];}
 async function loadClients(){const{data}=await sb.from('clients').select('id,name,company_name,cui,phone,delivery_address').order('company_name');clientsList=data||[];}
@@ -627,6 +682,7 @@ function renderOrders(){
               ${actiuni}
               ${isStock&&!o.allocated_to_client?`<button class="action-btn ab-blue" onclick="openAllocate('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>Alocă la client</button>`:''}
               <button class="action-btn ab-black" onclick="genFisaProductie('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><polyline points="15 2 15 7 20 7"/></svg>Fișă de Producție</button>
+              <button class="action-btn ab-blue" onclick="openMsgFromOrder('${o.id}','${o.order_no||'—'}',event)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Trimite mesaj despre comandă</button>
               <button class="action-btn ab-gold" onclick="genFisaClient('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Fișă client (cu prețuri)</button>
               <div style="display:flex;gap:8px;margin-top:4px">
                 <button class="action-btn ab-blue" style="flex:1;margin:0" onclick="openAtelier('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>Atelier extern</button>
@@ -998,6 +1054,35 @@ function renderLots(lots){
   el.innerHTML=lots.map(l=>{const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';const sc=l.stage==='la_croit'?'#8B6914':l.stage==='la_talpuit'?'#23394F':'#3A3530';const isU=l.orders?.priority==='urgent';
     return `<div class="order-row"><div style="display:grid;grid-template-columns:110px 1fr 100px 150px 100px;gap:12px;padding:14px 20px;align-items:center"><div class="order-no-cell">${l.lot_no||'—'}</div><div><div class="order-client-cell">${cl}${isU?'<span class="urgent-flag">⚡</span>':''}</div><div class="order-agent-cell">Art. ${l.products?.code||'—'} · Talpă: ${l.talpaData?.name||'—'}</div></div><div class="order-pairs-cell">${l.qty_planned||0} per.</div><span class="status-pill" style="color:${sc};background:${sc}18"><span style="width:5px;height:5px;border-radius:50%;background:${sc};display:inline-block"></span>${SL[l.stage]||l.stage}</span><div style="font-size:11px;color:#5A5248">${new Date(l.created_at).toLocaleDateString('ro-RO')}</div></div></div>`;
   }).join('');
+}
+
+// ── MESAJ DIN COMANDĂ ─────────────────────────────────────────
+let orderMsgId=null;
+function openMsgFromOrder(orderId,orderNo,e){
+  e.stopPropagation();orderMsgId=orderId;
+  const o=allOrders.find(x=>x.id===orderId);
+  const cl=o?.clients?.company_name||o?.clients?.name||'';
+  document.getElementById('orderMsgTitle').textContent='Mesaj despre '+orderNo;
+  document.getElementById('orderMsgSub').textContent=cl;
+  document.getElementById('orderMsgText').value='';
+  document.getElementById('orderMsgDept').value='agent';
+  document.getElementById('orderMsgPriority').value='normal';
+  document.getElementById('orderMsgModal').classList.add('show');
+}
+async function sendOrderMsg(){
+  const text=document.getElementById('orderMsgText').value.trim();
+  const dept=document.getElementById('orderMsgDept').value;
+  const priority=document.getElementById('orderMsgPriority').value;
+  if(!text){showToast('Scrie mesajul!');return;}
+  showLov('Se trimite...');
+  const depts=dept==='all'?['agent','croit','talpuit','impachetat','birou']:[dept];
+  await Promise.all(depts.map(d=>sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:d,order_id:orderMsgId,
+    message:text,priority,is_read:false
+  })));
+  hideLov();closeModal('orderMsgModal');
+  showToast('Mesaj trimis!');
+  await loadMsgBadge();
 }
 
 // ── ALOCARE STOC LA CLIENT ────────────────────────────────────
