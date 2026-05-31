@@ -1093,23 +1093,35 @@ function setEditStd(){SZ.forEach(s=>editSzV[s]={'39':1,'40':2,'41':3,'42':3,'43'
 
 function addEditArticle(){
   const mid=document.getElementById('editModId').value;
+  const modText=document.getElementById('editModInput').value.trim();
   const col=document.getElementById('editCol').value.trim();
   const pr=parseFloat(document.getElementById('editPret').value)||0;
-  const prod=prods.find(p=>p.id===mid);
-  if(!mid||!col){showToast('Selectează modelul și culoarea!');return;}
+  const prod=mid?prods.find(p=>p.id===mid):null;
+  if(!modText||!col){showToast('Completează modelul și culoarea!');return;}
   const pt={};let tot=0;SZ.forEach(s=>{if(editSzV[s]>0){pt[s]=editSzV[s];tot+=editSzV[s];}});
   if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
-  editArts.push({product_id:mid,code:prod?.code||'—',color:col,ponytage:pt,total_pairs:tot,unit_price:pr,notes:''});
+  const code=prod?.code||modText;
+  editArts.push({
+    product_id:mid||null,
+    free_model:mid?null:modText,
+    code,color:col,ponytage:pt,total_pairs:tot,unit_price:pr,notes:''
+  });
   document.getElementById('editModInput').value='';document.getElementById('editModId').value='';
   document.getElementById('editCol').value='';document.getElementById('editPret').value='';
   SZ.forEach(s=>editSzV[s]=0);renderEditSzGrid();renderEditArticles();
   document.getElementById('editAddBtn').textContent='+ Adaugă articol';
   editingArtIdx=null;
-  showToast(editingArtIdx!==null?'Articol salvat!':'Articol adăugat!');
+  showToast('Articol salvat!');
 }
 
 async function saveEdit(){
   if(!editOrderId)return;
+  // Dacă există un articol în curs de editare, îl salvăm automat
+  if(editingArtIdx!==null){
+    addEditArticle();
+    // Dacă tot e în editare după addEditArticle (eroare validare), stop
+    if(editingArtIdx!==null)return;
+  }
   const termen=document.getElementById('editTermen').value;
   const plata=document.getElementById('editPlata').value;
   const notes=document.getElementById('editNotes').value.trim();
