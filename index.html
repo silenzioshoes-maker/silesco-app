@@ -824,12 +824,15 @@ function renderOrders(orders){
       <div class="expand-det" id="det${i}">
         <div class="sec-label" style="margin-bottom:8px">Articole (${lines.length})</div>
         ${det||'<div style="font-size:12px;color:#5A5248;padding:8px 0">Nicio linie.</div>'}
+        <!-- Mesaje comandă -->
         <div id="omsg_${o.id}" style="margin-top:10px"></div>
+        <!-- Istoric modificări -->
+        <div id="ohist_${o.id}" style="margin-top:4px"></div>
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
           <button onclick="genPDF('${o.id}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #111111;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px">
             Generează fișă client
           </button>
-          <button onclick="window.location.href='/agent-messages.html?order=${o.id}&no=${o.order_no||''}'" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+          <button onclick="goToMsgs('${o.id}','${(o.order_no||'').replace(/'/g,'')}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg style="width:13px;height:13px;stroke:#23394F;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Mesaje despre această comandă
           </button>
@@ -880,6 +883,10 @@ async function loadOrderMsgs(orderId){
 
 function dismissNotif(){dismissedNotif=true;document.getElementById('ntf').classList.remove('show');}
 
+function goToMsgs(orderId,orderNo){
+  window.location.href='/agent-messages.html?order='+orderId+'&no='+encodeURIComponent(orderNo);
+}
+
 function togDet(i){
   const d=document.getElementById('det'+i);
   const a=document.getElementById('arr'+i);
@@ -887,10 +894,35 @@ function togDet(i){
   d.style.display=open?'none':'block';
   if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
   if(!open){
-    // Încarcă mesajele comenzii
     const o=allOrders[i];
-    if(o)loadOrderMsgs(o.id);
+    if(o){loadOrderMsgs(o.id);loadOrderHistory(o.id);}
   }
+}
+
+async function loadOrderHistory(orderId){
+  const el=document.getElementById('ohist_'+orderId);
+  if(!el)return;
+  const{data}=await sb.from('audit_log')
+    .select('id,new_data,created_at')
+    .eq('record_id',orderId).eq('action','update')
+    .order('created_at',{ascending:false}).limit(5);
+  if(!data||!data.length){el.innerHTML='';return;}
+  el.innerHTML=`
+    <div style="border-top:1px solid #EDE8DF;padding-top:10px;margin-top:4px">
+      <div style="font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Istoric modificări</div>
+      ${data.map(h=>{
+        const changes=(h.new_data?.action||'Modificare').split(' · ');
+        const t=new Date(h.created_at).toLocaleString('ro-RO');
+        const op=h.new_data?.operator||'—';
+        return `<div style="padding:8px 10px;background:#F4F1EA;border-radius:7px;margin-bottom:6px">
+          <div style="font-size:10px;color:#5A5248;font-family:monospace;margin-bottom:5px">${t} · ${op}</div>
+          ${changes.map(c=>`<div style="display:flex;gap:5px;align-items:baseline;margin-top:2px">
+            <span style="color:#B08D57;font-size:11px;flex-shrink:0">•</span>
+            <span style="font-size:12px;color:#111111;font-weight:500">${c}</span>
+          </div>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 // ── EDITARE COMPLETĂ ──────────────────────────────────────────
