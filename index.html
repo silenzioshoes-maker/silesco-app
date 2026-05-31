@@ -128,7 +128,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
 .client-result:hover{border-color:#B08D57}
 
 /* ── NOTIF ── */
-.notif{display:none;background:#EAF0EC;border:1px solid rgba(54,90,67,.2);border-radius:10px;padding:13px 16px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+.notif{display:none;background:#EAF0EC;border:1px solid rgba(54,90,67,.2);border-radius:10px;padding:13px 16px;margin-bottom:14px;gap:10px;align-items:flex-start}
+.notif.show{display:flex}
 .notif.show{display:flex}
 .notif-icon{width:16px;height:16px;stroke:#365A43;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
 
@@ -766,7 +767,7 @@ async function loadOrders(){
   const{data:orders,error}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
-      order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,products(code,name))`)
+      order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,products(code,name))`)
     .eq('agent_id',CU.id)
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
