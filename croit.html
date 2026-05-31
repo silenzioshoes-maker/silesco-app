@@ -823,7 +823,10 @@ async function openCroitReply(parentId){
   const text=prompt('Răspunsul tău:');
   if(!text)return;
   showLov('Se trimite...');
-  await sb.from('internal_messages').update({reply:text,replied_at:new Date().toISOString()}).eq('id',parentId);
+  await sb.from('internal_messages').update({
+    reply:text,
+    replied_at:new Date().toISOString()
+  }).eq('id',parentId);
   hideLov();showToast('Răspuns trimis!');loadCroitMessages();
 }
 
