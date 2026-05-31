@@ -688,7 +688,7 @@ function selectEditModel(id,code){
 // ── COMENZI ───────────────────────────────────────────────────
 async function loadOrders(){
   const{data:orders,error}=await sb.from('orders')
-    .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,
+    .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,products(code,name))`)
     .eq('agent_id',CU.id)
@@ -715,12 +715,13 @@ function renderOrders(orders){
   }else{ntf.classList.remove('show');}
 
   const SC={
-    nou:         {l:'Comandă nouă', c:'#2F4A63',b:'#E8EFF6'},
-    aprobat:     {l:'Aprobat',      c:'#B08D57',b:'#F6F0E5'},
-    in_productie:{l:'În producție', c:'#B0892B',b:'#FAF3E0'},
-    finalizat:   {l:'Gata livrare', c:'#365A43',b:'#EAF0EC'},
-    livrat:      {l:'Livrat',       c:'#4A4540',b:'#F4F1EA'},
-    anulat:      {l:'Anulat',       c:'#9C3A2B',b:'#F5EAE8'},
+    nou:              {l:'Comandă nouă',  c:'#23394F',b:'#E8EFF6'},
+    aprobat:          {l:'Aprobat',       c:'#8B6914',b:'#F6F0E5'},
+    modificat_pending:{l:'Aprobare modificări',c:'#7A5A00',b:'#FFF3CD'},
+    in_productie:     {l:'În producție',  c:'#8B6914',b:'#FAF3E0'},
+    finalizat:        {l:'Gata livrare',  c:'#1E4A2E',b:'#D8EEE0'},
+    livrat:           {l:'Livrat',        c:'#3A3530',b:'#EDEAE4'},
+    anulat:           {l:'Anulat',        c:'#7A2418',b:'#F5EAE8'},
   };
   const canEdit=s=>['nou','aprobat'].includes(s);
 
@@ -733,6 +734,8 @@ function renderOrders(orders){
     const dt=dl===null?'':dl<0?'+'+Math.abs(dl)+'z întârziere':dl===0?'Azi':dl+'z rămase';
     const lines=o.order_lines||[];
     const wasEdited=o.updated_at&&o.updated_at!==o.created_at;
+    const isPending=o.status==='modificat_pending';
+    const wasRejected=!!o.rejection_reason;
 
     // Preview articole cu model+culoare
     const preview=lines.length
@@ -786,6 +789,14 @@ function renderOrders(orders){
         </div>
       </div>
       <div class="expand-det" id="det${i}">
+        ${isPending?`<div style="background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:#7A5A00;margin-bottom:4px">⏳ Modificări în așteptare — necesită aprobare management</div>
+          <div style="font-size:11px;color:#8B6914">${(o.pending_changes?.changes||[]).map(c=>'• '+c).join('<br>')}</div>
+        </div>`:''}
+        ${wasRejected?`<div style="background:#F5EAE8;border:1.5px solid #9C3A2B;border-radius:8px;padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:#7A2418;margin-bottom:4px">✗ Modificări respinse de management</div>
+          <div style="font-size:11px;color:#9C3A2B">Motiv: ${o.rejection_reason}</div>
+        </div>`:''}
         <div class="sec-label" style="margin-bottom:8px">Articole (${lines.length})</div>
         ${det||'<div style="font-size:12px;color:#5A5248;padding:8px 0">Nicio linie.</div>'}
         <!-- Mesaje comandă -->
@@ -1025,50 +1036,76 @@ async function saveEdit(){
   // Construiește descrierea detaliată a modificărilor
   const{data:original}=await sb.from('orders').select('*,order_lines(*,products(code))').eq('id',editOrderId).single();
   const changes=[];
-  if(original.delivery_preset!==termen){
-    const tl={'5z':'5 zile','10z':'10 zile','15z':'15 zile','30z':'30 zile','prelungit':'Prelungit'};
+  const tl={'5z':'5 zile','10z':'10 zile','15z':'15 zile','30z':'30 zile','prelungit':'Prelungit'};
+  if(original.delivery_preset!==termen)
     changes.push('Termen: '+(tl[original.delivery_preset]||original.delivery_preset)+' → '+(tl[termen]||termen));
-  }
-  if(original.plata!==plata) changes.push('Plată: '+original.plata+' → '+plata);
-  if((original.notes||'')!==notes) changes.push('Observații modificate');
+  if(original.plata!==plata)
+    changes.push('Plată: '+original.plata+' → '+plata);
+  if((original.notes||'')!==notes)
+    changes.push('Observații: '+(original.notes||'—')+' → '+(notes||'—'));
+
   const origLines=original.order_lines||[];
-  const newArts=editArts;
-  if(origLines.length!==newArts.length){
-    changes.push('Articole: '+origLines.length+' → '+newArts.length+' articole');
-  } else {
-    newArts.forEach((a,i)=>{
-      const orig=origLines[i];
-      if(!orig)return;
-      if(orig.color!==a.color) changes.push('Art. '+a.code+': culoare '+orig.color+' → '+a.color);
-      if(orig.total_pairs!==a.total_pairs) changes.push('Art. '+a.code+': perechi '+orig.total_pairs+' → '+a.total_pairs);
-      if(orig.unit_price!==a.unit_price) changes.push('Art. '+a.code+': preț '+orig.unit_price+' → '+a.unit_price+' RON/per.');
+  if(origLines.length!==editArts.length){
+    changes.push('Articole: '+origLines.length+' → '+editArts.length);
+  }else{
+    editArts.forEach((a,i)=>{
+      const orig=origLines[i];if(!orig)return;
+      if(orig.color!==a.color)
+        changes.push('Art. '+a.code+': culoare '+orig.color+' → '+a.color);
+      if(orig.total_pairs!==a.total_pairs)
+        changes.push('Art. '+a.code+': perechi '+orig.total_pairs+' → '+a.total_pairs);
+      if((orig.unit_price||0)!==(a.unit_price||0))
+        changes.push('Art. '+a.code+': preț '+(orig.unit_price||0)+' → '+(a.unit_price||0)+' RON/per.');
+      // Compară pontajul
+      const origPt=JSON.stringify(orig.ponytage||{});
+      const newPt=JSON.stringify(a.ponytage||{});
+      if(origPt!==newPt){
+        const ptStr=Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join(' ');
+        changes.push('Art. '+a.code+': pontaj modificat → '+ptStr);
+      }
     });
   }
-  if(!changes.length) changes.push('Modificare generală');
+  if(!changes.length)changes.push('Modificare generală');
 
   showLov('Salvează modificările...');
 
+  // Salvează modificările ca pending — necesită aprobare management
+  const pendingData={
+    changes,
+    termen,plata,notes,
+    arts:editArts.map(a=>({
+      product_id:a.product_id,color:a.color,
+      ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null
+    })),
+    operator:CP?.full_name||'Agent',
+    timestamp:new Date().toISOString(),
+  };
+
+  await sb.from('orders').update({
+    status:'modificat_pending',
+    pending_changes:pendingData,
+    updated_at:new Date().toISOString(),
+  }).eq('id',editOrderId);
+
+  // Audit log
   await sb.from('audit_log').insert({
     table_name:'orders',record_id:editOrderId,action:'update',
-    new_data:{action:changes.join(' · '),operator:CP?.full_name||'Agent'},
+    new_data:{action:changes.join(' · '),operator:CP?.full_name||'Agent',pending:true},
     done_by:CU.id,
   });
 
-  await sb.from('orders').update({
-    delivery_preset:termen,delivery_date:calcDD(termen),plata,notes,
-    total_pairs:tp,total_value:tv,updated_at:new Date().toISOString(),
-  }).eq('id',editOrderId);
-
-  await sb.from('order_lines').delete().eq('order_id',editOrderId);
-  if(editArts.length){
-    await sb.from('order_lines').insert(
-      editArts.map(a=>({order_id:editOrderId,product_id:a.product_id,color:a.color,ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null,notes:a.notes||null}))
-    );
-  }
+  // Notificare management
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:'management',
+    order_id:editOrderId,
+    subject:'Modificare în așteptare — '+(original.order_no||''),
+    message:(CP?.full_name||'Agent')+' a modificat comanda '+(original.order_no||'')+'. Modificări: '+changes.join(', '),
+    priority:'normal',is_read:false,
+  });
 
   hideLov();
   closeEditModal();
-  showToast('Comanda a fost modificată.');
+  showToast('Modificările sunt trimise la management pentru aprobare.');
   await loadOrders();
 }
 
