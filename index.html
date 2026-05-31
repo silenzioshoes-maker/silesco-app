@@ -697,7 +697,9 @@ async function loadStockQuick(){
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700;color:#111111">${model} · ${b.color||'—'}</div>
         <div style="font-size:10px;color:#3A3530;font-family:monospace;margin-top:2px">${pontajStr}</div>
-        <div style="font-size:11px;color:#23394F;margin-top:2px">${b.total_pairs} per. ${b.price_per_pair?'· '+b.price_per_pair+' RON/per.':''}</div>
+        <div style="font-size:11px;color:#23394F;margin-top:2px">
+          ${(b.num_baxuri||1)>1?`<strong>${b.num_baxuri} baxuri</strong> · `:''}${b.total_pairs} per. ${b.price_per_pair?'· '+b.price_per_pair+' RON/per.':''}
+        </div>
       </div>
       <button onclick='quickAddFromStock("${model.replace(/"/g,'&quot;')}","${b.color||''}",${b.price_per_pair||0},${pontajJSON})' style="padding:8px 14px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0">
         + Adaugă
