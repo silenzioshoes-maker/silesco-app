@@ -115,13 +115,18 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <input type="text" id="baxColor" placeholder="ex: Negru Lac"/>
     </div>
     <div class="fld">
+      <label>Număr baxuri</label>
+      <input type="number" id="baxNum" placeholder="1" min="1" value="1" oninput="calcBaxTotal()"/>
+    </div>
+    <div class="fld">
       <label>Preț per pereche (RON)</label>
       <input type="number" id="baxPrice" placeholder="190" min="0"/>
     </div>
     <div class="fld">
-      <label>Pontaj pe mărimi</label>
+      <label>Pontaj per bax</label>
       <div class="sizes-grid" id="baxSizesGrid"></div>
       <button class="add-size-btn" onclick="addBaxCustomSize()">+ Adaugă mărime</button>
+      <div id="baxTotalInfo" style="margin-top:8px;padding:8px 12px;background:#EAF0EC;border-radius:6px;font-size:12px;color:#1E4A2E;font-weight:600;display:none"></div>
     </div>
     <div class="fld">
       <label>Link poză <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
@@ -287,7 +292,10 @@ async function loadBaxuri(){
         <div class="stock-pontaj">${pontajHTML||'<span style="font-size:11px;color:#C8C0B8">Fără pontaj</span>'}</div>
         ${b.notes?`<div class="stock-notes">${b.notes}</div>`:''}
         <div class="stock-meta">
-          <div><div class="stock-pairs">${b.total_pairs}</div><div class="stock-pairs-label">perechi</div></div>
+          <div>
+            <div class="stock-pairs">${b.total_pairs}</div>
+            <div class="stock-pairs-label">${b.num_baxuri>1?b.num_baxuri+' baxuri · ':''}perechi</div>
+          </div>
           ${b.price_per_pair?`<div class="stock-price">${b.price_per_pair} RON/per.</div>`:''}
         </div>
         <div class="stock-actions">
@@ -336,7 +344,9 @@ function openBaxModal(){
   document.getElementById('baxModalTitle').textContent='Adaugă Bax';
   ['baxModel','baxColor','baxPrice','baxPhoto','baxNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('baxProductId').value='';
+  document.getElementById('baxNum').value='1';
   document.getElementById('baxPhotoPreview').style.display='none';
+  document.getElementById('baxTotalInfo').style.display='none';
   renderBaxSizes();
   document.getElementById('baxModal').classList.add('show');
 }
@@ -348,6 +358,7 @@ async function editBax(id){
   document.getElementById('baxModel').value=b.products?'Art. '+b.products.code:b.free_model||'';
   document.getElementById('baxProductId').value=b.product_id||'';
   document.getElementById('baxColor').value=b.color||'';
+  document.getElementById('baxNum').value=b.num_baxuri||1;
   document.getElementById('baxPrice').value=b.price_per_pair||'';
   document.getElementById('baxPhoto').value=b.photo_url||'';
   document.getElementById('baxNotes').value=b.notes||'';
@@ -367,20 +378,36 @@ function renderBaxSizes(){
     </div></div>`).join('')
   +`<div class="size-cell" style="border-style:dashed;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center" onclick="addBaxCustomSize()"><div style="font-size:16px;color:#B08D57">+</div><div style="font-size:8px;color:#8B6914;font-weight:700">MĂRIME</div></div>`;
 }
+function calcBaxTotal(){
+  const num=parseInt(document.getElementById('baxNum').value)||1;
+  const perBax=baxSizes.reduce((s,sz)=>s+(baxSzV[sz]||0),0);
+  const total=num*perBax;
+  const info=document.getElementById('baxTotalInfo');
+  if(perBax>0){
+    info.style.display='block';
+    info.textContent=num+' bax'+(num>1?'uri':'')+' × '+perBax+' per./bax = '+total+' perechi total';
+  }else{info.style.display='none';}
+}
 function addBaxCustomSize(){const n=prompt('Mărime nouă:');if(!n)return;const c=n.trim();if(!c||baxSizes.includes(c)){showToast('Invalidă sau există deja');return;}baxSizes.push(c);baxSizes.sort((a,b)=>parseInt(a)-parseInt(b));baxSzV[c]=0;renderBaxSizes();}
-function adjSz(type,s,d){if(type==='bax'){baxSzV[s]=Math.max(0,(baxSzV[s]||0)+d);document.getElementById('bsv_'+s).textContent=baxSzV[s];}else{feteSzV[s]=Math.max(0,(feteSzV[s]||0)+d);document.getElementById('fsv_'+s).textContent=feteSzV[s];}}
+function adjSz(type,s,d){
+  if(type==='bax'){baxSzV[s]=Math.max(0,(baxSzV[s]||0)+d);document.getElementById('bsv_'+s).textContent=baxSzV[s];calcBaxTotal();}
+  else{feteSzV[s]=Math.max(0,(feteSzV[s]||0)+d);document.getElementById('fsv_'+s).textContent=feteSzV[s];}
+}
 
 async function saveBax(){
   const model=document.getElementById('baxModel').value.trim();
   const productId=document.getElementById('baxProductId').value||null;
   const color=document.getElementById('baxColor').value.trim();
+  const numBaxuri=parseInt(document.getElementById('baxNum').value)||1;
   const price=parseFloat(document.getElementById('baxPrice').value)||null;
   const photo=document.getElementById('baxPhoto').value.trim()||null;
   const notes=document.getElementById('baxNotes').value.trim()||null;
   if(!model||!color){showToast('Completează modelul și culoarea!');return;}
-  const pt={};let tot=0;baxSizes.forEach(s=>{if(baxSzV[s]>0){pt[s]=baxSzV[s];tot+=baxSzV[s];}});
-  if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
-  const row={product_id:productId,free_model:productId?null:model,color,ponytage:pt,total_pairs:tot,price_per_pair:price,photo_url:photo,notes,updated_at:new Date().toISOString()};
+  const pt={};let perBax=0;
+  baxSizes.forEach(s=>{if(baxSzV[s]>0){pt[s]=baxSzV[s];perBax+=baxSzV[s];}});
+  if(!perBax){showToast('Adaugă cel puțin o pereche în pontaj!');return;}
+  const tot=numBaxuri*perBax;
+  const row={product_id:productId,free_model:productId?null:model,color,ponytage:pt,num_baxuri:numBaxuri,total_pairs:tot,price_per_pair:price,photo_url:photo,notes,updated_at:new Date().toISOString()};
   showLov('Se salvează...');
   if(baxEditId)await sb.from('stock_baxuri').update(row).eq('id',baxEditId);
   else await sb.from('stock_baxuri').insert(row);
