@@ -593,20 +593,10 @@ async function loadMsgBadge(){
     .select('id,from_user_id,user_profiles!internal_messages_from_user_id_fkey(full_name)')
     .eq('to_department','management').eq('is_read',false);
   const n=(data||[]).length;
-  // Sidebar badge
   const sb2=document.getElementById('msgBadge');
   if(sb2){if(n>0){sb2.style.display='inline';sb2.textContent=n;}else{sb2.style.display='none';}}
-  // Topbar badge
   const tb=document.getElementById('topbarMsgBadge');
   if(tb){if(n>0){tb.style.display='inline';tb.textContent=n;}else{tb.style.display='none';}}
-  // Banner
-  const banner=document.getElementById('msgBanner');
-  if(banner){
-    if(n>0){
-      banner.style.display='flex';
-      document.getElementById('msgBannerText').textContent=n+(n===1?' mesaj nou necitit':' mesaje noi necitite');
-    }else{banner.style.display='none';}
-  }
 }
 async function loadProds(){const{data}=await sb.from('products').select('*').eq('is_active',true).order('code');prods=data||[];}
 async function loadClients(){const{data}=await sb.from('clients').select('id,name,company_name,cui,phone,delivery_address').order('company_name');clientsList=data||[];}
