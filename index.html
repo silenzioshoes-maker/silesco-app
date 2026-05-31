@@ -385,7 +385,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
           <div style="font-size:10px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">Adaugă articol</div>
           <div class="fld autocomplete-wrap">
             <label>Model <span style="color:#5A5248;font-weight:400;font-size:9px;text-transform:none;letter-spacing:0">(scrie orice — ex: 140, model nou, special)</span></label>
-            <input type="text" id="artModInput" placeholder="Scrie codul sau numele modelului..." oninput="filterModels(this.value)" onfocus="filterModels(this.value)" autocomplete="off"/>
+            <input type="text" id="artModInput" placeholder="Scrie codul sau numele modelului..." oninput="filterModels(this.value);document.getElementById('artMod').value=''" onfocus="filterModels(this.value)" autocomplete="off"/>
             <input type="hidden" id="artMod"/>
             <div class="autocomplete-drop" id="artModDrop"></div>
           </div>
