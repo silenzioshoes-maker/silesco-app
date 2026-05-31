@@ -373,14 +373,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
         <div class="card">
           <div style="font-size:10px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">Adaugă articol</div>
           <div class="fld autocomplete-wrap">
-            <label>Model</label>
-            <input type="text" id="artModInput" placeholder="Tastează — ex: 140, 0062, 121..." oninput="filterModels(this.value)" onfocus="filterModels(this.value)" autocomplete="off"/>
+            <label>Model <span style="color:#5A5248;font-weight:400;font-size:9px;text-transform:none;letter-spacing:0">(scrie orice — ex: 140, model nou, special)</span></label>
+            <input type="text" id="artModInput" placeholder="Scrie codul sau numele modelului..." oninput="filterModels(this.value)" onfocus="filterModels(this.value)" autocomplete="off"/>
             <input type="hidden" id="artMod"/>
             <div class="autocomplete-drop" id="artModDrop"></div>
           </div>
           <div class="fld autocomplete-wrap">
-            <label>Culoare / Piele</label>
-            <input type="text" id="artCol" placeholder="ex: Negru Lac, Maro Cioco..." oninput="filterColors(this.value)" onfocus="filterColors(this.value)" autocomplete="off"/>
+            <label>Culoare / Piele <span style="color:#5A5248;font-weight:400;font-size:9px;text-transform:none;letter-spacing:0">(scrie orice)</span></label>
+            <input type="text" id="artCol" placeholder="ex: Negru Lac, culoare specială, TBD..." oninput="filterColors(this.value)" onfocus="filterColors(this.value)" autocomplete="off"/>
             <div class="autocomplete-drop" id="artColDrop"></div>
           </div>
           <div class="fld"><label>Preț per pereche (RON)</label><input type="number" id="artPr" placeholder="ex: 190" min="0"/></div>
@@ -1306,24 +1306,43 @@ function adjSz(s,d){szV[s]=Math.max(0,szV[s]+d);document.getElementById('sv_'+s)
 // ── ARTICOLE ──────────────────────────────────────────────────
 function addArt(){
   const mid=document.getElementById('artMod').value;
+  const modText=document.getElementById('artModInput').value.trim();
   const col=document.getElementById('artCol').value.trim();
   const pr=parseFloat(document.getElementById('artPr').value)||0;
   const obs=document.getElementById('artObs').value.trim();
   const discTip=document.getElementById('artDiscountTip').value;
   const discVal=document.getElementById('artDiscountVal').value;
-  const prod=prods.find(p=>p.id===mid);
-  if(!mid||!col){showToast('Selectează modelul și culoarea!');return;}
+  // Model poate fi din catalog SAU text liber — nu blocăm
+  if(!modText){showToast('Scrie modelul!');return;}
+  if(!col){showToast('Scrie culoarea sau pielea!');return;}
   const pt={};let tot=0;SZ.forEach(s=>{if(szV[s]>0){pt[s]=szV[s];tot+=szV[s];}});
   if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
+  const prod=mid?prods.find(p=>p.id===mid):null;
+  const code=prod?.code||modText; // dacă nu e din catalog, folosim textul liber
   const{pretFinal,discount,discountText}=calcDiscount(pr,discTip,discVal);
-  arts.push({product_id:mid,code:prod?.code||'—',color:col,ponytage:pt,total_pairs:tot,unit_price:pr,pret_final:pretFinal,discount,discount_tip:discTip,discount_val:parseFloat(discVal)||0,discount_text:discountText,notes:obs});
-  document.getElementById('artCol').value='';document.getElementById('artPr').value='';document.getElementById('artObs').value='';
-  document.getElementById('artMod').value='';document.getElementById('artModInput').value='';
-  document.getElementById('artDiscountTip').value='';document.getElementById('artDiscountVal').value='';
+  arts.push({
+    product_id:mid||null,
+    free_model:mid?null:modText, // salvăm ca text liber dacă nu e din catalog
+    code,color:col,
+    ponytage:pt,total_pairs:tot,
+    unit_price:pr,pret_final:pretFinal,
+    discount,discount_tip:discTip,
+    discount_val:parseFloat(discVal)||0,
+    discount_text:discountText,
+    notes:obs
+  });
+  document.getElementById('artCol').value='';
+  document.getElementById('artPr').value='';
+  document.getElementById('artObs').value='';
+  document.getElementById('artMod').value='';
+  document.getElementById('artModInput').value='';
+  document.getElementById('artDiscountTip').value='';
+  document.getElementById('artDiscountVal').value='';
   document.getElementById('artModDrop').style.display='none';
   document.getElementById('artColDrop').style.display='none';
-  resetSz();renderArtList();document.getElementById('s2next').disabled=arts.length===0;
-  showToast('Art. '+(prod?.code||'—')+' adăugat!');
+  resetSz();renderArtList();
+  document.getElementById('s2next').disabled=arts.length===0;
+  showToast('Art. '+code+' adăugat!');
 }
 function renderArtList(){
   document.getElementById('artCnt').textContent='Articole: '+arts.length;
@@ -1379,8 +1398,12 @@ async function saveOrder(){
   }).select().single();
   if(ordErr){hideLov();showToast('Eroare: '+ordErr.message);document.getElementById('saveBtn').disabled=false;return;}
   await sb.from('order_lines').insert(arts.map(a=>({
-    order_id:ord.id,product_id:a.product_id,color:a.color,
-    ponytage:a.ponytage,total_pairs:a.total_pairs,
+    order_id:ord.id,
+    product_id:a.product_id||null,
+    free_model:a.free_model||null,
+    color:a.color||null,
+    ponytage:a.ponytage,
+    total_pairs:a.total_pairs,
     unit_price:a.pret_final||a.unit_price||null,
     notes:a.notes?`${a.discount_text?'[Discount: '+a.discount_text+'] ':''}${a.notes}`:a.discount_text?'[Discount: '+a.discount_text+']':null,
   })));
