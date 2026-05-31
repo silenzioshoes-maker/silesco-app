@@ -124,6 +124,9 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     </div>
     <div class="fld">
       <label>Pontaj per bax</label>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <button onclick="setStdBax()" style="padding:4px 12px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Standard 39×1 40×2 41×3 42×3 43×2 44×1</button>
+      </div>
       <div class="sizes-grid" id="baxSizesGrid"></div>
       <button class="add-size-btn" onclick="addBaxCustomSize()">+ Adaugă mărime</button>
       <div id="baxTotalInfo" style="margin-top:8px;padding:8px 12px;background:#EAF0EC;border-radius:6px;font-size:12px;color:#1E4A2E;font-weight:600;display:none"></div>
@@ -294,7 +297,7 @@ async function loadBaxuri(){
         <div class="stock-meta">
           <div>
             <div class="stock-pairs">${b.total_pairs}</div>
-            <div class="stock-pairs-label">${b.num_baxuri>1?b.num_baxuri+' baxuri · ':''}perechi</div>
+            <div class="stock-pairs-label">${(b.num_baxuri||1)>1?(b.num_baxuri)+' baxuri · ':''}${b.total_pairs} perechi</div>
           </div>
           ${b.price_per_pair?`<div class="stock-price">${b.price_per_pair} RON/per.</div>`:''}
         </div>
@@ -368,6 +371,12 @@ async function editBax(id){
   renderBaxSizes();
   if(b.photo_url){const img=document.getElementById('baxPhotoPreview');img.src=b.photo_url;img.style.display='block';}
   document.getElementById('baxModal').classList.add('show');
+}
+function setStdBax(){
+  baxSizes=[...SZ];
+  baxSzV={'39':1,'40':2,'41':3,'42':3,'43':2,'44':1};
+  renderBaxSizes();calcBaxTotal();
+  showToast('Pontaj standard aplicat!');
 }
 function renderBaxSizes(){
   document.getElementById('baxSizesGrid').innerHTML=baxSizes.map(s=>`
