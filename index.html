@@ -1240,12 +1240,13 @@ async function genPDF(oid){
     const sizeRow=entries.map(([s])=>`<td style="${cellStyle}font-size:10px;color:#888;font-weight:700">${s}</td>`).join('');
     const qtyRow=entries.map(([,q])=>`<td style="${cellStyle}font-size:14px;font-weight:700;color:#1A1814">${q}</td>`).join('');
     const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
+    const notesCleanPDF=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
     return `<tr>
       <td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top">
         <div style="font-weight:700;font-size:13px">${l.products?.code?'Art. '+l.products.code:l.free_model||'—'}</div>
         <div style="font-size:13px;color:#444;margin-top:2px">${l.color||'—'}</div>
         ${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}
-        ${l.notes?`<div style="font-size:11px;color:#B08D57;margin-top:2px">${l.notes}</div>`:''}
+        ${notesCleanPDF?`<div style="font-size:11px;color:#B08D57;margin-top:2px;font-weight:600">Obs: ${notesCleanPDF}</div>`:''}
       </td>
       <td style="border:1px solid #ddd;padding:6px">
         <table style="border-collapse:collapse;width:100%">
