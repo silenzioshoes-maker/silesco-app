@@ -1040,17 +1040,18 @@ function renderEditArticles(){
   const div=document.getElementById('editArticlesList');
   if(!editArts.length){div.innerHTML='<div style="font-size:12px;color:#4A4540;padding:8px 0">Niciun articol. Adaugă mai jos.</div>';return;}
   div.innerHTML=editArts.map((a,i)=>`
-    <div style="background:#fff;border:1.5px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px">
+    <div style="background:#fff;border:1.5px solid ${a.from_stock?'rgba(47,74,99,.4)':'#DDD7CE'};border-radius:8px;padding:12px 14px;margin-bottom:8px;${a.from_stock?'background:#F0F6FF':''}">
+      ${a.from_stock?'<div style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📦 Din stoc — nu se poate modifica</div>':''}
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700;color:#111111">${a.product_id?'Art. '+a.code:a.code} · ${a.color}</div>
           <div style="font-size:11px;color:#3A3530;margin-top:2px;font-weight:500">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
           <div style="font-size:10px;color:#4A4540;margin-top:2px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
         </div>
-        <div style="display:flex;gap:6px;flex-shrink:0">
+        ${!a.from_stock?`<div style="display:flex;gap:6px;flex-shrink:0">
           <button onclick="editExistingArt(${i})" style="background:#F6F0E5;border:1px solid #B08D57;border-radius:5px;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px;font-family:'Inter',sans-serif">Editează</button>
           <button onclick="removeEditArt(${i})" style="background:#F5EAE8;border:1px solid #9C3A2B;border-radius:5px;color:#7A2418;font-size:14px;cursor:pointer;padding:3px 9px;font-family:'Inter',sans-serif">×</button>
-        </div>
+        </div>`:''}
       </div>
     </div>`).join('');
 }
