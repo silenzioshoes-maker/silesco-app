@@ -559,7 +559,7 @@ async function loadAteliere(){
 
 async function loadOrders(){
   const{data,error}=await sb.from('orders')
-    .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,
+    .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       user_profiles!orders_agent_id_fkey(full_name),
       order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,products(id,code,name,default_sole_id))`)
@@ -618,12 +618,13 @@ function applyFilter(){
 }
 
 const SC={
-  nou:{l:'Comandă nouă',c:'#23394F',b:'#E8EFF6'},
-  aprobat:{l:'Aprobat',c:'#8B6914',b:'#F6F0E5'},
-  in_productie:{l:'În producție',c:'#8B6914',b:'#FAF3E0'},
-  finalizat:{l:'Gata livrare',c:'#1E4A2E',b:'#D8EEE0'},
-  livrat:{l:'Livrat',c:'#3A3530',b:'#EDEAE4'},
-  anulat:{l:'Anulat',c:'#7A2418',b:'#F5EAE8'},
+  nou:              {l:'Comandă nouă',      c:'#23394F',b:'#E8EFF6'},
+  aprobat:          {l:'Aprobat',           c:'#8B6914',b:'#F6F0E5'},
+  modificat_pending:{l:'Modificare pending',c:'#7A5A00',b:'#FFF3CD'},
+  in_productie:     {l:'În producție',      c:'#8B6914',b:'#FAF3E0'},
+  finalizat:        {l:'Gata livrare',      c:'#1E4A2E',b:'#D8EEE0'},
+  livrat:           {l:'Livrat',            c:'#3A3530',b:'#EDEAE4'},
+  anulat:           {l:'Anulat',            c:'#7A2418',b:'#F5EAE8'},
 };
 
 function renderOrders(){
@@ -652,11 +653,24 @@ function renderOrders(){
     let actiuni='';
     if(o.status==='nou')actiuni=`<button class="action-btn ab-green" onclick="openApprove('${o.id}',event)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Aprobă comanda</button>`;
     else if(o.status==='aprobat')actiuni=`<button class="action-btn ab-green" onclick="sendToCroit('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M20 4 8.12 15.88"/></svg>Lansează la Croit</button>`;
+    else if(o.status==='modificat_pending')actiuni=`
+      <div style="background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;padding:12px 14px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:#7A5A00;margin-bottom:6px">⏳ Modificări agent în așteptare</div>
+        <div style="font-size:11px;color:#8B6914;margin-bottom:10px">${(o.pending_changes?.changes||[]).map(c=>'• '+c).join('<br>')}</div>
+        <div style="display:flex;gap:8px">
+          <button class="action-btn ab-green" style="flex:1;margin:0;padding:9px" onclick="approveChanges('${o.id}',event)">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Aprobă modificările
+          </button>
+          <button class="action-btn ab-red" style="flex:1;margin:0;padding:9px" onclick="rejectChanges('${o.id}',event)">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Respinge
+          </button>
+        </div>
+      </div>`;
 
     return `<div class="order-row">
-      <div class="order-row-main" onclick="togRow(${i})">
+      <div class="order-row-main" onclick="togRow(${i},'${o.id}')">
         <div class="order-no-cell">${o.order_no||'—'}</div>
-        <div><div class="order-client-cell">${cl}${isStock&&!o.allocated_to_client?'<span class="urgent-flag" style="color:#23394F;background:#E8EFF6;border-color:rgba(47,74,99,.3)">STOC</span>':''}${isUrgent?'<span class="urgent-flag">⚡ Urgent</span>':''}</div><div class="order-agent-cell">Agent: ${agent}</div></div>
+        <div><div class="order-client-cell">${cl}${isStock&&!o.allocated_to_client?'<span class="urgent-flag" style="color:#23394F;background:#E8EFF6;border-color:rgba(47,74,99,.3)">STOC</span>':''}${isUrgent?'<span class="urgent-flag">⚡ Urgent</span>':''}${o.status==='modificat_pending'?'<span class="urgent-flag" style="color:#7A5A00;background:#FFF3CD;border-color:rgba(176,137,43,.3)">⏳ Pending</span>':''}</div><div class="order-agent-cell">Agent: ${agent}</div></div>
         <div class="order-pairs-cell">${o.total_pairs||0} per.</div>
         <div style="font-size:12px;color:${dc};font-weight:${dl!==null&&dl<=3?700:500}">${dt}<br><span style="font-size:10px;color:#5A5248;font-weight:500">${dd}</span></div>
         <span class="status-pill" style="color:${cfg.c};background:${cfg.b}"><span style="width:5px;height:5px;border-radius:50%;background:${cfg.c};display:inline-block"></span>${cfg.l}</span>
@@ -667,7 +681,10 @@ function renderOrders(){
         <div class="detail-grid">
           <div>
             <div class="detail-section" style="margin-bottom:12px"><div class="detail-label">Progres producție</div>${renderTimeline(o)}</div>
-            <div class="detail-section"><div class="detail-label">Articole (${lines.length})</div>${linesHTML||'<div style="font-size:12px;color:#5A5248">Niciun articol.</div>'}</div>
+            <div class="detail-section" style="margin-bottom:12px"><div class="detail-label">Articole (${lines.length})</div>${linesHTML||'<div style="font-size:12px;color:#5A5248">Niciun articol.</div>'}</div>
+            <!-- Mesaje + Audit încărcate dinamic -->
+            <div id="mgmt_omsg_${o.id}"></div>
+            <div id="mgmt_ohist_${o.id}"></div>
           </div>
           <div>
             <div class="detail-section" style="margin-bottom:12px">
@@ -701,7 +718,124 @@ function renderOrders(){
   }).join('');
 }
 
-function togRow(i){const r=document.getElementById('erow'+i);const a=document.getElementById('arr'+i);const open=r.style.display==='block';r.style.display=open?'none':'block';if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';}
+function togRow(i,orderId){
+  const r=document.getElementById('erow'+i);
+  const a=document.getElementById('arr'+i);
+  const open=r.style.display==='block';
+  r.style.display=open?'none':'block';
+  if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+  if(!open&&orderId){
+    loadMgmtOrderMsgs(orderId);
+    loadMgmtOrderHistory(orderId);
+  }
+}
+
+async function loadMgmtOrderMsgs(orderId){
+  const el=document.getElementById('mgmt_omsg_'+orderId);
+  if(!el)return;
+  const{data}=await sb.from('internal_messages')
+    .select(`id,from_user_id,message,reply,created_at,to_department,priority,
+      user_profiles!internal_messages_from_user_id_fkey(full_name,role)`)
+    .eq('order_id',orderId).is('parent_id',null)
+    .order('created_at',{ascending:false}).limit(8);
+  if(!data||!data.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="detail-section" style="margin-bottom:12px">
+    <div class="detail-label">Mesaje comandă (${data.length})</div>
+    ${data.map(m=>{
+      const isMine=m.from_user_id===CU.id;
+      const sender=isMine?'Tu (Management)':m.user_profiles?.full_name||'—';
+      const role=m.user_profiles?.role||'';
+      const isUrgent=m.priority==='urgent';
+      const t=new Date(m.created_at).toLocaleString('ro-RO');
+      return `<div style="background:${isMine?'#F4F1EA':'#E8EFF6'};border-radius:8px;padding:9px 12px;margin-bottom:6px;border-left:2px solid ${isUrgent?'#9C3A2B':'#C8C0B8'}">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <div style="font-size:10px;font-weight:700;color:#3A3530">${sender}${role&&!isMine?' · '+role:''}${isUrgent?' ⚡':''}</div>
+          <div style="font-size:9px;color:#9E9890">${t}</div>
+        </div>
+        <div style="font-size:12px;color:#111111;line-height:1.5">${m.message}</div>
+        ${m.reply?`<div style="margin-top:5px;padding:5px 8px;background:rgba(54,90,67,.1);border-radius:5px;font-size:11px;color:#1E4A2E"><strong>Răspuns:</strong> ${m.reply}</div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function loadMgmtOrderHistory(orderId){
+  const el=document.getElementById('mgmt_ohist_'+orderId);
+  if(!el)return;
+  const{data}=await sb.from('audit_log')
+    .select('id,new_data,created_at').eq('record_id',orderId).eq('action','update')
+    .order('created_at',{ascending:false}).limit(8);
+  if(!data||!data.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="detail-section" style="margin-bottom:12px">
+    <div class="detail-label">Istoric modificări</div>
+    ${data.map(h=>{
+      const changes=(h.new_data?.action||'Modificare').split(' · ');
+      const op=h.new_data?.operator||'—';
+      const isPending=h.new_data?.pending;
+      const t=new Date(h.created_at).toLocaleString('ro-RO');
+      return `<div style="padding:8px 10px;background:${isPending?'#FFF3CD':'#F4F1EA'};border-radius:7px;margin-bottom:6px;border-left:2px solid ${isPending?'#B0892B':'#DDD7CE'}">
+        <div style="font-size:10px;color:#5A5248;font-family:monospace;margin-bottom:4px">${t} · ${op}${isPending?' · ⏳ Pending':''}</div>
+        ${changes.map(c=>`<div style="font-size:12px;color:#111111;margin-top:2px">• ${c}</div>`).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── APROBARE / RESPINGERE MODIFICĂRI AGENT ────────────────────
+async function approveChanges(orderId,e){
+  e.stopPropagation();
+  const o=allOrders.find(x=>x.id===orderId);
+  if(!o||!o.pending_changes)return;
+  showLov('Se aprobă modificările...');
+  const pc=o.pending_changes;
+  // Aplică modificările
+  await sb.from('orders').update({
+    delivery_preset:pc.termen,delivery_date:calcDD(pc.termen),
+    plata:pc.plata,notes:pc.notes,
+    total_pairs:pc.arts.reduce((s,a)=>s+a.total_pairs,0),
+    total_value:pc.arts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0),
+    status:'aprobat',pending_changes:null,rejection_reason:null,
+    updated_at:new Date().toISOString(),
+  }).eq('id',orderId);
+  // Actualizează liniile
+  await sb.from('order_lines').delete().eq('order_id',orderId);
+  await sb.from('order_lines').insert(pc.arts.map(a=>({
+    order_id:orderId,product_id:a.product_id,color:a.color,
+    ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null
+  })));
+  // Notifică agentul
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:'agent',order_id:orderId,
+    subject:'Modificări aprobate — '+(o.order_no||''),
+    message:'Modificările tale la comanda '+(o.order_no||'')+' au fost aprobate.',
+    priority:'normal',is_read:false,
+  });
+  await sb.from('audit_log').insert({
+    table_name:'orders',record_id:orderId,action:'update',
+    new_data:{action:'Modificări aprobate de management: '+pc.changes.join(' · '),operator:CP?.full_name||'Management'},
+    done_by:CU.id,
+  });
+  hideLov();showToast('Modificări aprobate!');await loadAll();
+}
+
+async function rejectChanges(orderId,e){
+  e.stopPropagation();
+  const o=allOrders.find(x=>x.id===orderId);
+  const motiv=prompt('Motivul respingerii:');
+  if(!motiv)return;
+  showLov('Se respinge...');
+  await sb.from('orders').update({
+    status:'aprobat',pending_changes:null,
+    rejection_reason:motiv,updated_at:new Date().toISOString(),
+  }).eq('id',orderId);
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:'agent',order_id:orderId,
+    subject:'Modificări respinse — '+(o.order_no||''),
+    message:'Modificările tale la comanda '+(o.order_no||'')+' au fost respinse. Motiv: '+motiv,
+    priority:'urgent',is_read:false,
+  });
+  hideLov();showToast('Modificări respinse.');await loadAll();
+}
 
 // TIMELINE
 const STAGE_LABELS=['Nou','Verif. stoc','La croit','FEȚE gata','Cusut ext.','Cusut fin.','Recepție','Talpuit','Împachetat','Gata'];
