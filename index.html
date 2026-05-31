@@ -370,6 +370,16 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
       <div id="s2" style="display:none">
         <div class="sec-label" id="artCnt">Articole: 0</div>
         <div id="artList"></div>
+
+        <!-- ADAUGĂ DIN STOC -->
+        <div id="stockQuickSection" style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px">Din stoc disponibil</div>
+            <button onclick="toggleStockQuick()" id="stockQuickToggle" style="padding:4px 10px;border-radius:5px;border:1px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Arată ▾</button>
+          </div>
+          <div id="stockQuickList" style="display:none"></div>
+        </div>
+
         <div class="card">
           <div style="font-size:10px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">Adaugă articol</div>
           <div class="fld autocomplete-wrap">
@@ -439,6 +449,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
         <button class="btn btn-outline" onclick="showV('orders')">Înapoi la comenzi</button>
         <button class="btn btn-gold" id="succPDF">Generează fișă client</button>
       </div>
+    </div>
+  </div>
+
+  <!-- STOC -->
+  <div id="vStoc" style="display:none">
+    <div class="wrap">
+      <div class="sec-label">Baxuri gata</div><div id="stBax"></div>
+      <div class="sec-label" style="margin-top:16px">FEȚE disponibile</div><div id="stFete"></div>
     </div>
   </div>
 
@@ -653,6 +671,52 @@ function calcDiscount(pret,tip,val){
     return{pretFinal:Math.max(0,pret-d),discount:d,discountText:'-'+v+'%'};
   }
   return{pretFinal:pret,discount:0,discountText:''};
+}
+
+// ── STOC RAPID LA COMANDĂ ─────────────────────────────────────
+let stockQuickLoaded=false,stockQuickOpen=false;
+async function toggleStockQuick(){
+  stockQuickOpen=!stockQuickOpen;
+  const list=document.getElementById('stockQuickList');
+  const btn=document.getElementById('stockQuickToggle');
+  list.style.display=stockQuickOpen?'block':'none';
+  btn.textContent=stockQuickOpen?'Ascunde ▴':'Arată ▾';
+  if(stockQuickOpen&&!stockQuickLoaded)await loadStockQuick();
+}
+async function loadStockQuick(){
+  const{data:baxuri}=await sb.from('stock_baxuri').select('*,products(code)').order('created_at',{ascending:false});
+  stockQuickLoaded=true;
+  const el=document.getElementById('stockQuickList');
+  if(!baxuri?.length){el.innerHTML='<div style="font-size:12px;color:#9E9890;padding:8px 0;text-align:center">Niciun bax în stoc.</div>';return;}
+  el.innerHTML=baxuri.map(b=>{
+    const model=b.products?.code?'Art. '+b.products.code:b.free_model||'—';
+    const entries=b.ponytage?Object.entries(b.ponytage).filter(([,q])=>q>0):[];
+    const pontajStr=entries.map(([s,q])=>s+'×'+q).join(' ');
+    const pontajJSON=JSON.stringify(b.ponytage||{});
+    return `<div style="background:#E8EFF6;border:1px solid rgba(47,74,99,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#111111">${model} · ${b.color||'—'}</div>
+        <div style="font-size:10px;color:#3A3530;font-family:monospace;margin-top:2px">${pontajStr}</div>
+        <div style="font-size:11px;color:#23394F;margin-top:2px">${b.total_pairs} per. ${b.price_per_pair?'· '+b.price_per_pair+' RON/per.':''}</div>
+      </div>
+      <button onclick='quickAddFromStock("${model.replace(/"/g,'&quot;')}","${b.color||''}",${b.price_per_pair||0},${pontajJSON})' style="padding:8px 14px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0">
+        + Adaugă
+      </button>
+    </div>`;
+  }).join('');
+}
+function quickAddFromStock(model,color,price,pontaj){
+  document.getElementById('artModInput').value=model;
+  document.getElementById('artMod').value='';
+  document.getElementById('artCol').value=color;
+  document.getElementById('artPr').value=price||'';
+  const pt=typeof pontaj==='object'?pontaj:JSON.parse(pontaj||'{}');
+  SZ.forEach(s=>szV[s]=0);
+  Object.entries(pt).forEach(([s,q])=>{szV[s]=parseInt(q)||0;});
+  renderSz();
+  // Scroll la formular
+  document.querySelector('.card').scrollIntoView({behavior:'smooth'});
+  showToast('Pre-completat din stoc — verifică și adaugă!');
 }
 
 // ── AUTOSUGGESTION MODEL ──────────────────────────────────────
@@ -1228,6 +1292,7 @@ async function genPDF(oid){
 // ── NEW ORDER ─────────────────────────────────────────────────
 function startNew(){
   selClient=null;curTermen='10z';arts=[];SZ.forEach(s=>szV[s]=0);
+  stockQuickLoaded=false;stockQuickOpen=false;
   ['cSearch','artCol','artPr','artObs','ordObs','artModInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('cRes').innerHTML='';
   document.getElementById('cSel').style.display='none';
@@ -1237,6 +1302,8 @@ function startNew(){
   document.getElementById('succSc').classList.remove('show');
   const am=document.getElementById('artMod');if(am)am.value='';
   const amd=document.getElementById('artModDrop');if(amd)amd.style.display='none';
+  const sql=document.getElementById('stockQuickList');if(sql)sql.style.display='none';
+  const sqb=document.getElementById('stockQuickToggle');if(sqb)sqb.textContent='Arată ▾';
   renderSz();goStep(0);
 }
 
