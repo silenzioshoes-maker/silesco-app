@@ -817,7 +817,8 @@ function renderOrders(orders){
     const preview=lines.length
       ? lines.slice(0,3).map(l=>{
           const hasDisc=l.notes&&l.notes.includes('[Discount:');
-          return `<span class="art-tag">Art.${l.products?.code||'—'} · ${l.color||'—'}${hasDisc?' 🏷':''}  </span>`;
+          const modLabel=l.products?.code?'Art.'+l.products.code:l.free_model||'—';
+          return `<span class="art-tag">${modLabel} · ${l.color||'—'}${hasDisc?' 🏷':''}${l.from_stock?' 📦':''}  </span>`;
         }).join('')
         +(lines.length>3?`<span class="art-tag">+${lines.length-3}</span>`:'')
       :'<span style="font-size:10px;color:#5A5248">—</span>';
@@ -833,8 +834,10 @@ function renderOrders(orders){
       const hasDiscount=l.notes&&l.notes.includes('[Discount:');
       const discountText=hasDiscount?l.notes.match(/\[Discount: ([^\]]+)\]/)?.[1]||'':'';
       const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
+      const modLabel=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+      const stockBadge=l.from_stock?'<span style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 6px;border-radius:3px;margin-left:6px">📦 Din stoc</span>':'';
       return `<div style="padding:10px 0;border-bottom:1px solid #EDE8DF">
-        <div style="font-size:13px;font-weight:700;color:#1B1B1B">Art. ${l.products?.code||'—'} · ${l.color||'—'} · ${l.total_pairs} per.${val}</div>
+        <div style="font-size:13px;font-weight:700;color:#1B1B1B">${modLabel} · ${l.color||'—'} · ${l.total_pairs} per.${val}${stockBadge}</div>
         ${hasDiscount?`<span class="discount-badge" style="margin:3px 0;display:inline-flex">${discountText}</span>`:''}
         ${pontajHTML}
         ${l.unit_price?`<div style="font-size:11px;color:#4A4540;margin-top:3px">${l.unit_price} RON/per.</div>`:''}
@@ -1037,7 +1040,7 @@ function renderEditArticles(){
     <div style="background:#fff;border:1.5px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
-          <div style="font-size:13px;font-weight:700;color:#111111">Art. ${a.code} · ${a.color}</div>
+          <div style="font-size:13px;font-weight:700;color:#111111">${a.product_id?'Art. '+a.code:a.code} · ${a.color}</div>
           <div style="font-size:11px;color:#3A3530;margin-top:2px;font-weight:500">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
           <div style="font-size:10px;color:#4A4540;margin-top:2px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
         </div>
@@ -1447,7 +1450,7 @@ function renderArtList(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
           ${a.from_stock?'<div style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">📦 Din stoc — nu produce</div>':''}
-          <div style="font-size:14px;font-weight:700;color:#1B1B1B">Art. ${a.code} · ${a.color}</div>
+          <div style="font-size:14px;font-weight:700;color:#1B1B1B">${a.product_id?'Art. '+a.code:a.code} · ${a.color}</div>
           <div style="font-size:11px;color:#4A4540;margin-top:2px">
             ${a.total_pairs} per.
             ${a.unit_price?` · ${a.unit_price} RON/per.`:''}
@@ -1473,7 +1476,7 @@ function renderSum(){
   document.getElementById('sumV').textContent=tv.toLocaleString('ro-RO')+' RON';
   document.getElementById('sumArt').innerHTML=arts.map(a=>`
     <div class="card" style="margin-bottom:6px;padding:12px 14px">
-      <div style="font-size:13px;font-weight:700;color:#1B1B1B">Art. ${a.code} · ${a.color}</div>
+      <div style="font-size:13px;font-weight:700;color:#1B1B1B">${a.product_id?'Art. '+a.code:a.code} · ${a.color}${a.from_stock?' <span style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:1px 6px;border-radius:3px;margin-left:4px">📦 Stoc</span>':''}</div>
       <div style="font-size:11px;color:#4A4540;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
       <div style="font-size:10px;color:#5A5248;margin-top:2px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
     </div>`).join('');
