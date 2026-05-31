@@ -497,7 +497,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
       <svg class="nb-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span class="nb-label">Nou</span>
     </button>
-    <button class="nb" id="n_mesaje" onclick="showV('mesaje')" style="position:relative">
+    <button class="nb" id="n_mesaje" onclick="window.location.href='/agent-messages.html'" style="position:relative">
       <svg class="nb-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span class="nb-label">Mesaje</span>
       <span id="agentMsgBadge" style="display:none;position:absolute;top:2px;right:18px;background:#9C3A2B;color:#fff;font-size:8px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center">0</span>
@@ -824,13 +824,14 @@ function renderOrders(orders){
       <div class="expand-det" id="det${i}">
         <div class="sec-label" style="margin-bottom:8px">Articole (${lines.length})</div>
         ${det||'<div style="font-size:12px;color:#5A5248;padding:8px 0">Nicio linie.</div>'}
+        <div id="omsg_${o.id}" style="margin-top:10px"></div>
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
           <button onclick="genPDF('${o.id}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #111111;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px">
             Generează fișă client
           </button>
-          <button onclick="openNewAgentMsg('${o.id}','${o.order_no||'—'}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+          <button onclick="window.location.href='/agent-messages.html?order=${o.id}&no=${o.order_no||''}'" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg style="width:13px;height:13px;stroke:#23394F;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Trimite mesaj despre această comandă
+            Mesaje despre această comandă
           </button>
           ${canEdit(o.status)?`
           <div style="display:flex;gap:8px">
@@ -850,6 +851,33 @@ function renderOrders(orders){
   }).join('');
 }
 
+async function loadOrderMsgs(orderId){
+  const el=document.getElementById('omsg_'+orderId);
+  if(!el)return;
+  const{data}=await sb.from('internal_messages')
+    .select(`id,from_user_id,message,reply,created_at,to_department,
+      user_profiles!internal_messages_from_user_id_fkey(full_name,role)`)
+    .eq('order_id',orderId)
+    .is('parent_id',null)
+    .order('created_at',{ascending:false})
+    .limit(5);
+  if(!data||!data.length){el.innerHTML='';return;}
+  el.innerHTML=`
+    <div style="border-top:1px solid #EDE8DF;padding-top:10px">
+      <div style="font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Mesaje comandă</div>
+      ${data.map(m=>{
+        const isMine=m.from_user_id===CU.id;
+        const sender=isMine?'Tu':m.user_profiles?.full_name||'Management';
+        return `<div style="background:${isMine?'#F4F1EA':'#E8EFF6'};border-radius:8px;padding:9px 12px;margin-bottom:6px">
+          <div style="font-size:10px;font-weight:700;color:#3A3530;margin-bottom:3px">${sender}</div>
+          <div style="font-size:12px;color:#111111;line-height:1.5">${m.message}</div>
+          ${m.reply?`<div style="margin-top:6px;padding:6px 8px;background:rgba(54,90,67,.1);border-radius:5px;font-size:11px;color:#1E4A2E"><strong>Răspuns:</strong> ${m.reply}</div>`:''}
+        </div>`;
+      }).join('')}
+      <a href="/agent-messages.html" style="font-size:11px;color:#B08D57;font-weight:700;text-decoration:none">Vezi toate mesajele →</a>
+    </div>`;
+}
+
 function dismissNotif(){dismissedNotif=true;document.getElementById('ntf').classList.remove('show');}
 
 function togDet(i){
@@ -858,6 +886,11 @@ function togDet(i){
   const open=d.style.display==='block';
   d.style.display=open?'none':'block';
   if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+  if(!open){
+    // Încarcă mesajele comenzii
+    const o=allOrders[i];
+    if(o)loadOrderMsgs(o.id);
+  }
 }
 
 // ── EDITARE COMPLETĂ ──────────────────────────────────────────
