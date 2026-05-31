@@ -997,12 +997,14 @@ async function openEditModal(id){
   editArts=o.order_lines.map(l=>({
     id:l.id,
     product_id:l.product_id,
-    code:l.products?.code||'—',
+    code:l.products?.code||l.free_model||'—',
+    free_model:l.free_model||null,
     color:l.color||'',
     ponytage:l.ponytage||{},
     total_pairs:l.total_pairs||0,
     unit_price:l.unit_price||0,
     notes:l.notes||'',
+    from_stock:l.from_stock||false,
     isNew:false,
   }));
   renderEditArticles();
@@ -1226,7 +1228,7 @@ async function genPDF(oid){
     const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
     return `<tr>
       <td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top">
-        <div style="font-weight:700;font-size:13px">Art. ${l.products?.code||'—'}</div>
+        <div style="font-weight:700;font-size:13px">${l.products?.code?'Art. '+l.products.code:l.free_model||'—'}</div>
         <div style="font-size:13px;color:#444;margin-top:2px">${l.color||'—'}</div>
         ${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}
         ${l.notes?`<div style="font-size:11px;color:#B08D57;margin-top:2px">${l.notes}</div>`:''}
