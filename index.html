@@ -464,17 +464,26 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
   <!-- MODAL MESAJ NOU AGENT -->
   <div class="modal-overlay" id="agentMsgModal">
     <div class="modal-box">
-      <div class="modal-title">Mesaj către management</div>
-      <div class="modal-sub">Selectează comanda sau trimite un mesaj general</div>
+      <div class="modal-title" id="amTitle">Mesaj nou</div>
+      <div class="modal-sub" id="amSub">Trimite un mesaj către un departament</div>
       <div class="fld">
-        <label>Comandă asociată <span style="color:#5A5248;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
-        <select id="amOrderSel">
+        <label>Către</label>
+        <select id="amDept" style="width:100%;padding:12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff">
+          <option value="management">Management</option>
+          <option value="croit">Croit</option>
+          <option value="talpuit">Talpuit</option>
+          <option value="impachetat">Împachetat</option>
+        </select>
+      </div>
+      <div class="fld" id="amOrderWrap">
+        <label>Comandă <span style="color:#5A5248;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+        <select id="amOrderSel" style="width:100%;padding:12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff">
           <option value="">Fără comandă specifică</option>
         </select>
       </div>
       <div class="fld"><label>Mesaj</label><textarea style="width:100%;padding:12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;height:90px" id="amText" placeholder="Scrie mesajul..."></textarea></div>
-      <button class="btn btn-black" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px" onclick="sendAgentMsg()">Trimite la Management</button>
-      <button class="btn btn-outline" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #DDD7CE;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif" onclick="closeAgentMsgModal()">Anulează</button>
+      <button style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px" onclick="sendAgentMsg()">Trimite</button>
+      <button style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #DDD7CE;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif" onclick="closeAgentMsgModal()">Anulează</button>
     </div>
   </div>
 
@@ -818,6 +827,10 @@ function renderOrders(orders){
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
           <button onclick="genPDF('${o.id}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #111111;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px">
             Generează fișă client
+          </button>
+          <button onclick="openNewAgentMsg('${o.id}','${o.order_no||'—'}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg style="width:13px;height:13px;stroke:#23394F;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Trimite mesaj despre această comandă
           </button>
           ${canEdit(o.status)?`
           <div style="display:flex;gap:8px">
@@ -1358,16 +1371,27 @@ async function loadAgentMessages(){
   if(unreadIds.length)await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).in('id',unreadIds);
 }
 
-function openNewAgentMsg(){
+function openNewAgentMsg(orderId=null,orderNo=null){
   // Populează lista comenzi
   const sel=document.getElementById('amOrderSel');
   sel.innerHTML='<option value="">Fără comandă specifică</option>';
-  // Ia comenzile din allOrders deja încărcate
-  (allOrders||[]).filter(o=>o.agent_id===CU.id).forEach(o=>{
+  (allOrders||[]).forEach(o=>{
     const cl=o.clients?.company_name||o.clients?.name||'';
-    const opt=document.createElement('option');opt.value=o.id;opt.textContent=o.order_no+' · '+cl;sel.appendChild(opt);
+    const opt=document.createElement('option');
+    opt.value=o.id;
+    opt.textContent=(o.order_no||'—')+' · '+cl;
+    if(o.id===orderId)opt.selected=true;
+    sel.appendChild(opt);
   });
   document.getElementById('amText').value='';
+  document.getElementById('amDept').value='management';
+  if(orderId){
+    document.getElementById('amTitle').textContent='Mesaj despre '+orderNo;
+    document.getElementById('amSub').textContent='Comanda selectată automat';
+  }else{
+    document.getElementById('amTitle').textContent='Mesaj nou';
+    document.getElementById('amSub').textContent='Trimite un mesaj către un departament';
+  }
   document.getElementById('agentMsgModal').classList.add('show');
 }
 function closeAgentMsgModal(){document.getElementById('agentMsgModal').classList.remove('show');}
@@ -1375,10 +1399,15 @@ function closeAgentMsgModal(){document.getElementById('agentMsgModal').classList
 async function sendAgentMsg(){
   const text=document.getElementById('amText').value.trim();
   const orderId=document.getElementById('amOrderSel').value||null;
+  const dept=document.getElementById('amDept').value;
   if(!text){showToast('Scrie mesajul!');return;}
   showLov('Se trimite...');
-  await sb.from('internal_messages').insert({from_user_id:CU.id,to_department:'management',order_id:orderId,message:text,priority:'normal',is_read:false});
-  hideLov();closeAgentMsgModal();showToast('Mesaj trimis la Management!');
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:dept,
+    order_id:orderId,message:text,priority:'normal',is_read:false
+  });
+  hideLov();closeAgentMsgModal();
+  showToast('Mesaj trimis!');
   loadAgentMessages();
 }
 
@@ -1386,7 +1415,10 @@ async function openAgentReply(parentId){
   const text=prompt('Răspunsul tău:');
   if(!text)return;
   showLov('Se trimite...');
-  await sb.from('internal_messages').insert({from_user_id:CU.id,to_department:'management',message:text,priority:'normal',is_read:false,parent_id:parentId});
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:'management',
+    message:text,priority:'normal',is_read:false,parent_id:parentId
+  });
   hideLov();showToast('Răspuns trimis!');loadAgentMessages();
 }
 
