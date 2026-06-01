@@ -306,6 +306,11 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   </div>
 </div>
 
+<!-- MODAL BULK ENTRY -->
+<div class="modal-overlay" id="bulkModal" style="z-index:300">
+  <div id="bulkModalContent"></div>
+</div>
+
 <!-- MODAL MATERIE PRIMĂ -->
 <div class="modal-overlay" id="materieModal" style="z-index:300">
   <div class="modal-box">
@@ -647,8 +652,16 @@ function renderMaterieGrid(elId,items,tip){
   if(!items.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#9E9890;font-size:13px">Niciun articol. Adaugă primul.</div>';return;}
   el.innerHTML=items.map(item=>{
     const stoc=item.stoc||{};
-    const entries=Object.entries(stoc).filter(([,q])=>q>0);
+    const entries=Object.entries(stoc).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
     const total=entries.reduce((s,[,q])=>s+q,0);
+    const pontajHTML=entries.length?`
+      <div style="display:flex;gap:0;margin-top:10px;border:1px solid #DDD7CE;border-radius:6px;overflow:hidden">
+        ${entries.map(([s,q])=>`
+          <div style="flex:1;text-align:center;border-right:1px solid #DDD7CE;min-width:32px">
+            <div style="font-size:10px;font-weight:700;color:#5A5248;background:#F4F1EA;padding:3px 2px;border-bottom:1px solid #DDD7CE">${s}</div>
+            <div style="font-size:13px;font-weight:700;color:${q>0?'#111111':'#C8C0B8'};padding:4px 2px;font-family:'Playfair Display',serif">${q}</div>
+          </div>`).join('')}
+      </div>`:'<div style="font-size:11px;color:#C8C0B8;margin-top:8px;font-style:italic">Fără stoc per mărime</div>';
     return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
@@ -661,9 +674,10 @@ function renderMaterieGrid(elId,items,tip){
           <div style="font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px">total</div>
         </div>
       </div>
-      ${entries.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:10px">${entries.map(([s,q])=>`<span style="background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;font-family:monospace">${s}×${q}</span>`).join('')}</div>`:''}
+      ${pontajHTML}
       <div style="display:flex;gap:6px;margin-top:10px">
         <button onclick="editMaterie('${item.id}','${tip}')" style="flex:1;padding:7px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Editează</button>
+        <button onclick="openBulkEntry('${item.id}','${tip}','${item.cod}')" style="flex:1;padding:7px;border-radius:6px;border:1px solid #2F4A63;background:#E8EFF6;color:#2F4A63;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Intrare</button>
         <button onclick="deleteMaterie('${item.id}','${tip}')" style="padding:7px 12px;border-radius:6px;border:1px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">×</button>
       </div>
     </div>`;
@@ -747,6 +761,73 @@ function addMSize(){
   const n=prompt('Introdu mărimea:');if(!n)return;
   const c=n.trim();if(!c||mSzList.includes(c)){showToast('Mărime invalidă sau există!');return;}
   mSzList.push(c);mSzList.sort((a,b)=>parseInt(a)-parseInt(b));mSzV[c]=0;renderMSzGrid();
+}
+
+async function openBulkEntry(id,tip,cod){
+  const{data:item}=await sb.from(tip).select('*').eq('id',id).single();
+  if(!item)return;
+  const perMarime=['talpi','branturi'].includes(tip);
+  // Construiește modal dinamic
+  const existStoc=item.stoc||{};
+  const sizes=perMarime?Object.keys(existStoc).sort((a,b)=>parseInt(a)-parseInt(b)):null;
+  let html=`<div style="background:#fff;border-radius:14px;padding:24px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:4px">Intrare stoc</div>
+    <div style="font-size:12px;color:#5A5248;margin-bottom:16px">${cod} — adaugă cantitate la stocul existent</div>`;
+  if(perMarime&&sizes.length){
+    html+=`<div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Cantitate de adăugat per mărime</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      ${sizes.map(s=>`
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;font-weight:700;color:#111111;width:40px">Nr.${s}</span>
+          <span style="font-size:11px;color:#9E9890;flex:1">Stoc actual: ${existStoc[s]||0}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button onclick="adjBulk('${s}',-1)" style="width:28px;height:28px;border-radius:6px;border:1px solid #DDD7CE;background:#F4F1EA;color:#3A3530;font-size:14px;font-weight:700;cursor:pointer">−</button>
+            <span id="bulk_${s}" style="font-size:16px;font-weight:700;color:#111111;min-width:24px;text-align:center">0</span>
+            <button onclick="adjBulk('${s}',1)" style="width:28px;height:28px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:14px;font-weight:700;cursor:pointer">+</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }else if(!perMarime){
+    html+=`<div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cantitate de adăugat</div>
+      <div style="font-size:11px;color:#9E9890;margin-bottom:8px">Stoc actual: ${existStoc||0}</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="adjBulk('global',-10)" style="padding:6px 12px;border-radius:6px;border:1px solid #DDD7CE;background:#F4F1EA;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer">−10</button>
+        <button onclick="adjBulk('global',-1)" style="padding:6px 12px;border-radius:6px;border:1px solid #DDD7CE;background:#F4F1EA;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer">−1</button>
+        <span id="bulk_global" style="font-size:24px;font-weight:700;color:#111111;min-width:40px;text-align:center;font-family:'Playfair Display',serif">0</span>
+        <button onclick="adjBulk('global',1)" style="padding:6px 12px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer">+1</button>
+        <button onclick="adjBulk('global',10)" style="padding:6px 12px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer">+10</button>
+      </div>
+    </div>`;
+  }
+  html+=`<button onclick="saveBulkEntry('${id}','${tip}',${JSON.stringify(existStoc)},${perMarime})" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px">Salvează intrarea</button>
+    <button onclick="closeModal('bulkModal')" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Anulează</button>
+  </div>`;
+  document.getElementById('bulkModalContent').innerHTML=html;
+  document.getElementById('bulkModal').classList.add('show');
+}
+
+const bulkVals={};
+function adjBulk(sz,d){
+  if(!bulkVals[sz])bulkVals[sz]=0;
+  bulkVals[sz]=Math.max(0,bulkVals[sz]+d);
+  const el=document.getElementById('bulk_'+sz);
+  if(el)el.textContent=bulkVals[sz];
+}
+
+async function saveBulkEntry(id,tip,existStoc,perMarime){
+  showLov('Se salvează...');
+  let newStoc;
+  if(perMarime){
+    newStoc={...existStoc};
+    Object.entries(bulkVals).forEach(([sz,q])=>{if(q>0)newStoc[sz]=(parseInt(newStoc[sz])||0)+q;});
+  }else{
+    newStoc=(parseInt(existStoc)||0)+(bulkVals['global']||0);
+  }
+  await sb.from(tip).update({stoc:newStoc}).eq('id',id);
+  // Reset bulk vals
+  Object.keys(bulkVals).forEach(k=>delete bulkVals[k]);
+  hideLov();closeModal('bulkModal');showToast('Stoc actualizat!');await loadMaterii();
 }
 
 async function saveMaterie(){
