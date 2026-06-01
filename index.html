@@ -641,31 +641,60 @@ const CULORI_STANDARD=[
 ];
 let productColorsCache={};
 async function loadProductColors(){
-  const{data}=await sb.from('product_colors').select('product_id,color,id').order('color');
+  const{data}=await sb.from('product_colors').select('*').order('color');
   productColorsCache={};
-  (data||[]).forEach(c=>{if(!productColorsCache[c.product_id])productColorsCache[c.product_id]=[];productColorsCache[c.product_id].push(c.color);});
+  (data||[]).forEach(c=>{
+    if(!productColorsCache[c.product_id])productColorsCache[c.product_id]=[];
+    productColorsCache[c.product_id].push(c);
+  });
 }
 
 function filterColors(q){
   const drop=document.getElementById('artColDrop');
   if(!drop)return;
-  // Folosește culorile produsului selectat dacă există
   const selProdId=document.getElementById('artMod')?.value;
-  const prodCulori=selProdId&&productColorsCache[selProdId]?productColorsCache[selProdId]:[];
-  const baseCulori=prodCulori.length?prodCulori:CULORI_STANDARD;
-  const filtered=q.trim()
-    ? baseCulori.filter(c=>c.toLowerCase().includes(q.toLowerCase()))
-    : baseCulori;
-  if(!filtered.length){drop.style.display='none';return;}
+  const prodColors=selProdId&&productColorsCache[selProdId]?productColorsCache[selProdId]:[];
+  if(!prodColors.length){
+    // Fără culori predefinite — arată lista standard
+    const filtered=q.trim()?CULORI_STANDARD.filter(c=>c.toLowerCase().includes(q.toLowerCase())):CULORI_STANDARD;
+    if(!filtered.length){drop.style.display='none';return;}
+    drop.style.display='block';
+    drop.innerHTML=filtered.map(c=>`<div class="autocomplete-item" onclick="selectColor('${c}',null)"><span class="autocomplete-code">${c}</span></div>`).join('');
+    return;
+  }
+  // Filtrează culorile produsului
+  const filtered=q.trim()?prodColors.filter(c=>c.color.toLowerCase().includes(q.toLowerCase())):prodColors;
   drop.style.display='block';
   drop.innerHTML=filtered.map(c=>`
-    <div class="autocomplete-item" onclick="selectColor('${c}')">
-      <span class="autocomplete-code">${c}</span>
-    </div>`).join('');
+    <div class="autocomplete-item" onclick="selectColor('${c.color}','${c.id}')">
+      <span class="autocomplete-code">${c.color}</span>
+      <span style="font-size:10px;color:#9E9890;margin-left:6px">
+        ${c.talpa_id?'👟':''} ${c.brant_id?'🦶':''} ${c.siret_id?'🎀':''} ${c.cutie_id?'📫':''}
+      </span>
+    </div>`).join('')+
+    `<div class="autocomplete-item" onclick="selectColor('','altul')" style="border-top:1px solid #EDE8DF;color:#B08D57">
+      <span class="autocomplete-code">+ Altă culoare (text liber)</span>
+    </div>`;
 }
-function selectColor(c){
+
+function selectColor(c,colorId){
+  if(colorId==='altul'){
+    document.getElementById('artCol').value='';
+    document.getElementById('artCol').focus();
+    document.getElementById('artColDrop').style.display='none';
+    return;
+  }
   document.getElementById('artCol').value=c;
   document.getElementById('artColDrop').style.display='none';
+  // Salvează materialele din culoarea selectată pentru auto-fill la adăugare articol
+  if(colorId){
+    const selProdId=document.getElementById('artMod')?.value;
+    const prodColors=productColorsCache[selProdId]||[];
+    const colorObj=prodColors.find(x=>x.id===colorId);
+    window._selectedColorMaterials=colorObj||null;
+  }else{
+    window._selectedColorMaterials=null;
+  }
 }
 
 // ── AUTOSUGGESTION CULORI EDITARE ─────────────────────────────
@@ -1507,7 +1536,9 @@ function addArt(){
     discount_text:discountText,
     notes:finalNotes,
     from_stock:fromStock,
+    colorMaterials:window._selectedColorMaterials||null,
   });
+  window._selectedColorMaterials=null;
   document.getElementById('artCol').value='';
   document.getElementById('artPr').value='';
   document.getElementById('artObs').value='';
@@ -1581,6 +1612,8 @@ async function saveOrder(){
   if(ordErr){hideLov();showToast('Eroare: '+ordErr.message);document.getElementById('saveBtn').disabled=false;return;}
   await sb.from('order_lines').insert(arts.map(a=>{
     const mat=a.product_id?matByProduct[a.product_id]||{}:{};
+    // Prioritizează materialele din culoarea selectată față de default model
+    const colorMat=a.colorMaterials||{};
     return {
       order_id:ord.id,
       product_id:a.product_id||null,
@@ -1591,10 +1624,10 @@ async function saveOrder(){
       unit_price:a.pret_final||a.unit_price||null,
       from_stock:a.from_stock||false,
       notes:a.notes||null,
-      talpa_id:mat.talpa_id||null,
-      brant_id:mat.brant_id||null,
-      siret_id:mat.siret_id||null,
-      cutie_id:mat.cutie_id||null,
+      talpa_id:colorMat.talpa_id||mat.talpa_id||null,
+      brant_id:colorMat.brant_id||mat.brant_id||null,
+      siret_id:colorMat.siret_id||mat.siret_id||null,
+      cutie_id:colorMat.cutie_id||mat.cutie_id||null,
     };
   }));
   hideLov();
