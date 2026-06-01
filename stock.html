@@ -306,6 +306,23 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   </div>
 </div>
 
+<!-- MODAL PRODUS NOU -->
+<div class="modal-overlay" id="addProdModal" style="z-index:300">
+  <div style="background:#fff;border-radius:14px;padding:24px;width:100%;max-width:360px">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:16px">Model nou</div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cod model *</div>
+      <input id="apCode" type="text" placeholder="ex: 140, 0062..." style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Nume model</div>
+      <input id="apName" type="text" placeholder="ex: Oxford Lac, Derby Box..." style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
+    </div>
+    <button onclick="saveAddProduct()" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px">Salvează</button>
+    <button onclick="closeModal('addProdModal')" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Anulează</button>
+  </div>
+</div>
+
 <!-- MODAL BULK ENTRY -->
 <div class="modal-overlay" id="bulkModal" style="z-index:300">
   <div id="bulkModalContent"></div>
@@ -747,16 +764,14 @@ async function editMaterie(id,tip){
 
 function renderMSzGrid(){
   document.getElementById('mSzGrid').innerHTML=mSzList.map(s=>`
-    <div style="background:#F4F1EA;border:1.5px solid #DDD7CE;border-radius:7px;padding:7px 5px;text-align:center;min-width:52px">
-      <div style="font-size:10px;color:#5A5248;font-weight:600;margin-bottom:3px">Nr.${s}</div>
-      <div style="display:flex;align-items:center;gap:2px;justify-content:center">
-        <button onclick="adjMSz('${s}',-1)" style="width:20px;height:20px;border-radius:4px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
-        <span id="msv_${s}" style="font-size:14px;font-weight:700;color:#111111;min-width:18px;text-align:center;font-family:'Playfair Display',serif">${mSzV[s]||0}</span>
-        <button onclick="adjMSz('${s}',1)" style="width:20px;height:20px;border-radius:4px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
-      </div>
+    <div style="background:#F4F1EA;border:1.5px solid #DDD7CE;border-radius:7px;padding:7px 8px;text-align:center;min-width:60px">
+      <div style="font-size:10px;color:#5A5248;font-weight:600;margin-bottom:4px">Nr.${s}</div>
+      <input type="number" min="0" value="${mSzV[s]||0}" 
+        onchange="mSzV['${s}']=parseInt(this.value)||0"
+        oninput="mSzV['${s}']=parseInt(this.value)||0"
+        style="width:52px;height:30px;border-radius:5px;border:1.5px solid #B08D57;text-align:center;font-size:14px;font-weight:700;color:#111111;font-family:'Playfair Display',serif;background:#fff;padding:0"/>
     </div>`).join('');
 }
-function adjMSz(s,d){mSzV[s]=Math.max(0,(mSzV[s]||0)+d);const e=document.getElementById('msv_'+s);if(e)e.textContent=mSzV[s];}
 function addMSize(){
   const n=prompt('Introdu mărimea:');if(!n)return;
   const c=n.trim();if(!c||mSzList.includes(c)){showToast('Mărime invalidă sau există!');return;}
@@ -840,7 +855,14 @@ async function saveMaterie(){
   const cod=document.getElementById('mCod').value.trim();
   if(!cod){showToast('Completează codul!');return;}
   const perMarime=['talpi','branturi'].includes(curMaterie);
-  const stoc=perMarime?Object.fromEntries(mSzList.filter(s=>mSzV[s]>0).map(s=>[s,mSzV[s]])):parseInt(document.getElementById('mStoc').value)||0;
+  // Citește valorile direct din input-uri
+  if(perMarime){
+    mSzList.forEach(s=>{
+      const el=document.querySelector(`input[onchange*="mSzV['${s}']"]`);
+      if(el)mSzV[s]=parseInt(el.value)||0;
+    });
+  }
+  const stoc=perMarime?Object.fromEntries(mSzList.map(s=>[s,mSzV[s]||0])):parseInt(document.getElementById('mStoc').value)||0;
   const payload={cod,notes:document.getElementById('mNotes').value.trim()||null,stoc};
   const numeVal=document.getElementById('mNume').value.trim();
   if(curMaterie==='talpi')payload.name=numeVal;
@@ -896,40 +918,96 @@ async function loadModele(){
 
 function renderModele(){
   const el=document.getElementById('modeleGrid');if(!el)return;
-  if(!allProdsM.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#9E9890">Niciun produs.</div>';return;}
-  el.innerHTML=allProdsM.map(p=>{
+  const header=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:11px;color:#5A5248">${allProdsM.length} modele în catalog</div>
+      <button onclick="openAddProduct()" style="padding:8px 14px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Model nou</button>
+    </div>`;
+  if(!allProdsM.length){el.innerHTML=header+'<div style="text-align:center;padding:30px;color:#9E9890">Niciun produs. Adaugă primul.</div>';return;}
+  el.innerHTML=header+allProdsM.map(p=>{
     const a=allModeleMat[p.id]||{};
+    const talpaNume=a.talpa_id?allTalpiM.find(t=>t.id===a.talpa_id)?.cod:'—';
+    const brantNume=a.brant_id?allBranturiM.find(t=>t.id===a.brant_id)?.cod:'—';
+    const siretNume=a.siret_id?allSireturiM.find(t=>t.id===a.siret_id)?.cod:'—';
+    const cutieNume=a.cutie_id?allCutiiM.find(t=>t.id===a.cutie_id)?.cod:'—';
     const mkSel=(field,items,valKey,labelKey,currentId)=>`
-      <select onchange="saveModelMaterial('${p.id}','${field}',this.value)" 
-        style="flex:1;padding:7px 10px;border-radius:6px;border:1.5px solid #DDD7CE;background:#fff;font-size:12px;color:#111111;cursor:pointer;font-family:'Inter',sans-serif;min-width:0">
+      <select onchange="saveModelMaterial('${p.id}','${field}',this.value)"
+        style="flex:1;padding:6px 10px;border-radius:6px;border:1.5px solid #DDD7CE;background:#fff;font-size:12px;color:#111111;cursor:pointer;font-family:'Inter',sans-serif">
         <option value="">—</option>
         ${items.map(i=>`<option value="${i.id}"${currentId===i.id?' selected':''}>${i[valKey]||i[labelKey]||'—'}</option>`).join('')}
       </select>`;
-    return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:10px">
-      <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#111111;margin-bottom:10px">
-        Art. ${p.code} <span style="font-size:13px;font-weight:400;color:#5A5248">· ${p.name||'—'}</span>
+    return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:8px;overflow:hidden">
+      <div onclick="togModel('mod_${p.id}')" style="padding:12px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <span style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#111111">Art. ${p.code}</span>
+          <span style="font-size:13px;color:#5A5248;margin-left:8px">${p.name||'—'}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;gap:4px">
+            ${talpaNume!=='—'?`<span style="font-size:9px;background:#F5ECD7;color:#5A3E1B;padding:2px 6px;border-radius:3px;font-weight:700">👟 ${talpaNume}</span>`:''}
+            ${brantNume!=='—'?`<span style="font-size:9px;background:#E8EFF6;color:#2F4A63;padding:2px 6px;border-radius:3px;font-weight:700">🦶 ${brantNume}</span>`:''}
+            ${siretNume!=='—'?`<span style="font-size:9px;background:#EAF0EC;color:#1E4A2E;padding:2px 6px;border-radius:3px;font-weight:700">🎀 ${siretNume}</span>`:''}
+            ${cutieNume!=='—'?`<span style="font-size:9px;background:#F4F1EA;color:#5A5248;padding:2px 6px;border-radius:3px;font-weight:700">📫 ${cutieNume}</span>`:''}
+          </div>
+          <svg id="armod_${p.id}" style="width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px">👟 Talpă</span>
-          ${mkSel('talpa_id',allTalpiM,'cod','name',a.talpa_id)}
+      <div id="mod_${p.id}" style="display:none;border-top:1px solid #EDE8DF;padding:12px 16px">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">👟 Talpă</span>
+            ${mkSel('talpa_id',allTalpiM,'cod','name',a.talpa_id)}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">🦶 Branț</span>
+            ${mkSel('brant_id',allBranturiM,'cod','nume',a.brant_id)}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">🎀 Șiret</span>
+            ${mkSel('siret_id',allSireturiM,'cod','nume',a.siret_id)}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">📫 Cutie</span>
+            ${mkSel('cutie_id',allCutiiM,'cod','nume',a.cutie_id)}
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px">🦶 Branț</span>
-          ${mkSel('brant_id',allBranturiM,'cod','nume',a.brant_id)}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px">🎀 Șiret</span>
-          ${mkSel('siret_id',allSireturiM,'cod','nume',a.siret_id)}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px">📫 Cutie</span>
-          ${mkSel('cutie_id',allCutiiM,'cod','nume',a.cutie_id)}
-        </div>
-        ${a.notes?`<div style="font-size:11px;color:#9E9890;font-style:italic;margin-top:4px">${a.notes}</div>`:''}
+        <button onclick="deleteProduct('${p.id}','${p.code}')" style="padding:6px 14px;border-radius:6px;border:1px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Șterge model</button>
       </div>
     </div>`;
   }).join('');
+}
+
+function togModel(id){
+  const el=document.getElementById(id);
+  const pid=id.replace('mod_','');
+  const arr=document.getElementById('armod_'+pid);
+  const open=el.style.display==='block';
+  el.style.display=open?'none':'block';
+  if(arr)arr.style.transform=open?'':'rotate(180deg)';
+}
+
+function openAddProduct(){
+  document.getElementById('addProdModal').classList.add('show');
+  document.getElementById('apCode').value='';
+  document.getElementById('apName').value='';
+}
+
+async function saveAddProduct(){
+  const code=document.getElementById('apCode').value.trim();
+  const name=document.getElementById('apName').value.trim();
+  if(!code){showToast('Completează codul!');return;}
+  showLov('Se salvează...');
+  const{error}=await sb.from('products').insert({code,name:name||code,is_active:true});
+  if(error){hideLov();showToast('Eroare: '+error.message);return;}
+  hideLov();closeModal('addProdModal');showToast('Model adăugat!');await loadModele();
+}
+
+async function deleteProduct(id,code){
+  if(!confirm('Ștergi modelul Art. '+code+'? Se vor șterge și asocierile de materiale.'))return;
+  showLov('Se șterge...');
+  await sb.from('model_materiale').delete().eq('product_id',id);
+  await sb.from('products').delete().eq('id',id);
+  hideLov();showToast('Model șters!');await loadModele();
 }
 
 async function saveModelMaterial(productId,field,value){
