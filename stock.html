@@ -870,8 +870,10 @@ async function saveBulkEntry(id,tip,perMarime){
 }
 
 async function saveMaterie(){
+  if(window._saving){return;}
+  window._saving=true;
   const cod=document.getElementById('mCod').value.trim();
-  if(!cod){showToast('Completează codul!');return;}
+  if(!cod){window._saving=false;showToast('Completează codul!');return;}
   const perMarime=['talpi','branturi'].includes(curMaterie);
   const isSimple=['calapode'].includes(curMaterie);
   if(perMarime){
@@ -895,6 +897,7 @@ async function saveMaterie(){
     await sb.from(curMaterie).insert(payload);
   }
   hideLov();closeModal('materieModal');showToast('Salvat!');
+  window._saving=false;
   if(['talpi','branturi','sireturi','cutii'].includes(curMaterie)){
     await loadMaterii();
     // Reactivează tabul corect
