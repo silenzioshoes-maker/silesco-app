@@ -2131,30 +2131,56 @@ async function loadProdCusut(){
 
 async function loadProdTalpuit(){
   const{data:lines}=await sb.from('order_lines')
-    .select('id,total_pairs,production_status,product_id,free_model,color,notes,workshop,order_id,products(code)')
-    .in('production_status',['cusut_gata','la_talpuit']);
+    .select('id,total_pairs,production_status,product_id,free_model,color,notes,workshop,order_id,sort_order,products(code)')
+    .in('production_status',['cusut_gata','la_talpuit'])
+    .order('sort_order',{ascending:true});
   const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata');
   const laTalpuit=(lines||[]).filter(l=>l.production_status==='la_talpuit');
   document.getElementById('pt_receptie').textContent=receptie.length;
   document.getElementById('pt_active').textContent=laTalpuit.length;
   const getM=l=>l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
   const getO=oid=>allOrders.find(o=>o.id===oid);
+
+  // Recepție cusut — fără prioritizare
   document.getElementById('pt_receptie_list').innerHTML=receptie.length?receptie.map(l=>{
     const o=getO(l.order_id);
     const cl=o?.clients?.company_name||o?.clients?.name||'—';
     return `<div style="background:#E8EFF6;border-left:3px solid #2F4A63;border-radius:0 7px 7px 0;padding:8px 12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
       <div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'} · ${l.total_pairs} per.</div>
       <div style="font-size:10px;color:#5A5248">${o?.order_no||'—'} · ${cl} · <span style="text-transform:capitalize">${l.workshop||'intern'}</span></div></div>
-      <a href="/talpuit.html" style="font-size:10px;font-weight:700;color:#1E4A2E;text-decoration:none;padding:4px 8px;border:1px solid #1E4A2E;border-radius:5px">→ Talpuit</a>
+      <a href="/silesco-app/talpuit.html" style="font-size:10px;font-weight:700;color:#1E4A2E;text-decoration:none;padding:4px 8px;border:1px solid #1E4A2E;border-radius:5px">→ Talpuit</a>
     </div>`;}).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic">Nimic de recepționat</div>';
-  document.getElementById('pt_list').innerHTML=laTalpuit.length?laTalpuit.map(l=>{
+
+  // La talpuit — cu butoane ↑↓ prioritizare
+  document.getElementById('pt_list').innerHTML=laTalpuit.length?laTalpuit.map((l,i)=>{
     const o=getO(l.order_id);
     const cl=o?.clients?.company_name||o?.clients?.name||'—';
-    return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:7px;padding:8px 12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
-      <div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'} · ${l.total_pairs} per.</div>
-      <div style="font-size:10px;color:#5A5248">${o?.order_no||'—'} · ${cl}</div></div>
-      <span style="font-size:9px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:2px 7px;border-radius:4px">La talpuit</span>
-    </div>`;}).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic">Niciun articol în talpuit</div>';
+    const isFirst=i===0;const isLast=i===laTalpuit.length-1;
+    return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:7px;padding:8px 12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <button onclick="moveTalpuit('${l.id}',${i},-1,${JSON.stringify(laTalpuit.map(x=>x.id))})" ${isFirst?'disabled':''} style="width:22px;height:22px;border:1px solid #DDD7CE;border-radius:4px;background:#F4F1EA;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;${isFirst?'opacity:.3':''}">↑</button>
+        <button onclick="moveTalpuit('${l.id}',${i},1,${JSON.stringify(laTalpuit.map(x=>x.id))})" ${isLast?'disabled':''} style="width:22px;height:22px;border:1px solid #DDD7CE;border-radius:4px;background:#F4F1EA;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;${isLast?'opacity:.3':''}">↓</button>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:700;color:#B08D57;margin-bottom:1px">#${i+1}</div>
+        <div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'} · ${l.total_pairs} per.</div>
+        <div style="font-size:10px;color:#5A5248">${o?.order_no||'—'} · ${cl}</div>
+      </div>
+      <span style="font-size:9px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:2px 7px;border-radius:4px;flex-shrink:0">Lansat</span>
+    </div>`;}).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic">Niciun articol lansat</div>';
+}
+
+async function moveTalpuit(lineId,idx,dir,ids){
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=ids.length)return;
+  // Schimbă pozițiile
+  const newIds=[...ids];
+  [newIds[idx],newIds[newIdx]]=[newIds[newIdx],newIds[idx]];
+  // Salvează sort_order
+  showLov('Se salvează ordinea...');
+  await Promise.all(newIds.map((id,i)=>sb.from('order_lines').update({sort_order:i}).eq('id',id)));
+  hideLov();
+  await loadProdTalpuit();
 }
 
 async function loadProdAmbalat(){
