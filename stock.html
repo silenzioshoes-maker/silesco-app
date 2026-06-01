@@ -954,6 +954,18 @@ function renderModele(){
       </div>
       <div id="mod_${p.id}" style="display:none;border-top:1px solid #EDE8DF;padding:12px 16px">
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+          <div style="display:flex;gap:8px;margin-bottom:4px">
+            <div style="flex:1">
+              <div style="font-size:10px;font-weight:700;color:#5A5248;margin-bottom:4px">Nume model</div>
+              <input type="text" value="${p.name||''}" onchange="updateProduct('${p.id}','name',this.value)"
+                style="width:100%;padding:7px 10px;border-radius:6px;border:1.5px solid #DDD7CE;font-size:12px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
+            </div>
+            <div style="width:100px">
+              <div style="font-size:10px;font-weight:700;color:#5A5248;margin-bottom:4px">Preț (RON)</div>
+              <input type="number" min="0" step="0.01" value="${p.price||''}" onchange="updateProduct('${p.id}','price',this.value)"
+                style="width:100%;padding:7px 10px;border-radius:6px;border:1.5px solid #DDD7CE;font-size:12px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
+            </div>
+          </div>
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">👟 Talpă</span>
             ${mkSel('talpa_id',allTalpiM,'cod','name',a.talpa_id)}
@@ -1008,6 +1020,14 @@ async function deleteProduct(id,code){
   await sb.from('model_materiale').delete().eq('product_id',id);
   await sb.from('products').delete().eq('id',id);
   hideLov();showToast('Model șters!');await loadModele();
+}
+
+async function updateProduct(id,field,value){
+  await sb.from('products').update({[field]:field==='price'?(parseFloat(value)||null):value}).eq('id',id);
+  // Update local
+  const p=allProdsM.find(x=>x.id===id);
+  if(p)p[field]=value;
+  showToast('Salvat!');
 }
 
 async function saveModelMaterial(productId,field,value){
