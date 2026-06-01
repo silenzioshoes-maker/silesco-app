@@ -895,8 +895,22 @@ async function saveMaterie(){
     await sb.from(curMaterie).insert(payload);
   }
   hideLov();closeModal('materieModal');showToast('Salvat!');
-  if(['talpi','branturi','sireturi','cutii'].includes(curMaterie))await loadMaterii();
-  else if(curMaterie==='calapode')await loadCalapode();
+  if(['talpi','branturi','sireturi','cutii'].includes(curMaterie)){
+    await loadMaterii();
+    // Reactivează tabul corect
+    const tabMap={talpi:'tabTalpi',branturi:'tabBranturi',sireturi:'tabSireturi',cutii:'tabCutii'};
+    ['tabBaxuri','tabFete','tabTalpi','tabBranturi','tabSireturi','tabCutii','tabCalapode','tabModele'].forEach(t=>{
+      const e=document.getElementById(t);if(e)e.style.display='none';
+    });
+    const activeTab=document.getElementById(tabMap[curMaterie]);
+    if(activeTab)activeTab.style.display='block';
+  }else if(curMaterie==='calapode'){
+    await loadCalapode();
+    ['tabBaxuri','tabFete','tabTalpi','tabBranturi','tabSireturi','tabCutii','tabCalapode','tabModele'].forEach(t=>{
+      const e=document.getElementById(t);if(e)e.style.display='none';
+    });
+    const ct=document.getElementById('tabCalapode');if(ct)ct.style.display='block';
+  }
 }
 
 async function deleteMaterie(id,tip){
