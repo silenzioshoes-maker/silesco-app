@@ -562,6 +562,7 @@ async function initAgent(){
   document.getElementById('hSub').textContent=p?.full_name||'';
   await loadProds();
   await loadOrders();
+  await loadProductColors();
   await loadAgentMsgBadge();
   hideLov();
   document.getElementById('loginScreen').style.display='none';
@@ -638,12 +639,23 @@ const CULORI_STANDARD=[
   'Alb Nappa','Bej','Gri Velur','Bleumarin',
   'Camel','Cognac','Bordeaux','Verde Velur',
 ];
+let productColorsCache={};
+async function loadProductColors(){
+  const{data}=await sb.from('product_colors').select('product_id,color,id').order('color');
+  productColorsCache={};
+  (data||[]).forEach(c=>{if(!productColorsCache[c.product_id])productColorsCache[c.product_id]=[];productColorsCache[c.product_id].push(c.color);});
+}
+
 function filterColors(q){
   const drop=document.getElementById('artColDrop');
   if(!drop)return;
+  // Folosește culorile produsului selectat dacă există
+  const selProdId=document.getElementById('artMod')?.value;
+  const prodCulori=selProdId&&productColorsCache[selProdId]?productColorsCache[selProdId]:[];
+  const baseCulori=prodCulori.length?prodCulori:CULORI_STANDARD;
   const filtered=q.trim()
-    ? CULORI_STANDARD.filter(c=>c.toLowerCase().includes(q.toLowerCase()))
-    : CULORI_STANDARD;
+    ? baseCulori.filter(c=>c.toLowerCase().includes(q.toLowerCase()))
+    : baseCulori;
   if(!filtered.length){drop.style.display='none';return;}
   drop.style.display='block';
   drop.innerHTML=filtered.map(c=>`
