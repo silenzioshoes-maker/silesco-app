@@ -273,9 +273,9 @@ async function loadOrders(){
     .order('updated_at',{ascending:false}).limit(20);
   finOrders=fin||[];
 
-  // Init stare articole
+  // Init stare articole — exclude din stoc
   orders.forEach(o=>{
-    (o.order_lines||[]).forEach(l=>{
+    (o.order_lines||[]).filter(l=>!l.from_stock).forEach(l=>{
       if(!artState[l.id]){
         artState[l.id]={done:false,ponytage_done:{...l.ponytage},problem:null};
       }
@@ -318,19 +318,21 @@ function getModName(l){
 function renderOrderCard(o,i){
   const cl=o.clients?.company_name||o.clients?.name||'—';
   const lines=o.order_lines||[];
-  const doneCnt=lines.filter(l=>artState[l.id]?.done).length;
-  const allDone=lines.length>0&&doneCnt===lines.length;
+  const workLines=lines.filter(l=>!l.from_stock);
+  const doneCnt=workLines.filter(l=>artState[l.id]?.done).length;
+  const allDone=workLines.length>0&&doneCnt===workLines.length;
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const dl=o.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
   const dc=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=3?'#B0892B':'#5A5248';
   const dtText=dl===null?'':dl<0?'+'+Math.abs(dl)+'z întârziere':dl===0?'Azi':dl+'z';
 
-  // Preview articole
+  // Preview articole — toate liniile inclusiv stoc
   const previewChips=lines.map(l=>{
     const st=artState[l.id];
     const mod=getModName(l);
     const isDone=st?.done;
-    return `<span class="art-chip" style="${isDone?'background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E':''}">${isDone?'✓ ':''}${mod} · ${l.color||'—'}</span>`;
+    const isStoc=l.from_stock;
+    return `<span class="art-chip" style="${isDone?'background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E':isStoc?'background:#E8EFF6;border-color:rgba(47,74,99,.3);color:#23394F':''}">${isDone?'✓ ':isStoc?'📦 ':''}${mod} · ${l.color||'—'}</span>`;
   }).join('');
 
   return `<div class="cmd-card" id="cmd_${o.id}">
@@ -349,14 +351,13 @@ function renderOrderCard(o,i){
     </div>
     <div class="cmd-body" id="body_${o.id}">
       ${o.notes?`<div style="padding:10px 16px;background:#FAF3E0;border-bottom:1px solid #EDE8DF;font-size:12px;color:#8B6914"><strong>Obs. comandă:</strong> ${o.notes}</div>`:''}
-      ${lines.map(l=>renderArtRow(l,o.id)).join('')}
-      <!-- Mesaje comandă -->
+      ${workLines.map(l=>renderArtRow(l,o.id)).join('')}
+      ${lines.filter(l=>l.from_stock).length?`<div style="padding:10px 16px;border-bottom:1px solid #EDE8DF;font-size:12px;color:#23394F;background:#F0F6FF">📦 ${lines.filter(l=>l.from_stock).map(l=>getModName(l)+' · '+l.color).join(', ')} — din stoc, nu se croiește</div>`:''}
       <div id="omsg_${o.id}" class="order-msgs" style="display:none"></div>
-      <!-- Finalizare -->
       <div class="finalize-wrap">
         <button class="btn-finalize" id="fin_${o.id}" onclick="finalizeOrder('${o.id}')" ${allDone?'':'disabled'}>
           <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          ${allDone?'Finalizează — trimite la cusut':'Bifează toate articolele'}
+          ${allDone?'Finalizează — trimite la cusut':'Bifează toate articolele ('+doneCnt+'/'+workLines.length+')'}
         </button>
       </div>
     </div>
@@ -526,16 +527,15 @@ function updatePreviewChips(orderId){
 function updateFinalizeBtn(orderId){
   const o=orders.find(x=>x.id===orderId);
   if(!o)return;
-  const lines=o.order_lines||[];
-  const allDone=lines.length>0&&lines.every(l=>artState[l.id]?.done);
-  const doneCnt=lines.filter(l=>artState[l.id]?.done).length;
+  const workLines=(o.order_lines||[]).filter(l=>!l.from_stock);
+  const allDone=workLines.length>0&&workLines.every(l=>artState[l.id]?.done);
+  const doneCnt=workLines.filter(l=>artState[l.id]?.done).length;
   const btn=document.getElementById('fin_'+orderId);
   if(btn){
     btn.disabled=!allDone;
-    btn.innerHTML=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>${allDone?'Finalizează — trimite la cusut':'Bifează toate articolele ('+doneCnt+'/'+lines.length+')'}`;
-    // Update progress counter
+    btn.innerHTML=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>${allDone?'Finalizează — trimite la cusut':'Bifează toate articolele ('+doneCnt+'/'+workLines.length+')'}`;
     const progEl=document.querySelector(`#cmd_${orderId} .cmd-prog-num`);
-    if(progEl){progEl.textContent=doneCnt+'/'+lines.length;progEl.style.color=allDone?'#1E4A2E':'#111111';}
+    if(progEl){progEl.textContent=doneCnt+'/'+workLines.length;progEl.style.color=allDone?'#1E4A2E':'#111111';}
   }
 }
 
