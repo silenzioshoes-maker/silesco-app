@@ -389,7 +389,7 @@ async function loadOrders(){
   const{data:active}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,total_pairs,notes,
       clients!orders_client_id_fkey(name,company_name),
-      order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,products(code,name))`)
+      order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,products(code,name))`)
     .in('status',['la_croit','in_productie'])
     .order('created_at',{ascending:true});
   orders=active||[];
@@ -463,7 +463,8 @@ function renderOrderCard(o,i){
     const mod=getModName(l);
     const isDone=st?.done;
     const isStoc=l.from_stock;
-    return `<span class="art-chip" style="${isDone?'background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E':isStoc?'background:#E8EFF6;border-color:rgba(47,74,99,.3);color:#23394F':''}">${isDone?'✓ ':isStoc?'📦 ':''}${mod} · ${l.color||'—'}</span>`;
+    const wsBadge=l.workshop?` <span style="font-size:9px;background:#DCE8F5;color:#2F4A63;padding:1px 5px;border-radius:3px;font-weight:700;text-transform:capitalize">${l.workshop}</span>`:'';
+    return `<span class="art-chip" style="${isDone?'background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E':isStoc?'background:#E8EFF6;border-color:rgba(47,74,99,.3);color:#23394F':''}">${isDone?'✓ ':isStoc?'📦 ':''}${mod} · ${l.color||'—'}${wsBadge}</span>`;
   }).join('');
 
   return `<div class="cmd-card" id="cmd_${o.id}">
