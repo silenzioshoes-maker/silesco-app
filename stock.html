@@ -896,22 +896,25 @@ function showTab(tab,el){
 }
 
 // ── MODELE → MATERIALE ────────────────────────────────────────
-let allProdsM=[],allTalpiM=[],allBranturiM=[],allSireturiM=[],allCutiiM=[],allModeleMat={};
+let allProdsM=[],allTalpiM=[],allBranturiM=[],allSireturiM=[],allCutiiM=[],allModeleMat={},allProdColors={};
 
 async function loadModele(){
   showLov('Se încarcă...');
-  const[{data:prods},{data:talpi},{data:branturi},{data:sireturi},{data:cutii},{data:asoc}]=await Promise.all([
-    sb.from('products').select('id,code,name').order('code'),
+  const[{data:prods},{data:talpi},{data:branturi},{data:sireturi},{data:cutii},{data:asoc},{data:colors}]=await Promise.all([
+    sb.from('products').select('id,code,name,price').order('code'),
     sb.from('talpi').select('id,cod,name').order('cod'),
     sb.from('branturi').select('id,cod,nume').order('cod'),
     sb.from('sireturi').select('id,cod,nume').order('cod'),
     sb.from('cutii').select('id,cod,nume').order('cod'),
     sb.from('model_materiale').select('*'),
+    sb.from('product_colors').select('*').order('color'),
   ]);
   allProdsM=prods||[];allTalpiM=talpi||[];allBranturiM=branturi||[];
   allSireturiM=sireturi||[];allCutiiM=cutii||[];
   allModeleMat={};
   (asoc||[]).forEach(a=>allModeleMat[a.product_id]=a);
+  allProdColors={};
+  (colors||[]).forEach(c=>{if(!allProdColors[c.product_id])allProdColors[c.product_id]=[];allProdColors[c.product_id].push(c);});
   renderModele();
   hideLov();
 }
@@ -984,6 +987,24 @@ function renderModele(){
           </div>
         </div>
         <button onclick="deleteProduct('${p.id}','${p.code}')" style="padding:6px 14px;border-radius:6px;border:1px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Șterge model</button>
+        
+        <div style="margin-top:12px;border-top:1px solid #EDE8DF;padding-top:12px">
+          <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Culori disponibile</div>
+          <div id="colors_${p.id}" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+            ${(allProdColors[p.id]||[]).map(c=>`
+              <span style="display:inline-flex;align-items:center;gap:4px;background:#F4F1EA;border:1px solid #DDD7CE;border-radius:5px;padding:3px 8px;font-size:12px;font-weight:600;color:#111111">
+                ${c.color}
+                <button onclick="deleteColor('${c.id}','${p.id}')" style="background:none;border:none;cursor:pointer;color:#9C3A2B;font-size:14px;font-weight:700;padding:0;line-height:1">×</button>
+              </span>`).join('')}
+            ${!(allProdColors[p.id]||[]).length?'<span style="font-size:11px;color:#9E9890;font-style:italic">Nicio culoare adăugată</span>':''}
+          </div>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="newcolor_${p.id}" placeholder="ex: Negru, Cognac..." 
+              style="flex:1;padding:7px 10px;border-radius:6px;border:1.5px solid #DDD7CE;font-size:12px;font-family:'Inter',sans-serif;color:#111111;outline:none"
+              onkeydown="if(event.key==='Enter')addColor('${p.id}')"/>
+            <button onclick="addColor('${p.id}')" style="padding:7px 14px;border-radius:6px;border:none;background:#111111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+</button>
+          </div>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1020,6 +1041,41 @@ async function deleteProduct(id,code){
   await sb.from('model_materiale').delete().eq('product_id',id);
   await sb.from('products').delete().eq('id',id);
   hideLov();showToast('Model șters!');await loadModele();
+}
+
+async function addColor(productId){
+  const input=document.getElementById('newcolor_'+productId);
+  const color=input?.value.trim();
+  if(!color){showToast('Scrie culoarea!');return;}
+  const{data,error}=await sb.from('product_colors').insert({product_id:productId,color}).select().single();
+  if(error){showToast('Eroare: '+error.message);return;}
+  if(!allProdColors[productId])allProdColors[productId]=[];
+  allProdColors[productId].push(data);
+  input.value='';
+  // Update UI
+  const el=document.getElementById('colors_'+productId);
+  if(el){
+    el.innerHTML=allProdColors[productId].map(c=>`
+      <span style="display:inline-flex;align-items:center;gap:4px;background:#F4F1EA;border:1px solid #DDD7CE;border-radius:5px;padding:3px 8px;font-size:12px;font-weight:600;color:#111111">
+        ${c.color}
+        <button onclick="deleteColor('${c.id}','${productId}')" style="background:none;border:none;cursor:pointer;color:#9C3A2B;font-size:14px;font-weight:700;padding:0;line-height:1">×</button>
+      </span>`).join('');
+  }
+  showToast('Culoare adăugată!');
+}
+
+async function deleteColor(colorId,productId){
+  await sb.from('product_colors').delete().eq('id',colorId);
+  if(allProdColors[productId])allProdColors[productId]=allProdColors[productId].filter(c=>c.id!==colorId);
+  const el=document.getElementById('colors_'+productId);
+  if(el){
+    el.innerHTML=allProdColors[productId]?.length?allProdColors[productId].map(c=>`
+      <span style="display:inline-flex;align-items:center;gap:4px;background:#F4F1EA;border:1px solid #DDD7CE;border-radius:5px;padding:3px 8px;font-size:12px;font-weight:600;color:#111111">
+        ${c.color}
+        <button onclick="deleteColor('${c.id}','${productId}')" style="background:none;border:none;cursor:pointer;color:#9C3A2B;font-size:14px;font-weight:700;padding:0;line-height:1">×</button>
+      </span>`).join(''):'<span style="font-size:11px;color:#9E9890;font-style:italic">Nicio culoare adăugată</span>';
+  }
+  showToast('Șters!');
 }
 
 async function updateProduct(id,field,value){
