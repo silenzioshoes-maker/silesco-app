@@ -493,10 +493,13 @@ function updateDiffInfo(lineId,orderId){
 }
 
 // ── DONE TOGGLE ───────────────────────────────────────────────
-function toggleDone(lineId,orderId){
+async function toggleDone(lineId,orderId){
   const st=artState[lineId];
   if(!st)return;
   st.done=!st.done;
+  // Salvează statusul în DB
+  const newStatus=st.done?'croit_gata':'la_croit';
+  await sb.from('order_lines').update({production_status:newStatus}).eq('id',lineId);
   const o=orders.find(x=>x.order_lines?.some(l=>l.id===lineId));
   const l=o?.order_lines?.find(x=>x.id===lineId);
   if(l){
@@ -504,7 +507,6 @@ function toggleDone(lineId,orderId){
     if(artEl)artEl.outerHTML=renderArtRow(l,orderId);
   }
   updateFinalizeBtn(orderId);
-  // Update preview chips
   updatePreviewChips(orderId);
 }
 
