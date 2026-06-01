@@ -335,7 +335,7 @@ async function loadAll(){
 
 async function loadRestanteBanner(){
   const{data:lines}=await sb.from('order_lines')
-    .select('id,notes,color,free_model,total_pairs,order_id,products(code)')
+    .select('id,notes,color,free_model,total_pairs,order_id,ponytage,products(code)')
     .not('notes','is',null);
   const restante=(lines||[]).filter(l=>l.notes?.includes('[RESTANȚĂ:'));
   const banner=document.getElementById('restanteBanner');
@@ -343,20 +343,38 @@ async function loadRestanteBanner(){
   if(!restante.length){banner.style.display='none';return;}
   banner.style.display='block';
   banner.innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:13px;font-weight:700;color:#7A5A00">⚠ Restanțe necroite (${restante.length} articole)</span>
     </div>
     ${restante.map(l=>{
       const mod=l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
       const m=l.notes?.match(/\[RESTANȚĂ: (\d+) per\.\]/);
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(176,137,43,.15)">
-        <div style="font-size:11px;color:#8B6914">
-          ${mod} · ${l.color||'—'} — <strong>${m?m[1]:'?'} per. restante</strong>
+      const restQty=m?parseInt(m[1]):0;
+      // Găsește comanda din orders
+      const o=orders.find(x=>x.id===l.order_id);
+      const orderInfo=o?`${o.order_no||'—'} · ${o.clients?.company_name||o.clients?.name||'—'}`:'';
+      // Calculează mărimi lipsă din ponytage original vs artState
+      const st=artState[l.id];
+      const missSizes={};
+      if(l.ponytage&&st?.ponytage_done){
+        Object.entries(l.ponytage).forEach(([sz,qPlan])=>{
+          const qDone=st.ponytage_done[sz]||0;
+          if(qPlan-qDone>0)missSizes[sz]=qPlan-qDone;
+        });
+      }
+      const sizesEncoded=encodeURIComponent(JSON.stringify(missSizes));
+      return `<div style="padding:8px 0;border-bottom:1px solid rgba(176,137,43,.15)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#7A5A00">${mod} · ${l.color||'—'} — <strong>${restQty} per. restante</strong></div>
+            ${orderInfo?`<div style="font-size:10px;color:#8B6914;margin-top:2px">${orderInfo}</div>`:''}
+            ${Object.keys(missSizes).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">${Object.entries(missSizes).map(([s,q])=>`<span style="background:#FFF3CD;border:1px solid #B0892B;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:700;color:#7A5A00;font-family:monospace">${s}×${q}</span>`).join('')}</div>`:''}
+          </div>
+          <button onclick="openCompleteRestanta('${l.id}','${mod}','${l.color||''}',${restQty},'${sizesEncoded}')" 
+            style="padding:6px 12px;border-radius:6px;border:none;background:#B0892B;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0">
+            ✂ Completează
+          </button>
         </div>
-        <button onclick="openCompleteRestanta('${l.id}','${mod}','${l.color||''}',${m?m[1]:0})" 
-          style="padding:5px 10px;border-radius:6px;border:none;background:#B0892B;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap">
-          ✂ Completează
-        </button>
       </div>`;
     }).join('')}`;
 }
@@ -995,12 +1013,19 @@ function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
 
 // ── COMPLETARE RESTANȚĂ ──────────────────────────────────────
-let restantaLineId=null,restantaMax=0,restantaQtyVal=0;
-function openCompleteRestanta(lineId,mod,color,maxQty){
+let restantaLineId=null,restantaMax=0,restantaQtyVal=0,restantaSizes={};
+function openCompleteRestanta(lineId,mod,color,maxQty,sizesJson){
   restantaLineId=lineId;restantaMax=maxQty;restantaQtyVal=maxQty;
+  restantaSizes=sizesJson?JSON.parse(decodeURIComponent(sizesJson)):{};
   document.getElementById('restantaModalSub').textContent=mod+' · '+color;
   document.getElementById('restantaQty').textContent=maxQty;
   document.getElementById('restantaMax').textContent='/ '+maxQty+' restante';
+  // Afișează mărimile lipsă
+  const szEl=document.getElementById('restantaSizesInfo');
+  if(szEl){
+    const szEntries=Object.entries(restantaSizes).filter(([,q])=>q>0);
+    szEl.innerHTML=szEntries.length?'<div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Mărimi lipsă</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">'+szEntries.map(([s,q])=>`<span style="background:#FFF3CD;border:1px solid #B0892B;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;font-family:monospace;color:#7A5A00">${s}×${q}</span>`).join('')+'</div>':'';
+  }
   document.getElementById('restantaModal').classList.add('show');
 }
 function adjRestanta(d){
@@ -1033,7 +1058,8 @@ async function saveCompleteRestanta(){
 <div class="modal-overlay" id="restantaModal" style="z-index:300">
   <div style="background:#fff;border-radius:14px;padding:24px;width:100%;max-width:360px">
     <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:4px">Completează restanța</div>
-    <div style="font-size:12px;color:#5A5248;margin-bottom:16px" id="restantaModalSub">—</div>
+    <div style="font-size:12px;color:#5A5248;margin-bottom:12px" id="restantaModalSub">—</div>
+    <div id="restantaSizesInfo"></div>
     <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Perechi croite acum</div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
       <button onclick="adjRestanta(-1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:18px;font-weight:700;cursor:pointer">−</button>
