@@ -1094,18 +1094,16 @@ function renderOrders(){
   if(cnt)cnt.textContent=filteredOrders.length+' comenzi';
   const el=document.getElementById('ordersTable');
   const dash=document.getElementById('dashOrdersTable');
-  const html=_buildOrdersHTML(filteredOrders);
-  if(el)el.innerHTML=html;
-  // Dashboard arată ultimele 10 comenzi fără filtre
+  if(el)el.innerHTML=_buildOrdersHTML(filteredOrders,'ord');
   if(dash){
     const recent=allOrders.filter(o=>o.status!=='anulat').slice(0,10);
-    dash.innerHTML=_buildOrdersHTML(recent);
+    dash.innerHTML=_buildOrdersHTML(recent,'dash');
   }
 }
-function _buildOrdersHTML(orders){
+function _buildOrdersHTML(orders,prefix='ord'){
   if(!orders||!orders.length)return '<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px;font-weight:500">Nicio comandă găsită.</div>';
   return orders.map((o,i)=>{
-    const cfg=SC[o.status]||SC.nou;
+    const idx=prefix+'_'+i;
     const isStock=o.is_stock;
     const cl=isStock?(o.allocated_to_client&&o.clients?(o.clients.company_name||o.clients.name):'STOC'):(o.clients?.company_name||o.clients?.name||'—');
     const agent=o.user_profiles?.full_name||'—';
@@ -1203,16 +1201,16 @@ function _buildOrdersHTML(orders){
       </div>`;
 
     return `<div class="order-row">
-      <div class="order-row-main" onclick="togRow(${i},'${o.id}')">
+      <div class="order-row-main" onclick="togRow('${idx}','${o.id}')">
         <div class="order-no-cell">${o.order_no||'—'}</div>
         <div><div class="order-client-cell">${cl}${isStock&&!o.allocated_to_client?'<span class="urgent-flag" style="color:#23394F;background:#E8EFF6;border-color:rgba(47,74,99,.3)">STOC</span>':''}${isUrgent?'<span class="urgent-flag">⚡ Urgent</span>':''}${o.status==='modificat_pending'?'<span class="urgent-flag" style="color:#7A5A00;background:#FFF3CD;border-color:rgba(176,137,43,.3)">⏳ Pending</span>':''}</div><div class="order-agent-cell">Agent: ${agent}</div></div>
         <div class="order-pairs-cell">${o.total_pairs||0} per.</div>
         <div style="font-size:12px;color:${dc};font-weight:${dl!==null&&dl<=3?700:500}">${dt}<br><span style="font-size:10px;color:#5A5248;font-weight:500">${dd}</span></div>
         <span class="status-pill" style="color:${cfg.c};background:${cfg.b}"><span style="width:5px;height:5px;border-radius:50%;background:${cfg.c};display:inline-block"></span>${cfg.l}</span>
         <div style="font-size:12px;color:#3A3530;text-align:right;font-weight:600">${o.total_value?o.total_value.toLocaleString('ro-RO')+' RON':'—'}</div>
-        <svg id="arr${i}" style="width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;justify-self:center" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        <svg id="arr${idx}" style="width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;justify-self:center" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div class="expand-row" id="erow${i}">
+      <div class="expand-row" id="erow${idx}">
         <div class="detail-grid">
           <div>
             <div class="detail-section" style="margin-bottom:12px"><div class="detail-label">Progres producție</div>${renderTimeline(o)}</div>
