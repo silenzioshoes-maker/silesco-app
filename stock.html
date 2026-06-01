@@ -796,9 +796,11 @@ async function openBulkEntry(id,tip,cod){
       </div>
     </div>`;
   }
-  html+=`<button onclick="saveBulkEntry('${id}','${tip}',${JSON.stringify(existStoc)},${perMarime})" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px">Salvează intrarea</button>
+  html+=`<button onclick="saveBulkEntry('${id}','${tip}',${perMarime})" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px">Salvează intrarea</button>
     <button onclick="closeModal('bulkModal')" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Anulează</button>
   </div>`;
+  // Stocul curent e stocat global
+  window._bulkExistStoc=existStoc;
   document.getElementById('bulkModalContent').innerHTML=html;
   document.getElementById('bulkModal').classList.add('show');
 }
@@ -811,9 +813,9 @@ function adjBulk(sz,d){
   if(el){el.value=bulkVals[sz];}
 }
 
-async function saveBulkEntry(id,tip,existStoc,perMarime){
+async function saveBulkEntry(id,tip,perMarime){
   showLov('Se salvează...');
-  // Citește valorile din input-uri
+  const existStoc=window._bulkExistStoc||{};
   let newStoc;
   if(perMarime){
     newStoc={...existStoc};
@@ -827,7 +829,9 @@ async function saveBulkEntry(id,tip,existStoc,perMarime){
     const q=el?parseInt(el.value)||0:0;
     newStoc=(parseInt(existStoc)||0)+q;
   }
-  await sb.from(tip).update({stoc:newStoc}).eq('id',id);
+  const{error}=await sb.from(tip).update({stoc:newStoc}).eq('id',id);
+  if(error){hideLov();showToast('Eroare: '+error.message);return;}
+  window._bulkExistStoc=null;
   Object.keys(bulkVals).forEach(k=>delete bulkVals[k]);
   hideLov();closeModal('bulkModal');showToast('Stoc actualizat!');await loadMaterii();
 }
