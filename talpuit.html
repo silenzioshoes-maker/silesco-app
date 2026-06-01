@@ -196,12 +196,15 @@ function getModName(l){
 
 async function loadLines(){
   const{data}=await sb.from('order_lines')
-    .select(`id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,updated_at,
-      products(code,name),
-      orders!inner(id,order_no,status,delivery_date,clients!orders_client_id_fkey(name,company_name))`)
-    .in('production_status',['cusut_gata','la_talpuit','gata'])
-    .in('orders.status',['fete_gata_cusut','la_cusut_extern','in_productie','la_talpuit','la_impachetat','finalizat'])
-    .order('updated_at',{ascending:false});
+    .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,products(code,name)')
+    .in('production_status',['cusut_gata','la_talpuit','gata']);
+  const orderIds=[...new Set((data||[]).map(l=>l.order_id).filter(Boolean))];
+  let ordersMap={};
+  if(orderIds.length){
+    const{data:orders}=await sb.from('orders').select('id,order_no,status,delivery_date,clients!orders_client_id_fkey(name,company_name)').in('id',orderIds);
+    (orders||[]).forEach(o=>ordersMap[o.id]=o);
+  }
+  (data||[]).forEach(l=>l.orders=ordersMap[l.order_id]||null);
   const lines=data||[];
 
   // Separă pe statusuri
@@ -350,22 +353,13 @@ async function markGata(lineId,orderId){
 }
 
 async function loadStats(){
-  const now=new Date();
-  const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
-  const day=now.getDay()||7;
-  const saptStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day+1).toISOString();
-  // Talpuite
-  const{data:talpData}=await sb.from('order_lines')
-    .select('total_pairs,updated_at').eq('production_status','gata').gte('updated_at',saptStart);
-  let tAzi=0,tSapt=0;
-  (talpData||[]).forEach(l=>{tSapt+=(l.total_pairs||0);if(l.updated_at>=aziStart)tAzi+=(l.total_pairs||0);});
-  document.getElementById('stTalpAzi').textContent=tAzi||0;
+  const{data:talpData}=await sb.from('order_lines').select('total_pairs').eq('production_status','gata');
+  const tSapt=(talpData||[]).reduce((s,l)=>s+(l.total_pairs||0),0);
+  document.getElementById('stTalpAzi').textContent=0;
   document.getElementById('stTalpSapt').textContent=tSapt||0;
-  // Cusut recepționat azi
-  const{data:cusutData}=await sb.from('order_lines')
-    .select('total_pairs').eq('production_status','la_talpuit').gte('updated_at',aziStart);
-  const cAzi=(cusutData||[]).reduce((s,l)=>s+(l.total_pairs||0),0);
-  document.getElementById('stCusutAzi').textContent=cAzi||0;
+  const{data:cusutData}=await sb.from('order_lines').select('total_pairs').eq('production_status','la_talpuit');
+  const cTotal=(cusutData||[]).reduce((s,l)=>s+(l.total_pairs||0),0);
+  document.getElementById('stCusutAzi').textContent=cTotal||0;
 }
 
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
