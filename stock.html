@@ -880,9 +880,10 @@ async function saveMaterie(){
       if(el)mSzV[s]=parseInt(el.value)||0;
     });
   }
-  const stoc=isSimple?null:perMarime?Object.fromEntries(mSzList.map(s=>[s,mSzV[s]||0])):parseInt(document.getElementById('mStoc').value)||0;
+  const stocRaw=perMarime?Object.fromEntries(mSzList.map(s=>[s,mSzV[s]||0])):parseInt(document.getElementById('mStoc').value)||0;
+  const stoc=isSimple?null:perMarime?Object.fromEntries(Object.entries(stocRaw).filter(([,q])=>q>0)):stocRaw;
   const payload={cod,notes:document.getElementById('mNotes').value.trim()||null};
-  if(!isSimple)payload.stoc=stoc;
+  if(!isSimple)payload.stoc=stoc||{};
   const numeVal=document.getElementById('mNume').value.trim();
   if(curMaterie==='talpi')payload.name=numeVal;
   else if(curMaterie==='calapode')payload.nume=numeVal;
