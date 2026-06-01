@@ -782,7 +782,7 @@ async function openBulkEntry(id,tip,cod){
           <span style="font-size:11px;color:#9E9890;flex:1">Stoc actual: ${existStoc[s]||0}</span>
           <div style="display:flex;align-items:center;gap:6px">
             <button onclick="adjBulk('${s}',-1)" style="width:28px;height:28px;border-radius:6px;border:1px solid #DDD7CE;background:#F4F1EA;color:#3A3530;font-size:14px;font-weight:700;cursor:pointer">−</button>
-            <span id="bulk_${s}" style="font-size:16px;font-weight:700;color:#111111;min-width:24px;text-align:center">0</span>
+            <input id="bulk_${s}" type="number" min="0" value="0" onchange="bulkVals['${s}']=parseInt(this.value)||0" style="width:52px;height:28px;border-radius:6px;border:1.5px solid #B08D57;text-align:center;font-size:14px;font-weight:700;color:#111111;font-family:'Inter',sans-serif;padding:0 4px"/>
             <button onclick="adjBulk('${s}',1)" style="width:28px;height:28px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:14px;font-weight:700;cursor:pointer">+</button>
           </div>
         </div>`).join('')}
@@ -792,11 +792,7 @@ async function openBulkEntry(id,tip,cod){
       <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cantitate de adăugat</div>
       <div style="font-size:11px;color:#9E9890;margin-bottom:8px">Stoc actual: ${existStoc||0}</div>
       <div style="display:flex;align-items:center;gap:10px">
-        <button onclick="adjBulk('global',-10)" style="padding:6px 12px;border-radius:6px;border:1px solid #DDD7CE;background:#F4F1EA;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer">−10</button>
-        <button onclick="adjBulk('global',-1)" style="padding:6px 12px;border-radius:6px;border:1px solid #DDD7CE;background:#F4F1EA;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer">−1</button>
-        <span id="bulk_global" style="font-size:24px;font-weight:700;color:#111111;min-width:40px;text-align:center;font-family:'Playfair Display',serif">0</span>
-        <button onclick="adjBulk('global',1)" style="padding:6px 12px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer">+1</button>
-        <button onclick="adjBulk('global',10)" style="padding:6px 12px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer">+10</button>
+        <input id="bulk_global" type="number" min="0" value="0" onchange="bulkVals['global']=parseInt(this.value)||0" style="width:80px;height:36px;border-radius:6px;border:1.5px solid #B08D57;text-align:center;font-size:18px;font-weight:700;color:#111111;font-family:'Inter',sans-serif;padding:0 6px"/>
       </div>
     </div>`;
   }
@@ -812,20 +808,26 @@ function adjBulk(sz,d){
   if(!bulkVals[sz])bulkVals[sz]=0;
   bulkVals[sz]=Math.max(0,bulkVals[sz]+d);
   const el=document.getElementById('bulk_'+sz);
-  if(el)el.textContent=bulkVals[sz];
+  if(el){el.value=bulkVals[sz];}
 }
 
 async function saveBulkEntry(id,tip,existStoc,perMarime){
   showLov('Se salvează...');
+  // Citește valorile din input-uri
   let newStoc;
   if(perMarime){
     newStoc={...existStoc};
-    Object.entries(bulkVals).forEach(([sz,q])=>{if(q>0)newStoc[sz]=(parseInt(newStoc[sz])||0)+q;});
+    Object.keys(newStoc).forEach(sz=>{
+      const el=document.getElementById('bulk_'+sz);
+      const q=el?parseInt(el.value)||0:0;
+      if(q>0)newStoc[sz]=(parseInt(newStoc[sz])||0)+q;
+    });
   }else{
-    newStoc=(parseInt(existStoc)||0)+(bulkVals['global']||0);
+    const el=document.getElementById('bulk_global');
+    const q=el?parseInt(el.value)||0:0;
+    newStoc=(parseInt(existStoc)||0)+q;
   }
   await sb.from(tip).update({stoc:newStoc}).eq('id',id);
-  // Reset bulk vals
   Object.keys(bulkVals).forEach(k=>delete bulkVals[k]);
   hideLov();closeModal('bulkModal');showToast('Stoc actualizat!');await loadMaterii();
 }
