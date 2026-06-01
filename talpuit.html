@@ -232,11 +232,12 @@ function renderCusutNotif(lines){
     const mod=getModName(l);
     const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';
     const ws=l.workshop||'intern';
-    const t=new Date(l.updated_at).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'});
+    const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`<span style="display:inline-block;margin-right:8px"><strong>${s}</strong>×${q}</span>`).join(''):'—';
     return `<div class="notif-item">
       <div class="notif-info">
         <div class="notif-art">${mod} · ${l.color||'—'} · ${l.total_pairs} per.</div>
-        <div class="notif-meta">${l.orders?.order_no||'—'} · ${cl} · finalizat ${t}</div>
+        <div style="font-size:12px;color:#444;margin:4px 0;font-family:monospace">${pt}</div>
+        <div class="notif-meta">${l.orders?.order_no||'—'} · ${cl}</div>
         <span class="notif-ws">${ws}</span>
       </div>
       <button class="btn-receptie" onclick="markLaTalpuit('${l.id}')">Recepționat ✓</button>
