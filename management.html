@@ -54,7 +54,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 
 /* FILTERS */
 .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.filter-btn{padding:7px 14px;border-radius:6px;border:1.5px solid #C8C0B8;background:#fff;font-size:12px;color:#3A3530;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;transition:all .12s}
+.filter-btn{padding:4px 10px;border-radius:5px;border:1px solid #C8C0B8;background:#fff;font-size:11px;color:#3A3530;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;transition:all .12s;white-space:nowrap}
 .filter-btn.active{border-color:#B08D57;background:#F6F0E5;color:#8B6914;font-weight:700}
 .search-box{padding:7px 12px;border-radius:6px;border:1.5px solid #C8C0B8;background:#fff;font-size:13px;font-family:'Inter',sans-serif;color:#111111;outline:none;width:240px}
 .search-box:focus{border-color:#B08D57}
@@ -529,27 +529,91 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         <div id="diffList" style="max-height:200px;overflow-y:auto"></div>
       </div>
 
-      <!-- MESAJE RECENTE -->
-      <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:20px;overflow:hidden">
-        <div style="padding:11px 20px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:13px;font-weight:700;color:#111111;display:flex;align-items:center;gap:8px">
-            <svg style="width:14px;height:14px;stroke:#111111;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Mesaje recente
-            <span id="msgPanelBadge" style="display:none;background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:2px 7px">0</span>
+      <!-- SPLIT: MESAJE + RAPOARTE ZILNICE -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <!-- MESAJE -->
+        <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden;min-width:0">
+          <div style="padding:9px 14px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:12px;font-weight:700;color:#111111;display:flex;align-items:center;gap:6px">
+              <svg style="width:13px;height:13px;stroke:#111111;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Mesaje
+              <span id="msgPanelBadge" style="display:none;background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:1px 6px">0</span>
+            </div>
+            <button onclick="window.location.href='/messages.html'" style="padding:3px 8px;border-radius:4px;border:none;background:#111111;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Toate →</button>
           </div>
-          <div style="display:flex;gap:6px">
-            <button onclick="loadMsgPanel()" style="padding:5px 10px;border-radius:5px;border:1px solid #DDD7CE;background:#fff;font-size:11px;color:#3A3530;cursor:pointer;font-family:'Inter',sans-serif">↻</button>
-            <button onclick="window.location.href='/messages.html'" style="padding:5px 12px;border-radius:5px;border:none;background:#111111;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Toate mesajele →</button>
+          <div id="msgPanelList" style="max-height:220px;overflow-y:auto"></div>
+        </div>
+
+        <!-- RAPOARTE ZILNICE -->
+        <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden;min-width:0">
+          <div style="padding:9px 14px;border-bottom:1px solid #EDE8DF">
+            <div style="font-size:12px;font-weight:700;color:#111111">Rapoarte zilnice</div>
+          </div>
+          <div style="padding:10px 14px;max-height:220px;overflow-y:auto">
+            <!-- CROIT -->
+            <div style="margin-bottom:12px">
+              <div style="font-size:9px;font-weight:700;color:#5A3E1B;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px">
+                <svg style="width:11px;height:11px;stroke:#5A3E1B;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M20 4 8.12 15.88"/></svg>
+                Croit
+              </div>
+              <div style="display:flex;gap:8px">
+                <div style="flex:1;background:#F5ECD7;border-radius:7px;padding:8px 10px;text-align:center">
+                  <div style="font-size:18px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif" id="rCroitAzi">—</div>
+                  <div style="font-size:9px;color:#8B6914;text-transform:uppercase;letter-spacing:.5px">Azi</div>
+                </div>
+                <div style="flex:1;background:#F4F1EA;border-radius:7px;padding:8px 10px;text-align:center">
+                  <div style="font-size:18px;font-weight:700;color:#3A3530;font-family:'Playfair Display',serif" id="rCroitSapt">—</div>
+                  <div style="font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px">Săpt.</div>
+                </div>
+              </div>
+            </div>
+            <!-- CUSUT per atelier -->
+            <div style="margin-bottom:12px">
+              <div style="font-size:9px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px">
+                <svg style="width:11px;height:11px;stroke:#2F4A63;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                Cusut
+              </div>
+              <div id="rCusutAteliere" style="display:flex;flex-direction:column;gap:4px">
+                <div style="font-size:11px;color:#9E9890;font-style:italic">Se încarcă...</div>
+              </div>
+            </div>
+            <!-- TALPUIT -->
+            <div>
+              <div style="font-size:9px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px">
+                <svg style="width:11px;height:11px;stroke:#1E4A2E;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                Talpuit
+              </div>
+              <div style="display:flex;gap:8px">
+                <div style="flex:1;background:#D8EEE0;border-radius:7px;padding:8px 10px;text-align:center">
+                  <div style="font-size:18px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="rTalpuitAzi">—</div>
+                  <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:.5px">Azi</div>
+                </div>
+                <div style="flex:1;background:#F4F1EA;border-radius:7px;padding:8px 10px;text-align:center">
+                  <div style="font-size:18px;font-weight:700;color:#3A3530;font-family:'Playfair Display',serif" id="rTalpuitSapt">—</div>
+                  <div style="font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px">Săpt.</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div id="msgPanelList" style="max-height:180px;overflow-y:auto"></div>
       </div>
-      <div class="filters">
+
+      <!-- DIFERENȚE -->
+      <div id="diffPanel" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:9px 14px;border-bottom:1px solid rgba(176,137,43,.2);display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;font-weight:700;color:#7A5A00">⚠ Restanțe producție</div>
+          <button onclick="loadDiffs()" style="padding:3px 8px;border-radius:4px;border:1px solid #B0892B;background:#FAF3E0;font-size:10px;color:#8B6914;cursor:pointer;font-family:'Inter',sans-serif">↻</button>
+        </div>
+        <div id="diffList" style="max-height:160px;overflow-y:auto"></div>
+      </div>
+
+      <!-- FILTRE MICI -->
+      <div class="filters" style="margin-bottom:8px;flex-wrap:wrap;gap:4px">
         <button class="filter-btn active" onclick="setFilter('toate',this)">Toate</button>
         <button class="filter-btn" onclick="setFilter('nou',this)">Noi</button>
         <button class="filter-btn" onclick="setFilter('aprobat',this)">Aprobate</button>
-        <button class="filter-btn" onclick="setFilter('in_productie',this)">În producție</button>
-        <button class="filter-btn" onclick="setFilter('finalizat',this)">Gata livrare</button>
+        <button class="filter-btn" onclick="setFilter('in_productie',this)">Producție</button>
+        <button class="filter-btn" onclick="setFilter('finalizat',this)">Gata</button>
         <button class="filter-btn" onclick="setFilter('intarziate',this)">Întârziate</button>
       </div>
       <div class="table-wrap">
@@ -608,7 +672,7 @@ async function doLogout(){await sb.auth.signOut();}
 // LOAD
 async function loadAll(){
   showLov('Se încarcă datele...');
-  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadWorkshopTokens(),loadMsgBadge(),loadMsgPanel(),loadDiffs(),loadProdStats()]);
+  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadWorkshopTokens(),loadMsgBadge(),loadMsgPanel(),loadDiffs(),loadProdStats(),loadDailyReports()]);
   hideLov();
 }
 async function loadMsgPanel(){
@@ -726,6 +790,64 @@ async function loadDiffs(){
 function scrollToOrder(orderId){
   const el=document.getElementById('row_'+orderId);
   if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow='0 0 0 3px #B0892B';setTimeout(()=>el.style.boxShadow='',2000);}
+}
+
+async function loadDailyReports(){
+  const now=new Date();
+  const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
+  const day=now.getDay()||7;
+  const saptStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day+1).toISOString();
+
+  // Croit — din audit_log
+  const{data:auditCroit}=await sb.from('audit_log')
+    .select('new_data,created_at').eq('action','update')
+    .like('new_data->>action','Croit finalizat%')
+    .gte('created_at',saptStart);
+  let croitAzi=0,croitSapt=0;
+  (auditCroit||[]).forEach(h=>{
+    const matches=[...((h.new_data?.action||'').matchAll(/: (\d+) per\./g))];
+    const total=matches.reduce((s,m)=>s+parseInt(m[1]),0);
+    if(h.created_at>=aziStart)croitAzi+=total;
+    croitSapt+=total;
+  });
+  document.getElementById('rCroitAzi').textContent=croitAzi||0;
+  document.getElementById('rCroitSapt').textContent=croitSapt||0;
+
+  // Cusut per atelier — order_lines cu production_status=cusut_gata updated azi/sapt
+  const{data:cusutLines}=await sb.from('order_lines')
+    .select('workshop,total_pairs,updated_at')
+    .eq('production_status','cusut_gata')
+    .gte('updated_at',saptStart);
+  const atelierStats={};
+  (cusutLines||[]).forEach(l=>{
+    const ws=l.workshop||'intern';
+    if(!atelierStats[ws])atelierStats[ws]={azi:0,sapt:0};
+    atelierStats[ws].sapt+=(l.total_pairs||0);
+    if(l.updated_at>=aziStart)atelierStats[ws].azi+=(l.total_pairs||0);
+  });
+  const atelEl=document.getElementById('rCusutAteliere');
+  if(Object.keys(atelierStats).length){
+    atelEl.innerHTML=Object.entries(atelierStats).map(([ws,s])=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#F4F1EA;border-radius:6px">
+        <span style="font-size:11px;font-weight:700;color:#2F4A63;text-transform:capitalize">${ws}</span>
+        <span style="font-size:11px;color:#3A3530"><strong>${s.azi}</strong> azi · ${s.sapt} săpt.</span>
+      </div>`).join('');
+  }else{
+    atelEl.innerHTML='<div style="font-size:11px;color:#9E9890;font-style:italic">Nicio activitate</div>';
+  }
+
+  // Talpuit — din audit sau production_status
+  const{data:talpLines}=await sb.from('order_lines')
+    .select('total_pairs,updated_at')
+    .eq('production_status','gata')
+    .gte('updated_at',saptStart);
+  let talpAzi=0,talpSapt=0;
+  (talpLines||[]).forEach(l=>{
+    talpSapt+=(l.total_pairs||0);
+    if(l.updated_at>=aziStart)talpAzi+=(l.total_pairs||0);
+  });
+  document.getElementById('rTalpuitAzi').textContent=talpAzi||0;
+  document.getElementById('rTalpuitSapt').textContent=talpSapt||0;
 }
 
 async function loadProdStats(){
@@ -874,6 +996,9 @@ function renderOrders(){
       const pt=entries.length?`<div class="pontaj-table">${entries.map(([s,q])=>`<div class="pontaj-col"><div class="pontaj-sz">${s}</div><div class="pontaj-qty">${q}</div></div>`).join('')}</div>`:'—';
       const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
       const stockBadge=l.from_stock?'<span style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 7px;border-radius:3px;margin-left:6px;text-transform:uppercase;letter-spacing:.5px">📦 Din stoc</span>':'';
+      const restantaMatch=l.notes?.match(/\[RESTANȚĂ: (\d+) per\.\]/);
+      const restantaBadge=restantaMatch?`<span style="font-size:9px;font-weight:700;color:#7A2418;background:#F5EAE8;border:1px solid rgba(156,58,43,.3);padding:2px 7px;border-radius:3px;margin-left:6px">⚠ Restanță ${restantaMatch[1]} per.</span>`:'';
+      const notesCleanLine=l.notes?l.notes.replace(/\[RESTANȚĂ:[^\]]+\]/g,'').replace(/\[Discount:[^\]]+\]/g,'').replace(/\[[^\]]+\]/g,'').trim():'';
       const ps=l.production_status||'in_lucru';
       const psColors={in_lucru:{c:'#5A5248',b:'#F4F1EA'},la_croit:{c:'#5A3E1B',b:'#F5ECD7'},croit_gata:{c:'#2F4A63',b:'#E8EFF6'},la_cusut:{c:'#2F4A63',b:'#DCE8F5'},cusut_gata:{c:'#365A43',b:'#EAF0EC'},la_talpuit:{c:'#1E4A2E',b:'#D8EEE0'},gata:{c:'#1E4A2E',b:'#C8E6C9'}};
       const psLabels={in_lucru:'În lucru',la_croit:'La croit',croit_gata:'Croit ✓',la_cusut:'La cusut',cusut_gata:'Cusut ✓',la_talpuit:'La talpuit',gata:'✓ Gata'};
@@ -894,7 +1019,8 @@ function renderOrders(){
       return `<div style="padding:8px 0;border-bottom:1px solid #EDE8DF">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:#111111">${modName} · ${l.color||'—'} · ${l.total_pairs} per.${stockBadge}</div>
+            <div style="font-size:13px;font-weight:700;color:#111111">${modName} · ${l.color||'—'} · ${l.total_pairs} per.${stockBadge}${restantaBadge}</div>
+            ${notesCleanLine?`<div style="font-size:11px;color:#B08D57;margin-top:2px;font-style:italic">${notesCleanLine}</div>`:''}
             ${pt}
             ${workshopHTML}
           </div>
@@ -1236,7 +1362,16 @@ async function createAtelier(){
 
 async function confirmAtelier(){
   showLov('Se salvează...');
-  await sb.from('orders').update({status:'la_cusut_extern',updated_at:new Date().toISOString()}).eq('id',atelierOrderId);
+  // Actualizează production_status per articol alocat
+  const o=allOrders.find(x=>x.id===atelierOrderId);
+  if(o){
+    const assignedLines=(o.order_lines||[]).filter(l=>l.workshop&&!l.from_stock);
+    for(const l of assignedLines){
+      if(l.production_status==='croit_gata'||l.production_status==='in_lucru'){
+        await sb.from('order_lines').update({production_status:'la_cusut'}).eq('id',l.id);
+      }
+    }
+  }
   hideLov();closeModal('atelierModal');showToast('Alocări salvate!');await loadAll();
 }
 
