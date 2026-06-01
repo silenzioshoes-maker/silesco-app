@@ -883,9 +883,7 @@ async function loadDailyReports(){
 
   // Cusut per atelier — order_lines cu production_status=cusut_gata updated azi/sapt
   const{data:cusutLines}=await sb.from('order_lines')
-    .select(`workshop,total_pairs,updated_at,product_id,free_model,color,notes,
-      orders!inner(order_no,clients!orders_client_id_fkey(name,company_name)),
-      products(code)`)
+    .select('workshop,total_pairs,updated_at')
     .eq('production_status','cusut_gata')
     .gte('updated_at',saptStart)
     .order('updated_at',{ascending:false});
@@ -897,9 +895,6 @@ async function loadDailyReports(){
     atelierStats[ws].sapt+=(l.total_pairs||0);
     if(l.updated_at>=aziStart){
       atelierStats[ws].azi+=(l.total_pairs||0);
-      const mod=l.products?.code?'Art. '+l.products.code:l.free_model||(l.notes?.match(/\[([^\]]+)\]/)?.[1]||l.color)||'—';
-      const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';
-      cusutAziItems.push({ws,mod,color:l.color,total:l.total_pairs,orderNo:l.orders?.order_no||'—',cl});
     }
   });
   const atelEl=document.getElementById('rCusutAteliere');
@@ -912,18 +907,8 @@ async function loadDailyReports(){
   }else{
     atelEl.innerHTML='<div style="font-size:11px;color:#9E9890;font-style:italic">Nicio activitate</div>';
   }
-  // Notificări cusut azi
   const notifEl=document.getElementById('rCusutNotif');
-  if(cusutAziItems.length){
-    notifEl.innerHTML=cusutAziItems.map(n=>`
-      <div style="padding:5px 8px;background:#E8EFF6;border-left:3px solid #2F4A63;border-radius:0 6px 6px 0;font-size:11px;color:#111111">
-        <strong>${n.mod} · ${n.color}</strong> — ${n.total} per. 
-        <span style="color:#5A5248">${n.orderNo} · ${n.cl}</span>
-        <span style="font-size:9px;color:#2F4A63;font-weight:700;margin-left:4px;background:#DCE8F5;padding:1px 5px;border-radius:3px;text-transform:capitalize">${n.ws}</span>
-      </div>`).join('');
-  }else{
-    notifEl.innerHTML='';
-  }
+  if(notifEl)notifEl.innerHTML='';
 
   // Talpuit — din audit sau production_status
   const{data:talpLines}=await sb.from('order_lines')
@@ -1745,7 +1730,7 @@ async function genFisaClient(id,e){e.stopPropagation();showLov('Se generează...
 // LOTURI
 const SL={nou:'Nou',la_croit:'La croit',fete_gata_cusut:'FEȚE gata',la_cusut_extern:'La cusut extern',cusut_extern_finalizat:'Cusut fin.',receptie_fete:'Recepție',la_talpuit:'La talpuit',la_impachetat:'La împachetat'};
 function renderLots(lots){
-  document.getElementById('lotsCount').textContent=lots.length+' comenzi active';
+  const lc=document.getElementById('lotsCount');if(lc)lc.textContent=lots.length+' comenzi active';
   const el=document.getElementById('lotsTable');
   if(!lots.length){el.innerHTML='<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px;font-weight:500">Nicio comandă în producție.</div>';return;}
   el.innerHTML=lots.map(l=>{const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';const sc=l.stage==='la_croit'?'#8B6914':l.stage==='la_talpuit'?'#23394F':'#3A3530';const isU=l.orders?.priority==='urgent';
