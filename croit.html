@@ -686,7 +686,9 @@ async function finalizeOrder(orderId){
   if(!workLines.every(l=>artState[l.id]?.done)){showToast('Bifează toate articolele!');return;}
   showLov('Se finalizează...');
   const diffs=[];
-  const croitSummary=workLines.map(l=>{
+  // Salvează restanțe și construiește summary
+  const summaryParts=[];
+  for(const l of workLines){
     const st=artState[l.id];
     const mod=getModName(l);
     const totalCroit=Object.values(st.ponytage_done||{}).reduce((s,q)=>s+q,0);
@@ -694,16 +696,17 @@ async function finalizeOrder(orderId){
     const restanta=totalPlan-totalCroit;
     if(restanta>0){
       diffs.push(mod+' '+l.color+': '+totalCroit+'/'+totalPlan+' per. (restanță '+restanta+' per.)');
-      // Salvează flag restanță pe order_line
-      const notesWithRestanta=(l.notes||'')+' [RESTANȚĂ: '+restanta+' per.]';
-      sb.from('order_lines').update({
+      const notesWithRestanta=(l.notes?l.notes+' ':'')+' [RESTANȚĂ: '+restanta+' per.]';
+      const{error:restErr}=await sb.from('order_lines').update({
         notes:notesWithRestanta.trim(),
-        total_pairs:totalCroit, // actualizăm cu ce s-a croit efectiv
+        total_pairs:totalCroit,
       }).eq('id',l.id);
+      if(restErr)console.error('Restanță save error:',restErr.message);
     }
     const ptStr=Object.entries(st.ponytage_done||{}).map(([s,q])=>s+'×'+q).join(' ');
-    return mod+' '+l.color+': '+totalCroit+' per. ('+ptStr+')'+(st.problem?' ⚠':'');
-  }).join(' | ');
+    summaryParts.push(mod+' '+l.color+': '+totalCroit+' per. ('+ptStr+')'+(st.problem?' ⚠':''));
+  }
+  const croitSummary=summaryParts.join(' | ');
 
   await sb.from('orders').update({status:'fete_gata_cusut',updated_at:new Date().toISOString()}).eq('id',orderId);
   await sb.from('audit_log').insert({
