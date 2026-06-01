@@ -2004,7 +2004,19 @@ async function loadProdCroit(){
         </div></div>`;
     }).join('');
   }
-  document.getElementById('pc_restante_list').innerHTML=restanteReal.length?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;color:#7A2418;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">⚠ Restanțe necroite</div>${restanteReal.map(l=>{const mod=getM(l);const m=l.notes?.match(/\[RESTANȚĂ: (\d+) per\.\]/);return `<div style="background:#F5EAE8;border-left:3px solid #9C3A2B;border-radius:0 6px 6px 0;padding:6px 10px;margin-bottom:4px;font-size:11px;color:#7A2418"><strong>${mod} · ${l.color||'—'}</strong> — Restanță <strong>${m?m[1]:'?'} per.</strong></div>`;}).join('')}</div>`:'';
+  document.getElementById('pc_restante_list').innerHTML=restanteReal.length?`
+    <div style="margin-top:12px">
+      <div style="font-size:10px;font-weight:700;color:#7A2418;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">⚠ Restanțe necroite</div>
+      ${restanteReal.map(l=>{
+        const mod=getM(l);
+        const m=l.notes?.match(/\[RESTANȚĂ: (\d+) per\.\]/);
+        const o=croitOrders.find(x=>(x.order_lines||[]).some(line=>line.id===l.id));
+        const cl=o?.clients?.company_name||o?.clients?.name||'—';
+        return `<div style="background:#F5EAE8;border-left:3px solid #9C3A2B;border-radius:0 6px 6px 0;padding:8px 10px;margin-bottom:4px">
+          <div style="font-size:12px;font-weight:700;color:#7A2418">${mod} · ${l.color||'—'} — Restanță <strong>${m?m[1]:'?'} per.</strong></div>
+          ${o?`<div style="font-size:10px;color:#9C3A2B;margin-top:2px">${o.order_no||'—'} · ${cl}</div>`:''}
+        </div>`;}).join('')}
+    </div>`:'';
 }
 
 async function loadProdCusut(){
