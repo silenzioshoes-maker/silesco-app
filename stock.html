@@ -974,14 +974,6 @@ function renderModele(){
             ${mkSel('talpa_id',allTalpiM,'cod','name',a.talpa_id)}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">🦶 Branț</span>
-            ${mkSel('brant_id',allBranturiM,'cod','nume',a.brant_id)}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">🎀 Șiret</span>
-            ${mkSel('siret_id',allSireturiM,'cod','nume',a.siret_id)}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">📫 Cutie</span>
             ${mkSel('cutie_id',allCutiiM,'cod','nume',a.cutie_id)}
           </div>
@@ -1099,14 +1091,20 @@ async function addColor(productId){
   const input=document.getElementById('newcolor_'+productId);
   const color=input?.value.trim();
   if(!color){showToast('Scrie culoarea!');return;}
-  const{data,error}=await sb.from('product_colors').insert({product_id:productId,color}).select().single();
+  // Preia talpa și cutia default din model
+  const mat=allModeleMat[productId]||{};
+  const{data,error}=await sb.from('product_colors').insert({
+    product_id:productId,
+    color,
+    talpa_id:mat.talpa_id||null,
+    cutie_id:mat.cutie_id||null,
+  }).select().single();
   if(error){showToast('Eroare: '+error.message);return;}
   if(!allProdColors[productId])allProdColors[productId]=[];
   allProdColors[productId].push(data);
   input.value='';
   showToast('Culoare adăugată!');
   renderModele();
-  // Redeschide modelul
   const modEl=document.getElementById('mod_'+productId);
   if(modEl)modEl.style.display='block';
   const arr=document.getElementById('armod_'+productId);
@@ -1141,7 +1139,22 @@ async function saveModelMaterial(productId,field,value){
     const{data}=await sb.from('model_materiale').insert({product_id:productId,[field]:value||null}).select().single();
     if(data)allModeleMat[productId]=data;
   }
+  // Dacă e talpa sau cutie, propagă la culorile care nu au override
+  if(field==='talpa_id'||field==='cutie_id'){
+    const colors=allProdColors[productId]||[];
+    for(const c of colors){
+      if(!c[field]){
+        await sb.from('product_colors').update({[field]:value||null}).eq('id',c.id);
+        c[field]=value||null;
+      }
+    }
+  }
   showToast('Salvat!');
+  renderModele();
+  const modEl=document.getElementById('mod_'+productId);
+  if(modEl)modEl.style.display='block';
+  const arr=document.getElementById('armod_'+productId);
+  if(arr)arr.style.transform='rotate(180deg)';
 }
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
