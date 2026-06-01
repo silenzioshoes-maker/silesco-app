@@ -1730,7 +1730,13 @@ function calcDD(t){const d=new Date();const z={'5z':5,'10z':10,'15z':15,'30z':30
 
 // ── FIȘĂ DE PRODUCȚIE (fâșii tăiabile) ────────────────────────
 async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează fișa...');
-  const{data:o}=await sb.from('orders').select('*,clients!orders_client_id_fkey(*),order_lines(*,products(code,name))').eq('id',id).single();hideLov();if(!o)return;
+  const{data:o}=await sb.from('orders').select(`*,clients!orders_client_id_fkey(*),
+    order_lines(*,products(code,name),
+      talpa:talpi(cod),brant:branturi(cod),siret:sireturi(cod),cutie:cutii(cod))`).eq('id',id).single();
+  // Încarcă și calapoadele + model_materiale
+  const{data:modMat}=await sb.from('model_materiale').select('*,calapod:calapode(cod)');
+  const matByProd={};(modMat||[]).forEach(m=>matByProd[m.product_id]=m);
+  hideLov();if(!o)return;
   const cl=o.clients?.company_name||o.clients?.name||'—';
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const azi=new Date().toLocaleDateString('ro-RO');
@@ -1740,21 +1746,41 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
   const sumar=lines.map(l=>{
     const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`${s}×${q}`).join('  '):'';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
-    const obs=l.notes?` <em style="color:#888;font-size:11px">${l.notes}</em>`:'';
+    const obs=l.notes?` <em style="color:#888;font-size:11px">${l.notes.replace(/\[RESTANȚĂ:[^\]]+\]/g,'').replace(/\[Discount:[^\]]+\]/g,'').replace(/\[[^\]]+\]/g,'').trim()}</em>`:'';
     const stockBadge=l.from_stock?'<span style="background:#E8EFF6;color:#23394F;border:1px solid rgba(47,74,99,.4);font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px">📦 DIN STOC</span>':'';
+    const mat=matByProd[l.product_id]||{};
+    const talpaCod=l.talpa?.cod||mat.talpa_cod||'—';
+    const calapodCod=mat.calapod?.cod||'—';
+    const brantCod=l.brant?.cod||'—';
+    const siretCod=l.siret?.cod||'—';
+    const cutieCod=l.cutie?.cod||'—';
+    const decalaj=mat.notes?` <span style="color:#888;font-size:10px">(decalaj ${mat.notes})</span>`:'';
+    const materialeRow=l.from_stock?'':`<tr style="background:#fafafa"><td colspan="3" style="border:1px solid #ccc;padding:5px 10px;font-size:10px;color:#555">
+      <span style="margin-right:14px">👟 Talpă: <strong>${talpaCod}</strong>${decalaj}</span>
+      <span style="margin-right:14px">📐 Calapod: <strong>${calapodCod}</strong></span>
+      <span style="margin-right:14px">🦶 Branț: <strong>${brantCod}</strong></span>
+      <span style="margin-right:14px">🎀 Șiret: <strong>${siretCod}</strong></span>
+      <span>📫 Cutie: <strong>${cutieCod}</strong></span>
+    </td></tr>`;
     return `<tr${l.from_stock?' style="background:#F0F6FF"':''}>
       <td style="border:1px solid #ccc;padding:8px 10px;font-weight:700;font-size:13px">${modName} · ${l.color||'—'}${stockBadge}${obs}</td>
       <td style="border:1px solid #ccc;padding:8px 10px;font-family:monospace;font-size:12px">${l.from_stock?'<strong style="color:#23394F">NU PRODUCE — DIN STOC</strong>':pt}</td>
       <td style="border:1px solid #ccc;padding:8px 10px;text-align:center;font-weight:700">${l.total_pairs} per.</td>
-    </tr>`;
+    </tr>${materialeRow}`;
   }).join('');
 
   // Părțile 2-3 - fâșii tăiabile (doar articolele de produs, nu din stoc)
   const fasii=lines.filter(l=>!l.from_stock).map(l=>{
     const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`<span style="display:inline-block;margin-right:14px;font-size:15px"><strong>${s}</strong>×${q}</span>`).join(''):'';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
-    const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
-    const detailsText=[notesClean,o.notes].filter(Boolean).join(' | ');
+    const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').replace(/\[RESTANȚĂ:[^\]]+\]\s*/,'').replace(/\[[^\]]+\]\s*/g,'').trim():'';
+    const mat=matByProd[l.product_id]||{};
+    const talpaCod=l.talpa?.cod||'—';
+    const calapodCod=mat.calapod?.cod||'—';
+    const brantCod=l.brant?.cod||'—';
+    const siretCod=l.siret?.cod||'—';
+    const cutieCod=l.cutie?.cod||'—';
+    const decalaj=mat.notes?` (decalaj ${mat.notes})`:'';
     return `<div style="border:2px dashed #999;border-radius:4px;padding:14px 18px;margin-bottom:10px;page-break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div style="font-size:18px;font-weight:700">${cl}</div>
@@ -1762,7 +1788,14 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
       </div>
       <div style="font-size:16px;font-weight:700;margin-bottom:6px;color:#1A1814">${modName} · ${l.color||'—'} · ${l.total_pairs} perechi</div>
       <div style="margin-bottom:8px;padding:8px 0;border-top:1px solid #eee;border-bottom:1px solid #eee">${pt}</div>
-      ${notesClean?`<div style="font-size:13px;color:#333;margin-top:4px;background:#FFF9EC;border-left:3px solid #B08D57;padding:6px 10px;border-radius:0 4px 4px 0"><strong>Obs. articol:</strong> ${notesClean}</div>`:''}
+      <div style="font-size:11px;color:#444;margin-top:6px;display:flex;gap:16px;flex-wrap:wrap;padding:6px 10px;background:#F8F5F0;border-radius:4px">
+        <span>👟 <strong>${talpaCod}</strong>${decalaj}</span>
+        <span>📐 <strong>${calapodCod}</strong></span>
+        <span>🦶 <strong>${brantCod}</strong></span>
+        <span>🎀 <strong>${siretCod}</strong></span>
+        <span>📫 <strong>${cutieCod}</strong></span>
+      </div>
+      ${notesClean?`<div style="font-size:13px;color:#333;margin-top:6px;background:#FFF9EC;border-left:3px solid #B08D57;padding:6px 10px;border-radius:0 4px 4px 0"><strong>Obs:</strong> ${notesClean}</div>`:''}
       ${o.notes?`<div style="font-size:12px;color:#555;margin-top:4px;padding:5px 10px;background:#F5F5F5;border-radius:4px"><strong>Obs. generale:</strong> ${o.notes}</div>`:''}
       <div style="text-align:right;font-size:11px;color:#aaa;margin-top:8px">✂ — — — taie aici — — —</div>
     </div>`;
