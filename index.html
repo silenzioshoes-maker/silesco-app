@@ -668,9 +668,6 @@ function filterColors(q){
   drop.innerHTML=filtered.map(c=>`
     <div class="autocomplete-item" onclick="selectColor('${c.color}','${c.id}')">
       <span class="autocomplete-code">${c.color}</span>
-      <span style="font-size:10px;color:#9E9890;margin-left:6px">
-        ${c.talpa_id?'👟':''} ${c.brant_id?'🦶':''} ${c.siret_id?'🎀':''} ${c.cutie_id?'📫':''}
-      </span>
     </div>`).join('')+
     `<div class="autocomplete-item" onclick="selectColor('','altul')" style="border-top:1px solid #EDE8DF;color:#B08D57">
       <span class="autocomplete-code">+ Altă culoare (text liber)</span>
