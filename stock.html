@@ -1231,20 +1231,24 @@ async function updateProduct(id,field,value){
 
 async function saveModelMaterial(productId,field,value){
   const existing=allModeleMat[productId];
+  // Convertește talpa_offset la integer
+  const val=field==='talpa_offset'?parseInt(value)||0:(value||null);
   if(existing){
-    await sb.from('model_materiale').update({[field]:value||null}).eq('product_id',productId);
-    existing[field]=value||null;
+    const{error}=await sb.from('model_materiale').update({[field]:val}).eq('product_id',productId);
+    if(error){showToast('Eroare: '+error.message);return;}
+    existing[field]=val;
   }else{
-    const{data}=await sb.from('model_materiale').insert({product_id:productId,[field]:value||null}).select().single();
+    const{data,error}=await sb.from('model_materiale').insert({product_id:productId,[field]:val}).select().single();
+    if(error){showToast('Eroare: '+error.message);return;}
     if(data)allModeleMat[productId]=data;
   }
-  // Dacă e talpa sau cutie, propagă la culorile care nu au override
+  // Propagă talpa/cutie la culori
   if(field==='talpa_id'||field==='cutie_id'){
     const colors=allProdColors[productId]||[];
     for(const c of colors){
       if(!c[field]){
-        await sb.from('product_colors').update({[field]:value||null}).eq('id',c.id);
-        c[field]=value||null;
+        await sb.from('product_colors').update({[field]:val}).eq('id',c.id);
+        c[field]=val;
       }
     }
   }
