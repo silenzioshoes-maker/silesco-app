@@ -170,8 +170,9 @@ function renderPontaj(ponytage){
 async function loadAll(){
   showLov('Se încarcă...');
   const{data:lines}=await sb.from('order_lines')
-    .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,products(code,name)')
-    .in('production_status',['cusut_gata','la_talpuit','gata']);
+    .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,sort_order,products(code,name)')
+    .in('production_status',['cusut_gata','la_talpuit','gata'])
+    .order('sort_order',{ascending:true});
 
   const orderIds=[...new Set((lines||[]).map(l=>l.order_id).filter(Boolean))];
   let ordersMap={};
