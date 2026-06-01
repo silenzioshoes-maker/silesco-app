@@ -238,6 +238,9 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <div class="stock-tab" onclick="showTab('cutii',this)">
         📫 Cutii
       </div>
+      <div class="stock-tab" onclick="showTab('calapode',this)">
+        📐 Calapode
+      </div>
       <div class="stock-tab" onclick="showTab('modele',this)">
         🔗 Modele
       </div>
@@ -295,6 +298,15 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       </div>
       <div id="cutiiGrid"></div>
     </div>
+    <!-- CALAPODE -->
+    <div id="tabCalapode" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#5A5248">Calapode</div>
+        <button onclick="openMaterieModal('calapode')" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă calapod</button>
+      </div>
+      <div id="calapodeGrid"></div>
+    </div>
+
     <!-- MODELE -->
     <div id="tabModele" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -724,10 +736,16 @@ function renderSimpleGrid(elId,items,tip){
     </div>`).join('');
 }
 
+async function loadCalapode(){
+  const{data}=await sb.from('calapode').select('*').order('cod');
+  renderSimpleGrid('calapodeGrid',data||[],'calapode');
+}
+
 function openMaterieModal(tip){
   curMaterie=tip;mEditId=null;
   const perMarime=['talpi','branturi'].includes(tip);
-  document.getElementById('materieModalTitle').textContent={talpi:'Adaugă talpă',branturi:'Adaugă branț',sireturi:'Adaugă șiret',cutii:'Adaugă cutie'}[tip];
+  const titles={talpi:'Adaugă talpă',branturi:'Adaugă branț',sireturi:'Adaugă șiret',cutii:'Adaugă cutie',calapode:'Adaugă calapod'};
+  document.getElementById('materieModalTitle').textContent=titles[tip]||'Adaugă';
   document.getElementById('mCod').value='';
   document.getElementById('mNume').value='';
   document.getElementById('mNotes').value='';
@@ -855,15 +873,16 @@ async function saveMaterie(){
   const cod=document.getElementById('mCod').value.trim();
   if(!cod){showToast('Completează codul!');return;}
   const perMarime=['talpi','branturi'].includes(curMaterie);
-  // Citește valorile direct din input-uri
+  const isSimple=['calapode'].includes(curMaterie);
   if(perMarime){
     mSzList.forEach(s=>{
       const el=document.querySelector(`input[onchange*="mSzV['${s}']"]`);
       if(el)mSzV[s]=parseInt(el.value)||0;
     });
   }
-  const stoc=perMarime?Object.fromEntries(mSzList.map(s=>[s,mSzV[s]||0])):parseInt(document.getElementById('mStoc').value)||0;
-  const payload={cod,notes:document.getElementById('mNotes').value.trim()||null,stoc};
+  const stoc=isSimple?null:perMarime?Object.fromEntries(mSzList.map(s=>[s,mSzV[s]||0])):parseInt(document.getElementById('mStoc').value)||0;
+  const payload={cod,notes:document.getElementById('mNotes').value.trim()||null};
+  if(!isSimple)payload.stoc=stoc;
   const numeVal=document.getElementById('mNume').value.trim();
   if(curMaterie==='talpi')payload.name=numeVal;
   else payload.nume=numeVal;
@@ -884,7 +903,7 @@ async function deleteMaterie(id,tip){
 }
 
 function showTab(tab,el){
-  ['tabBaxuri','tabFete','tabTalpi','tabBranturi','tabSireturi','tabCutii','tabModele'].forEach(t=>{
+  ['tabBaxuri','tabFete','tabTalpi','tabBranturi','tabSireturi','tabCutii','tabCalapode','tabModele'].forEach(t=>{
     const e=document.getElementById(t);if(e)e.style.display='none';
   });
   const t=document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1));
@@ -892,25 +911,27 @@ function showTab(tab,el){
   document.querySelectorAll('.stock-tab').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   if(['talpi','branturi','sireturi','cutii'].includes(tab))loadMaterii();
+  if(tab==='calapode')loadCalapode();
   if(tab==='modele')loadModele();
 }
 
 // ── MODELE → MATERIALE ────────────────────────────────────────
-let allProdsM=[],allTalpiM=[],allBranturiM=[],allSireturiM=[],allCutiiM=[],allModeleMat={},allProdColors={};
+let allProdsM=[],allTalpiM=[],allBranturiM=[],allSireturiM=[],allCutiiM=[],allCalapodeM=[],allModeleMat={},allProdColors={};
 
 async function loadModele(){
   showLov('Se încarcă...');
-  const[{data:prods},{data:talpi},{data:branturi},{data:sireturi},{data:cutii},{data:asoc},{data:colors}]=await Promise.all([
+  const[{data:prods},{data:talpi},{data:branturi},{data:sireturi},{data:cutii},{data:calapode},{data:asoc},{data:colors}]=await Promise.all([
     sb.from('products').select('id,code,name,price').order('code'),
     sb.from('talpi').select('id,cod,name').order('cod'),
     sb.from('branturi').select('id,cod,nume').order('cod'),
     sb.from('sireturi').select('id,cod,nume').order('cod'),
     sb.from('cutii').select('id,cod,nume').order('cod'),
+    sb.from('calapode').select('id,cod,nume').order('cod'),
     sb.from('model_materiale').select('*'),
     sb.from('product_colors').select('*').order('color'),
   ]);
   allProdsM=prods||[];allTalpiM=talpi||[];allBranturiM=branturi||[];
-  allSireturiM=sireturi||[];allCutiiM=cutii||[];
+  allSireturiM=sireturi||[];allCutiiM=cutii||[];allCalapodeM=calapode||[];
   allModeleMat={};
   (asoc||[]).forEach(a=>allModeleMat[a.product_id]=a);
   allProdColors={};
@@ -972,6 +993,21 @@ function renderModele(){
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">👟 Talpă</span>
             ${mkSel('talpa_id',allTalpiM,'cod','name',a.talpa_id)}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">📐 Calapod</span>
+            ${mkSel('calapod_id',allCalapodeM,'cod','nume',a.calapod_id)}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">↕ Decalaj</span>
+            <select onchange="saveModelMaterial('${p.id}','talpa_offset',this.value)"
+              style="flex:1;padding:6px 10px;border-radius:6px;border:1.5px solid #DDD7CE;background:#fff;font-size:12px;color:#111111;cursor:pointer;font-family:'Inter',sans-serif">
+              <option value="-2"${a.talpa_offset===-2?' selected':''}>-2 (calapod 42 → talpă 40)</option>
+              <option value="-1"${a.talpa_offset===-1?' selected':''}>-1 (calapod 41 → talpă 40)</option>
+              <option value="0"${(!a.talpa_offset||a.talpa_offset===0)?' selected':''}>0 — număr pe număr</option>
+              <option value="1"${a.talpa_offset===1?' selected':''}>+1 (calapod 39 → talpă 40)</option>
+              <option value="2"${a.talpa_offset===2?' selected':''}>+2 (calapod 38 → talpă 40)</option>
+            </select>
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0">📫 Cutie</span>
