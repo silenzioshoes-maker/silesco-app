@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SILESCO · Talpuit</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#111111}
+.hdr{background:#111111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px}
+.hdr-title{font-family:'Playfair Display',serif;font-size:20px;color:#fff;font-weight:700}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#B08D57;font-weight:600}
+.logout-btn{background:none;border:none;cursor:pointer;padding:6px}
+.logout-btn svg{width:16px;height:16px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.tabs{background:#fff;border-bottom:1px solid #DDD7CE;display:flex;position:sticky;top:57px;z-index:40}
+.tab{flex:1;padding:11px;text-align:center;font-size:12px;font-weight:700;color:#5A5248;cursor:pointer;border-bottom:2px solid transparent}
+.tab.active{color:#111111;border-bottom-color:#111111}
+/* STATS BAR */
+.stats-bar{background:#111111;padding:8px 14px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.stat-item{flex-shrink:0;padding:5px 16px 5px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px}
+.stat-item:last-child{border-right:none;margin-right:0;padding-right:0}
+.stat-label{font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
+.stat-val{font-size:16px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif}
+.stat-sub{font-size:8px;color:rgba(255,255,255,.3)}
+.wrap{padding:12px 14px 80px}
+/* NOTIF CUSUT */
+.notif-section{background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:12px;overflow:hidden}
+.notif-header{padding:10px 14px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:center}
+.notif-title{font-size:12px;font-weight:700;color:#111111;display:flex;align-items:center;gap:6px}
+.notif-badge{background:#2F4A63;color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 6px}
+.notif-item{padding:10px 14px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.notif-item:last-child{border-bottom:none}
+.notif-info{flex:1}
+.notif-art{font-size:13px;font-weight:700;color:#111111}
+.notif-meta{font-size:11px;color:#5A5248;margin-top:2px}
+.notif-ws{font-size:9px;font-weight:700;color:#2F4A63;background:#E8EFF6;padding:2px 6px;border-radius:3px;text-transform:capitalize;margin-top:3px;display:inline-block}
+.btn-receptie{padding:8px 14px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+/* COMENZI CARD */
+.cmd-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:8px;overflow:hidden}
+.cmd-header{padding:13px 15px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.cmd-header:active{background:#F4F1EA}
+.cmd-no{font-size:10px;font-family:'Courier New',monospace;color:#5A5248;margin-bottom:2px}
+.cmd-client{font-family:'Playfair Display',serif;font-size:16px;color:#111111;margin-bottom:4px}
+.cmd-meta{font-size:11px;color:#5A5248}
+.cmd-progress{text-align:right;flex-shrink:0}
+.cmd-prog-num{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
+.cmd-prog-label{font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px}
+.cmd-arrow{width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex-shrink:0;margin-top:4px}
+.cmd-body{display:none;border-top:1px solid #EDE8DF}
+.art-row{padding:12px 15px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.art-row:last-child{border-bottom:none}
+.art-info{flex:1}
+.art-name{font-size:13px;font-weight:700;color:#111111}
+.art-color{font-size:12px;color:#5A5248;margin-top:1px}
+.art-pairs{font-size:11px;color:#5A5248;margin-top:2px}
+.pontaj{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.pchip{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:3px;padding:2px 6px;font-size:10px;font-weight:700;color:#111111;font-family:monospace}
+.ps-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:2px;display:inline-block}
+.btn-talpuit{padding:8px 14px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
+.btn-talpuit svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-talpuit.done{background:#F4F1EA;border:1.5px solid #DDD7CE;color:#5A5248}
+.btn-talpuit.done svg{stroke:#5A5248}
+.empty{text-align:center;padding:50px 20px;color:#9E9890}
+.empty svg{width:32px;height:32px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 10px;display:block}
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.lov.show{display:flex}
+.spinner{width:28px;height:28px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lov-text{font-size:13px;color:#2A2A2A;font-weight:600}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="lov" id="lov"><div class="spinner"></div><div class="lov-text" id="lovText">Se încarcă...</div></div>
+<div class="toast" id="toast"></div>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-brand">SILESCO · Talpuit</div>
+    <div class="hdr-title">Atelier Talpuit</div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-badge" id="hdrBadge">0 comenzi</div>
+    <button class="logout-btn" onclick="doLogout()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab_receptie" onclick="setTab('receptie')">Recepție cusut</div>
+  <div class="tab" id="tab_talpuit" onclick="setTab('talpuit')">De talpuit</div>
+  <div class="tab" id="tab_gata" onclick="setTab('gata')">Gata</div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-label">Talpuite azi</div>
+    <div class="stat-val" id="stTalpAzi">—</div>
+    <div class="stat-sub">perechi</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-label">Talpuite săpt.</div>
+    <div class="stat-val" id="stTalpSapt">—</div>
+    <div class="stat-sub">perechi</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-label">Cusut azi</div>
+    <div class="stat-val" id="stCusutAzi">—</div>
+    <div class="stat-sub">per. recepționate</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- RECEPȚIE CUSUT -->
+  <div id="viewReceptie">
+    <!-- NOTIFICĂRI CUSUT FINALIZAT -->
+    <div class="notif-section" id="cusutNotifSection" style="display:none">
+      <div class="notif-header">
+        <div class="notif-title">
+          <svg style="width:13px;height:13px;stroke:#2F4A63;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Cusut finalizat — de recepționat
+          <span class="notif-badge" id="cusutNotifBadge">0</span>
+        </div>
+        <button onclick="loadAll()" style="padding:3px 8px;border-radius:4px;border:1px solid #DDD7CE;background:#fff;font-size:10px;color:#5A5248;cursor:pointer;font-family:'Inter',sans-serif">↻</button>
+      </div>
+      <div id="cusutNotifList"></div>
+    </div>
+    <!-- TOATE ARTICOLELE CUSUT_GATA -->
+    <div id="receptieList"></div>
+    <div class="empty" id="receptieEmpty" style="display:none">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      <div style="font-size:13px;font-weight:600">Nicio recepție în așteptare</div>
+    </div>
+  </div>
+
+  <!-- DE TALPUIT -->
+  <div id="viewTalpuit" style="display:none">
+    <div id="talpuitList"></div>
+    <div class="empty" id="talpuitEmpty" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <div style="font-size:13px;font-weight:600">Niciun articol de talpuit</div>
+    </div>
+  </div>
+
+  <!-- GATA -->
+  <div id="viewGata" style="display:none">
+    <div id="gataList"></div>
+    <div class="empty" id="gataEmpty" style="display:none">
+      <div style="font-size:13px;font-weight:600">Niciun articol gata</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+const{createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+let CU=null,CP=null;
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/silesco-app/index.html';return;}
+  CU=session.user;
+  const{data:p}=await sb.from('user_profiles').select('full_name,role').eq('id',CU.id).single();
+  CP=p;
+  if(!['management','talpuit'].includes(p?.role)){window.location.href='/silesco-app/index.html';return;}
+  sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT')window.location.href='/silesco-app/index.html';});
+  await loadAll();
+});
+
+async function doLogout(){await sb.auth.signOut();}
+
+function setTab(t){
+  ['receptie','talpuit','gata'].forEach(x=>{
+    document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1)).style.display=x===t?'block':'none';
+    document.getElementById('tab_'+x).classList.toggle('active',x===t);
+  });
+}
+
+async function loadAll(){
+  showLov('Se încarcă...');
+  await Promise.all([loadLines(),loadStats()]);
+  hideLov();
+}
+
+function getModName(l){
+  return l.products?.code?'Art. '+l.products.code:l.free_model||(l.notes?.match(/\[([^\]]+)\]/)?.[1]||l.color)||'—';
+}
+
+async function loadLines(){
+  const{data}=await sb.from('order_lines')
+    .select(`id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,updated_at,
+      products(code,name),
+      orders!inner(id,order_no,status,delivery_date,clients!orders_client_id_fkey(name,company_name))`)
+    .in('production_status',['cusut_gata','la_talpuit','gata'])
+    .in('orders.status',['fete_gata_cusut','la_cusut_extern','in_productie','la_talpuit','la_impachetat','finalizat'])
+    .order('updated_at',{ascending:false});
+  const lines=data||[];
+
+  // Separă pe statusuri
+  const cusutGata=lines.filter(l=>l.production_status==='cusut_gata');
+  const laTalpuit=lines.filter(l=>l.production_status==='la_talpuit');
+  const gata=lines.filter(l=>l.production_status==='gata');
+
+  document.getElementById('hdrBadge').textContent=laTalpuit.length+' de talpuit';
+
+  // Tab recepție — notificări + lista cusut_gata
+  renderCusutNotif(cusutGata);
+  renderReceptie(cusutGata);
+  renderTalpuit(laTalpuit);
+  renderGata(gata);
+}
+
+function renderCusutNotif(lines){
+  const section=document.getElementById('cusutNotifSection');
+  const badge=document.getElementById('cusutNotifBadge');
+  const list=document.getElementById('cusutNotifList');
+  if(!lines.length){section.style.display='none';return;}
+  section.style.display='block';
+  badge.textContent=lines.length;
+  list.innerHTML=lines.map(l=>{
+    const mod=getModName(l);
+    const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';
+    const ws=l.workshop||'intern';
+    const t=new Date(l.updated_at).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="notif-item">
+      <div class="notif-info">
+        <div class="notif-art">${mod} · ${l.color||'—'} · ${l.total_pairs} per.</div>
+        <div class="notif-meta">${l.orders?.order_no||'—'} · ${cl} · finalizat ${t}</div>
+        <span class="notif-ws">${ws}</span>
+      </div>
+      <button class="btn-receptie" onclick="markLaTalpuit('${l.id}')">Recepționat ✓</button>
+    </div>`;
+  }).join('');
+}
+
+function renderReceptie(lines){
+  const el=document.getElementById('receptieList');
+  const empty=document.getElementById('receptieEmpty');
+  if(!lines.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  el.innerHTML='';
+}
+
+function renderTalpuit(lines){
+  const el=document.getElementById('talpuitList');
+  const empty=document.getElementById('talpuitEmpty');
+  if(!lines.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  // Grupează pe comandă
+  const byOrder={};
+  lines.forEach(l=>{const oid=l.orders?.id;if(!oid)return;if(!byOrder[oid])byOrder[oid]={order:l.orders,lines:[]};byOrder[oid].lines.push(l);});
+  el.innerHTML=Object.values(byOrder).map((g,gi)=>{
+    const o=g.order;
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    return `<div class="cmd-card">
+      <div class="cmd-header" onclick="togCmd('tp_${gi}','tparr_${gi}')">
+        <div style="flex:1;min-width:0">
+          <div class="cmd-no">${o.order_no||'—'}</div>
+          <div class="cmd-client">${cl}</div>
+          <div class="cmd-meta">Livrare: ${dd}</div>
+        </div>
+        <div class="cmd-progress">
+          <div class="cmd-prog-num" style="color:#1E4A2E">${g.lines.length}</div>
+          <div class="cmd-prog-label">art.</div>
+        </div>
+        <svg class="cmd-arrow" id="tparr_${gi}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="cmd-body" id="tp_${gi}">
+        ${g.lines.map(l=>{
+          const mod=getModName(l);
+          const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
+          const notesClean=l.notes?l.notes.replace(/\[[^\]]+\]/g,'').replace(/\[Discount:[^\]]+\]/g,'').trim():'';
+          return `<div class="art-row">
+            <div class="art-info">
+              <div class="art-name">${mod}</div>
+              <div class="art-color">${l.color||'—'}</div>
+              <div class="art-pairs">${l.total_pairs} per. · <span style="text-transform:capitalize">${l.workshop||'intern'}</span></div>
+              <div class="pontaj">${entries.map(([s,q])=>`<span class="pchip">${s}×${q}</span>`).join('')}</div>
+              ${notesClean?`<div style="font-size:11px;color:#B08D57;margin-top:3px;font-style:italic">${notesClean}</div>`:''}
+            </div>
+            <button class="btn-talpuit" onclick="markGata('${l.id}','${o.id}')">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Talpuit ✓
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGata(lines){
+  const el=document.getElementById('gataList');
+  const empty=document.getElementById('gataEmpty');
+  if(!lines.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  el.innerHTML=lines.slice(0,30).map(l=>{
+    const mod=getModName(l);
+    const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';
+    const t=new Date(l.updated_at).toLocaleDateString('ro-RO');
+    return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#111111">${mod} · ${l.color||'—'}</div>
+        <div style="font-size:11px;color:#5A5248;margin-top:2px">${l.orders?.order_no||'—'} · ${cl} · ${l.total_pairs} per. · ${t}</div>
+      </div>
+      <span style="font-size:10px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:3px 8px;border-radius:5px">✓ Gata</span>
+    </div>`;
+  }).join('');
+}
+
+function togCmd(bodyId,arrowId){
+  const b=document.getElementById(bodyId),a=document.getElementById(arrowId);
+  const open=b.style.display==='block';
+  b.style.display=open?'none':'block';
+  if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+}
+
+async function markLaTalpuit(lineId){
+  showLov('Se recepționează...');
+  await sb.from('order_lines').update({production_status:'la_talpuit'}).eq('id',lineId);
+  hideLov();showToast('Recepționat — la talpuit!');
+  await loadAll();setTab('talpuit');
+}
+
+async function markGata(lineId,orderId){
+  showLov('Se finalizează...');
+  await sb.from('order_lines').update({production_status:'gata'}).eq('id',lineId);
+  // Verifică dacă toate articolele comenzii sunt gata
+  const{data:remaining}=await sb.from('order_lines')
+    .select('id,production_status')
+    .eq('order_id',orderId)
+    .neq('from_stock',true);
+  const allGata=(remaining||[]).every(l=>l.production_status==='gata'||l.id===lineId);
+  if(allGata){
+    await sb.from('orders').update({status:'finalizat',updated_at:new Date().toISOString()}).eq('id',orderId);
+    showToast('✓ Comandă FINALIZATĂ — gata livrare!');
+  }else{
+    showToast('Articol talpuit!');
+  }
+  hideLov();await loadAll();
+}
+
+async function loadStats(){
+  const now=new Date();
+  const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
+  const day=now.getDay()||7;
+  const saptStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day+1).toISOString();
+  // Talpuite
+  const{data:talpData}=await sb.from('order_lines')
+    .select('total_pairs,updated_at').eq('production_status','gata').gte('updated_at',saptStart);
+  let tAzi=0,tSapt=0;
+  (talpData||[]).forEach(l=>{tSapt+=(l.total_pairs||0);if(l.updated_at>=aziStart)tAzi+=(l.total_pairs||0);});
+  document.getElementById('stTalpAzi').textContent=tAzi||0;
+  document.getElementById('stTalpSapt').textContent=tSapt||0;
+  // Cusut recepționat azi
+  const{data:cusutData}=await sb.from('order_lines')
+    .select('total_pairs').eq('production_status','la_talpuit').gte('updated_at',aziStart);
+  const cAzi=(cusutData||[]).reduce((s,l)=>s+(l.total_pairs||0),0);
+  document.getElementById('stCusutAzi').textContent=cAzi||0;
+}
+
+function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
+function hideLov(){document.getElementById('lov').classList.remove('show');}
+function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+</script>
+</body>
+</html>
