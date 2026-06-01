@@ -238,6 +238,9 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <div class="stock-tab" onclick="showTab('cutii',this)">
         📫 Cutii
       </div>
+      <div class="stock-tab" onclick="showTab('modele',this)">
+        🔗 Modele
+      </div>
     </div>
 
     <!-- BAXURI -->
@@ -291,6 +294,14 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         <button onclick="openMaterieModal('cutii')" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă cutie</button>
       </div>
       <div id="cutiiGrid"></div>
+    </div>
+    <!-- MODELE -->
+    <div id="tabModele" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#5A5248">Asociere model → materiale default</div>
+        <button onclick="loadModele()" style="padding:8px 14px;border-radius:7px;border:1px solid #DDD7CE;background:#fff;font-size:12px;color:#3A3530;cursor:pointer;font-family:'Inter',sans-serif">↻</button>
+      </div>
+      <div id="modeleGrid"></div>
     </div>
   </div>
 </div>
@@ -763,7 +774,7 @@ async function deleteMaterie(id,tip){
 }
 
 function showTab(tab,el){
-  ['tabBaxuri','tabFete','tabTalpi','tabBranturi','tabSireturi','tabCutii'].forEach(t=>{
+  ['tabBaxuri','tabFete','tabTalpi','tabBranturi','tabSireturi','tabCutii','tabModele'].forEach(t=>{
     const e=document.getElementById(t);if(e)e.style.display='none';
   });
   const t=document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1));
@@ -771,6 +782,78 @@ function showTab(tab,el){
   document.querySelectorAll('.stock-tab').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   if(['talpi','branturi','sireturi','cutii'].includes(tab))loadMaterii();
+  if(tab==='modele')loadModele();
+}
+
+// ── MODELE → MATERIALE ────────────────────────────────────────
+let allProdsM=[],allTalpiM=[],allBranturiM=[],allSireturiM=[],allCutiiM=[],allModeleMat={};
+
+async function loadModele(){
+  showLov('Se încarcă...');
+  const[{data:prods},{data:talpi},{data:branturi},{data:sireturi},{data:cutii},{data:asoc}]=await Promise.all([
+    sb.from('products').select('id,code,name').order('code'),
+    sb.from('talpi').select('id,cod,name').order('cod'),
+    sb.from('branturi').select('id,cod,nume').order('cod'),
+    sb.from('sireturi').select('id,cod,nume').order('cod'),
+    sb.from('cutii').select('id,cod,nume').order('cod'),
+    sb.from('model_materiale').select('*'),
+  ]);
+  allProdsM=prods||[];allTalpiM=talpi||[];allBranturiM=branturi||[];
+  allSireturiM=sireturi||[];allCutiiM=cutii||[];
+  allModeleMat={};
+  (asoc||[]).forEach(a=>allModeleMat[a.product_id]=a);
+  renderModele();
+  hideLov();
+}
+
+function renderModele(){
+  const el=document.getElementById('modeleGrid');if(!el)return;
+  if(!allProdsM.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#9E9890">Niciun produs.</div>';return;}
+  el.innerHTML=allProdsM.map(p=>{
+    const a=allModeleMat[p.id]||{};
+    const mkSel=(field,items,valKey,labelKey,currentId)=>`
+      <select onchange="saveModelMaterial('${p.id}','${field}',this.value)" 
+        style="flex:1;padding:7px 10px;border-radius:6px;border:1.5px solid #DDD7CE;background:#fff;font-size:12px;color:#111111;cursor:pointer;font-family:'Inter',sans-serif;min-width:0">
+        <option value="">—</option>
+        ${items.map(i=>`<option value="${i.id}"${currentId===i.id?' selected':''}>${i[valKey]||i[labelKey]||'—'}</option>`).join('')}
+      </select>`;
+    return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#111111;margin-bottom:10px">
+        Art. ${p.code} <span style="font-size:13px;font-weight:400;color:#5A5248">· ${p.name||'—'}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px">👟 Talpă</span>
+          ${mkSel('talpa_id',allTalpiM,'cod','name',a.talpa_id)}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px">🦶 Branț</span>
+          ${mkSel('brant_id',allBranturiM,'cod','nume',a.brant_id)}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px">🎀 Șiret</span>
+          ${mkSel('siret_id',allSireturiM,'cod','nume',a.siret_id)}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:700;color:#5A5248;width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px">📫 Cutie</span>
+          ${mkSel('cutie_id',allCutiiM,'cod','nume',a.cutie_id)}
+        </div>
+        ${a.notes?`<div style="font-size:11px;color:#9E9890;font-style:italic;margin-top:4px">${a.notes}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveModelMaterial(productId,field,value){
+  const existing=allModeleMat[productId];
+  if(existing){
+    await sb.from('model_materiale').update({[field]:value||null}).eq('product_id',productId);
+    existing[field]=value||null;
+  }else{
+    const{data}=await sb.from('model_materiale').insert({product_id:productId,[field]:value||null}).select().single();
+    if(data)allModeleMat[productId]=data;
+  }
+  showToast('Salvat!');
 }
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
