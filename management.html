@@ -42,15 +42,15 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .alert-banner svg{width:15px;height:15px;stroke:#9C3A2B;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
 /* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-.kpi-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:20px 22px;border-top:3px solid transparent}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.kpi-card{background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:10px 14px;border-top:2px solid transparent;display:flex;align-items:center;gap:10px}
 .kpi-card.accent{border-top-color:#B08D57}
 .kpi-card.red{border-top-color:#9C3A2B}
 .kpi-card.green{border-top-color:#365A43}
-.kpi-icon{width:34px;height:34px;border-radius:6px;background:#F4F1EA;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
-.kpi-icon svg{width:16px;height:16px;stroke:#B08D57;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.kpi-val{font-family:'Playfair Display',serif;font-size:30px;color:#111111;font-weight:700;line-height:1;margin-bottom:5px}
-.kpi-label{font-size:12px;color:#3A3530;font-weight:500}
+.kpi-icon{width:28px;height:28px;border-radius:6px;background:#F4F1EA;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-icon svg{width:14px;height:14px;stroke:#B08D57;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.kpi-val{font-family:'Playfair Display',serif;font-size:22px;color:#111111;font-weight:700;line-height:1;margin-bottom:2px}
+.kpi-label{font-size:10px;color:#3A3530;font-weight:500}
 
 /* FILTERS */
 .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
@@ -338,7 +338,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 </div>
 
 <!-- MODAL CLIENT NOU -->
-<div class="modal-overlay" id="newClientModal">
+<div class="modal-overlay" id="newClientModal" style="z-index:300">
   <div class="modal-box">
     <div class="modal-title">Client nou</div>
     <div class="fld"><label>Nume companie *</label><input type="text" id="nc_co" placeholder="Magazin ABC SRL" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
@@ -451,6 +451,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="nav-item" id="nav_productie" onclick="showSection('productie',this)">
       <svg viewBox="0 0 24 24"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
       <span>Producție</span>
+    </div>
+    <div class="nav-item" onclick="showSection('clienti',this)">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Clienți</span>
     </div>
     <div class="nav-item" onclick="window.location.href='/messages.html'">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -580,6 +584,9 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         </div>
       </div>
 
+      <!-- ATENȚIONĂRI PRODUCȚIE -->
+      <div id="alertsProdPanel" style="display:none;margin-bottom:12px"></div>
+
       <!-- DIFERENȚE -->
       <div id="diffPanel" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;margin-bottom:12px;overflow:hidden">
         <div style="padding:9px 14px;border-bottom:1px solid rgba(176,137,43,.2);display:flex;justify-content:space-between;align-items:center">
@@ -611,6 +618,16 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         <div class="table-header"><div class="table-title">Comenzi</div><div class="table-count" id="ordersCount">Se încarcă...</div></div>
         <div id="ordersTable"></div>
       </div>
+    </div>
+
+    <!-- CLIENȚI -->
+    <div id="sectionClienti" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="table-title">Clienți</div>
+        <button onclick="openNewClientModal()" style="padding:6px 14px;border-radius:6px;border:none;background:#111111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Client nou</button>
+      </div>
+      <input type="text" id="clientSearch" placeholder="Caută client..." oninput="filterClientiList(this.value)" style="width:100%;padding:10px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;outline:none;margin-bottom:12px"/>
+      <div id="clientiList"></div>
     </div>
 
     <!-- PRODUCȚIE DASHBOARD -->
@@ -717,7 +734,7 @@ async function doLogout(){await sb.auth.signOut();}
 // LOAD
 async function loadAll(){
   showLov('Se încarcă datele...');
-  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadWorkshopTokens(),loadMsgBadge(),loadMsgPanel(),loadDiffs(),loadProdStats(),loadDailyReports()]);
+  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadWorkshopTokens(),loadMsgBadge(),loadMsgPanel(),loadDiffs(),loadProdStats(),loadDailyReports(),loadProdAlerts()]);
   // Asigură că dashboard e vizibil la start
   if(document.getElementById('sectionDashboard').style.display==='none'&&
      document.getElementById('sectionOrders').style.display==='none'&&
@@ -926,6 +943,38 @@ async function loadProdStats(){
   const s6=document.getElementById('mgStatOrdLunaVal');if(s6)s6.textContent='com. · '+fmt(lunaOrders.reduce((s,o)=>s+(o.total_value||0),0));
 }
 
+async function loadProdAlerts(){
+  const alerts=[];
+  // Croit — restanțe
+  const{data:restante}=await sb.from('order_lines').select('id,notes,color,free_model,products(code)').like('notes','%[RESTANȚĂ:%');
+  if(restante?.length){
+    alerts.push({color:'#7A5A00',bg:'#FFF3CD',border:'#B0892B',icon:'✂',text:`<strong>${restante.length} articole</strong> cu restanțe la croit — material insuficient`});
+  }
+  // Cusut — de recepționat
+  const{data:cusutGata}=await sb.from('order_lines').select('id').eq('production_status','cusut_gata');
+  if(cusutGata?.length){
+    alerts.push({color:'#23394F',bg:'#E8EFF6',border:'#2F4A63',icon:'🧵',text:`<strong>${cusutGata.length} articole</strong> cusute — de recepționat la talpuit`});
+  }
+  // Talpuit — comenzi finalizate nelivrate
+  const finalizate=allOrders.filter(o=>o.status==='finalizat').length;
+  if(finalizate>0){
+    alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${finalizate} comenzi</strong> gata — de ambalat și livrat`});
+  }
+  // Întârziate
+  const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
+  if(intarz>0){
+    alerts.push({color:'#7A2418',bg:'#F5EAE8',border:'#9C3A2B',icon:'⚠',text:`<strong>${intarz} comenzi</strong> au depășit termenul de livrare`});
+  }
+  const panel=document.getElementById('alertsProdPanel');
+  if(!panel)return;
+  if(!alerts.length){panel.style.display='none';return;}
+  panel.style.display='block';
+  panel.innerHTML=alerts.map(a=>`
+    <div style="background:${a.bg};border-left:3px solid ${a.border};border-radius:0 7px 7px 0;padding:8px 12px;margin-bottom:6px;font-size:12px;color:${a.color}">
+      ${a.icon} ${a.text}
+    </div>`).join('');
+}
+
 async function loadMsgBadge(){
   const{data}=await sb.from('internal_messages')
     .select('id,from_user_id,user_profiles!internal_messages_from_user_id_fkey(full_name)')
@@ -981,7 +1030,7 @@ function renderKPIs(){
     {icon:'<path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>',val:prod,label:'În producție',cls:''},
     {icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>',val:intarz,label:'Întârziate',cls:'red'},
     {icon:'<polyline points="20 6 9 17 4 12"/>',val:gata,label:'Gata livrare',cls:'green'},
-  ].map(k=>`<div class="kpi-card ${k.cls}"><div class="kpi-icon"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#B08D57;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">${k.icon}</svg></div><div class="kpi-val">${k.val}</div><div class="kpi-label">${k.label}</div></div>`).join('');
+  ].map(k=>`<div class="kpi-card ${k.cls}"><div class="kpi-icon"><svg viewBox="0 0 24 24">${k.icon}</svg></div><div><div class="kpi-val">${k.val}</div><div class="kpi-label">${k.label}</div></div></div>`).join('');
 }
 
 function updateAlerts(){
@@ -1778,17 +1827,39 @@ function toggleSidebar(open){
 
 // SECTIONS
 function showSection(name,el){
-  ['sectionDashboard','sectionOrders','sectionProductie'].forEach(s=>{
+  ['sectionDashboard','sectionOrders','sectionProductie','sectionClienti'].forEach(s=>{
     const el2=document.getElementById(s);if(el2)el2.style.display='none';
   });
   const sec=document.getElementById('section'+name.charAt(0).toUpperCase()+name.slice(1));
   if(sec)sec.style.display='block';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el)el.classList.add('active');
-  const titles={dashboard:'Dashboard',orders:'Comenzi',productie:'Producție'};
+  const titles={dashboard:'Dashboard',orders:'Comenzi',productie:'Producție',clienti:'Clienți'};
   document.getElementById('pageTitle').textContent=titles[name]||name;
   toggleSidebar(false);
   if(name==='productie')loadProdDashboard();
+  if(name==='clienti')renderClientiList(clientsList);
+}
+
+function filterClientiList(q){
+  const filtered=q.trim()?clientsList.filter(c=>(c.company_name||c.name||'').toLowerCase().includes(q.toLowerCase())||(c.phone||'').includes(q)):clientsList;
+  renderClientiList(filtered);
+}
+function renderClientiList(list){
+  const el=document.getElementById('clientiList');if(!el)return;
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#9E9890;font-size:13px">Niciun client găsit.</div>';return;}
+  el.innerHTML=list.map(c=>`
+    <div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:12px 16px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#111111;font-family:'Playfair Display',serif">${c.company_name||c.name||'—'}</div>
+        ${c.cui?`<div style="font-size:11px;color:#5A5248;margin-top:2px">CUI: ${c.cui}</div>`:''}
+        ${c.phone?`<div style="font-size:11px;color:#5A5248">${c.phone}</div>`:''}
+        ${c.delivery_address?`<div style="font-size:11px;color:#9E9890;margin-top:2px">${c.delivery_address}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <span style="font-size:10px;color:#5A5248;background:#F4F1EA;padding:2px 8px;border-radius:4px">${allOrders.filter(o=>o.client_id===c.id).length} comenzi</span>
+      </div>
+    </div>`).join('');
 }
 
 async function loadProdDashboard(){
