@@ -885,6 +885,7 @@ async function saveMaterie(){
   if(!isSimple)payload.stoc=stoc;
   const numeVal=document.getElementById('mNume').value.trim();
   if(curMaterie==='talpi')payload.name=numeVal;
+  else if(curMaterie==='calapode')payload.nume=numeVal;
   else payload.nume=numeVal;
   showLov('Se salvează...');
   if(mEditId){
@@ -892,7 +893,9 @@ async function saveMaterie(){
   }else{
     await sb.from(curMaterie).insert(payload);
   }
-  hideLov();closeModal('materieModal');showToast('Salvat!');await loadMaterii();
+  hideLov();closeModal('materieModal');showToast('Salvat!');
+  if(['talpi','branturi','sireturi','cutii'].includes(curMaterie))await loadMaterii();
+  else if(curMaterie==='calapode')await loadCalapode();
 }
 
 async function deleteMaterie(id,tip){
