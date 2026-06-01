@@ -274,6 +274,8 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 <!-- CONTENT -->
 <div class="wrap">
   <div id="viewComenzi">
+    <!-- BANNER RESTANȚE DIN DB -->
+    <div id="restanteBanner" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;padding:12px 14px;margin-bottom:12px"></div>
     <div id="diffBanner" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;padding:12px 14px;margin-bottom:12px">
       <div style="font-size:12px;font-weight:700;color:#7A5A00;margin-bottom:6px">⚠ Articole necroite complet</div>
       <div id="diffBannerList" style="font-size:11px;color:#8B6914;line-height:1.7"></div>
@@ -327,8 +329,31 @@ async function doLogout(){await sb.auth.signOut();}
 
 async function loadAll(){
   showLov('Se încarcă...');
-  await Promise.all([loadOrders(),loadMsgBadge(),loadCroitStats()]);
+  await Promise.all([loadOrders(),loadMsgBadge(),loadCroitStats(),loadRestanteBanner()]);
   hideLov();
+}
+
+async function loadRestanteBanner(){
+  const{data:lines}=await sb.from('order_lines')
+    .select('id,notes,color,free_model,total_pairs,order_id,products(code)')
+    .not('notes','is',null);
+  const restante=(lines||[]).filter(l=>l.notes?.includes('[RESTANȚĂ:'));
+  const banner=document.getElementById('restanteBanner');
+  if(!banner)return;
+  if(!restante.length){banner.style.display='none';return;}
+  banner.style.display='block';
+  banner.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:13px;font-weight:700;color:#7A5A00">⚠ Restanțe necroite (${restante.length} articole)</span>
+    </div>
+    ${restante.map(l=>{
+      const mod=l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
+      const m=l.notes?.match(/\[RESTANȚĂ: (\d+) per\.\]/);
+      return `<div style="font-size:11px;color:#8B6914;padding:3px 0;border-bottom:1px solid rgba(176,137,43,.15)">
+        ${mod} · ${l.color||'—'} — <strong>${m?m[1]:'?'} per. restante</strong>
+      </div>`;
+    }).join('')}
+    <div style="font-size:10px;color:#8B6914;margin-top:6px">Completează pontajul și finalizează comanda pentru a șterge restanța.</div>`;
 }
 
 async function loadCroitStats(){
@@ -694,7 +719,6 @@ async function finalizeOrder(orderId){
     const totalCroit=Object.values(st.ponytage_done||{}).reduce((s,q)=>s+q,0);
     const totalPlan=l.total_pairs;
     const restanta=totalPlan-totalCroit;
-    console.log('Articol:',mod,'totalCroit:',totalCroit,'totalPlan:',totalPlan,'restanta:',restanta);
     if(restanta>0){
       diffs.push(mod+' '+l.color+': '+totalCroit+'/'+totalPlan+' per. (restanță '+restanta+' per.)');
       const notesWithRestanta=(l.notes?l.notes+' ':'')+' [RESTANȚĂ: '+restanta+' per.]';
