@@ -326,6 +326,20 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   </div>
 </div>
 
+<!-- MODAL CLIENT NOU -->
+<div class="modal-overlay" id="newClientModal">
+  <div class="modal-box">
+    <div class="modal-title">Client nou</div>
+    <div class="fld"><label>Nume companie *</label><input type="text" id="nc_co" placeholder="Magazin ABC SRL" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+    <div class="fld"><label>CUI</label><input type="text" id="nc_cui" placeholder="RO12345678" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+    <div class="fld"><label>Persoană contact</label><input type="text" id="nc_nm" placeholder="Ion Popescu" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+    <div class="fld"><label>Telefon</label><input type="tel" id="nc_ph" placeholder="07xx xxx xxx" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+    <div class="fld"><label>Adresă livrare</label><input type="text" id="nc_ad" placeholder="Str. Exemplu 1, Oraș" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+    <button class="action-btn ab-green" onclick="saveMgmtNewClient()">Salvează client</button>
+    <button class="action-btn ab-outline" onclick="closeModal('newClientModal')">Anulează</button>
+  </div>
+</div>
+
 <!-- MODAL CREARE/EDITARE COMANDĂ -->
 <div class="modal-overlay" id="orderModal">
   <div class="modal-box">
@@ -342,6 +356,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <input type="text" id="omClient" placeholder="Caută client sau lasă gol..." oninput="filterClients(this.value)" onfocus="filterClients(this.value)" autocomplete="off"/>
       <input type="hidden" id="omClientId"/>
       <div class="ac-drop" id="omClientDrop"></div>
+      <button onclick="openNewClientModal()" style="margin-top:6px;padding:5px 12px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Client nou</button>
     </div>
     <div id="omStockNote" style="display:none;background:#E8EFF6;border-left:3px solid #2F4A63;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#23394F;line-height:1.5">
       Comandă pentru stoc — fără client. Când e gata sau chiar în lucru, o poți aloca unui client din lista de comenzi.
@@ -472,6 +487,15 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div id="sectionOrders">
       <div class="kpi-grid" id="kpiGrid"></div>
 
+      <!-- DIFERENȚE PRODUCȚIE -->
+      <div id="diffPanel" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:10px;margin-bottom:16px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:1px solid rgba(176,137,43,.2);display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:13px;font-weight:700;color:#7A5A00">⚠ Diferențe necroite</div>
+          <button onclick="loadDiffs()" style="padding:4px 10px;border-radius:5px;border:1px solid #B0892B;background:#FAF3E0;font-size:11px;color:#8B6914;cursor:pointer;font-family:'Inter',sans-serif">↻</button>
+        </div>
+        <div id="diffList" style="max-height:200px;overflow-y:auto"></div>
+      </div>
+
       <!-- MESAJE RECENTE -->
       <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:20px;overflow:hidden">
         <div style="padding:11px 20px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:center">
@@ -551,7 +575,7 @@ async function doLogout(){await sb.auth.signOut();}
 // LOAD
 async function loadAll(){
   showLov('Se încarcă datele...');
-  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadMsgBadge(),loadMsgPanel()]);
+  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadMsgBadge(),loadMsgPanel(),loadDiffs()]);
   hideLov();
 }
 async function loadMsgPanel(){
@@ -627,6 +651,48 @@ async function updateLineStatus(lineId,orderId,status){
   }
   // Refresh linia în UI fără reload complet
   await loadAll();
+}
+
+async function loadDiffs(){
+  // Caută articole cu diferențe în audit — qty_done < total_pairs
+  const{data}=await sb.from('audit_log')
+    .select('id,record_id,new_data,created_at')
+    .eq('action','update')
+    .like('new_data->>action','Croit finalizat%')
+    .order('created_at',{ascending:false})
+    .limit(20);
+  const diffs=[];
+  (data||[]).forEach(h=>{
+    const action=h.new_data?.action||'';
+    // Extrage diferențe din mesaj
+    const parts=action.replace('Croit finalizat: ','').split(' | ');
+    parts.forEach(p=>{
+      const m=p.match(/(.+): (\d+) per\. \((.+)\)/);
+      if(!m)return;
+      const art=m[1],total=parseInt(m[2]);
+      // Verifică dacă suma din pontaj e mai mică
+      const pontajTotal=m[3].split(' ').reduce((s,x)=>{const[,q]=x.split('×');return s+(parseInt(q)||0);},0);
+      if(pontajTotal<total){
+        diffs.push({art,croit:pontajTotal,plan:total,orderId:h.record_id,date:new Date(h.created_at).toLocaleDateString('ro-RO')});
+      }
+    });
+  });
+  const panel=document.getElementById('diffPanel');
+  const list=document.getElementById('diffList');
+  if(!diffs.length){panel.style.display='none';return;}
+  panel.style.display='block';
+  list.innerHTML=diffs.map(d=>`
+    <div style="padding:9px 16px;border-bottom:1px solid rgba(176,137,43,.15);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#111111">${d.art}</div>
+        <div style="font-size:11px;color:#8B6914;margin-top:2px">Croit: <strong>${d.croit}</strong> / ${d.plan} per. — lipsesc ${d.plan-d.croit} per. · ${d.date}</div>
+      </div>
+      <button onclick="scrollToOrder('${d.orderId}')" style="padding:4px 10px;border-radius:5px;border:1px solid #B0892B;background:#FAF3E0;font-size:10px;font-weight:700;color:#8B6914;cursor:pointer;font-family:'Inter',sans-serif">Vezi</button>
+    </div>`).join('');
+}
+function scrollToOrder(orderId){
+  const el=document.getElementById('row_'+orderId);
+  if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow='0 0 0 3px #B0892B';setTimeout(()=>el.style.boxShadow='',2000);}
 }
 
 async function loadMsgBadge(){
@@ -1203,7 +1269,10 @@ async function addArtToOrder(){
 async function saveOrder(){
   const clientId=document.getElementById('omClientId').value;
   const isStock=omOrderType==='stock';
-  if(!isStock&&!clientId){showToast('Alege un client sau comută pe „Pentru stoc"!');return;}
+  // Dacă nu e stoc și nu e client selectat — permite cu client_id null (comandă fără client)
+  if(!isStock&&!clientId){
+    if(!confirm('Nu ai selectat un client. Salvezi comanda fără client?'))return;
+  }
   if(!omArts.length){showToast('Adaugă cel puțin un articol!');return;}
   const termen=document.getElementById('omTermen').value;
   const plata=document.getElementById('omPlata').value;
@@ -1223,6 +1292,31 @@ async function saveOrder(){
     await sb.from('order_lines').insert(omArts.map(a=>({order_id:ord.id,...lineRows(a)})));
   }
   hideLov();closeModal('orderModal');showToast(omEditId?'Comandă modificată!':isStock?'Comandă STOC creată!':'Comandă creată!');await loadAll();}
+
+function openNewClientModal(){
+  ['nc_co','nc_cui','nc_nm','nc_ph','nc_ad'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('newClientModal').classList.add('show');
+}
+async function saveMgmtNewClient(){
+  const co=document.getElementById('nc_co').value.trim();
+  if(!co){showToast('Completează numele companiei!');return;}
+  showLov('Se salvează...');
+  const{data,error}=await sb.from('clients').insert({
+    company_name:co,
+    name:document.getElementById('nc_nm').value.trim()||co,
+    cui:document.getElementById('nc_cui').value.trim(),
+    phone:document.getElementById('nc_ph').value.trim(),
+    delivery_address:document.getElementById('nc_ad').value.trim(),
+    agent_id:CU.id,
+  }).select().single();
+  hideLov();
+  if(error){showToast('Eroare: '+error.message);return;}
+  document.getElementById('omClient').value=data.company_name||data.name;
+  document.getElementById('omClientId').value=data.id;
+  closeModal('newClientModal');
+  showToast('Client salvat!');
+  await loadClients();
+}
 
 function calcDD(t){const d=new Date();const z={'5z':5,'10z':10,'15z':15,'30z':30,'prelungit':90};d.setDate(d.getDate()+(z[t]||30));return d.toISOString().split('T')[0];}
 
