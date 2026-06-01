@@ -1555,6 +1555,10 @@ async function saveOrder(){
   showLov('Salvează comanda...');
   const tp=arts.reduce((s,a)=>s+a.total_pairs,0);
   const tv=arts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
+  // Încarcă materiale default per model
+  const{data:asoc}=await sb.from('model_materiale').select('*');
+  const matByProduct={};
+  (asoc||[]).forEach(a=>matByProduct[a.product_id]=a);
   const{data:ord,error:ordErr}=await sb.from('orders').insert({
     client_id:selClient.id,agent_id:CU.id,status:'nou',
     delivery_date:calcDD(curTermen),delivery_preset:curTermen,
@@ -1563,17 +1567,24 @@ async function saveOrder(){
     notes:document.getElementById('ordObs').value.trim(),
   }).select().single();
   if(ordErr){hideLov();showToast('Eroare: '+ordErr.message);document.getElementById('saveBtn').disabled=false;return;}
-  await sb.from('order_lines').insert(arts.map(a=>({
-    order_id:ord.id,
-    product_id:a.product_id||null,
-    free_model:a.free_model||null,
-    color:a.color||null,
-    ponytage:a.ponytage,
-    total_pairs:a.total_pairs,
-    unit_price:a.pret_final||a.unit_price||null,
-    from_stock:a.from_stock||false,
-    notes:a.notes||null,
-  })));
+  await sb.from('order_lines').insert(arts.map(a=>{
+    const mat=a.product_id?matByProduct[a.product_id]||{}:{};
+    return {
+      order_id:ord.id,
+      product_id:a.product_id||null,
+      free_model:a.free_model||null,
+      color:a.color||null,
+      ponytage:a.ponytage,
+      total_pairs:a.total_pairs,
+      unit_price:a.pret_final||a.unit_price||null,
+      from_stock:a.from_stock||false,
+      notes:a.notes||null,
+      talpa_id:mat.talpa_id||null,
+      brant_id:mat.brant_id||null,
+      siret_id:mat.siret_id||null,
+      cutie_id:mat.cutie_id||null,
+    };
+  }));
   hideLov();
   document.getElementById('succPDF').onclick=()=>genPDF(ord.id);
   for(let i=0;i<=3;i++)document.getElementById('s'+i).style.display='none';
