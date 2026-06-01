@@ -694,6 +694,7 @@ async function finalizeOrder(orderId){
     const totalCroit=Object.values(st.ponytage_done||{}).reduce((s,q)=>s+q,0);
     const totalPlan=l.total_pairs;
     const restanta=totalPlan-totalCroit;
+    console.log('Articol:',mod,'totalCroit:',totalCroit,'totalPlan:',totalPlan,'restanta:',restanta);
     if(restanta>0){
       diffs.push(mod+' '+l.color+': '+totalCroit+'/'+totalPlan+' per. (restanță '+restanta+' per.)');
       const notesWithRestanta=(l.notes?l.notes+' ':'')+' [RESTANȚĂ: '+restanta+' per.]';
