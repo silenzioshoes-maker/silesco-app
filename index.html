@@ -818,7 +818,7 @@ function renderOrders(orders){
     const preview=lines.length
       ? lines.slice(0,3).map(l=>{
           const hasDisc=l.notes&&l.notes.includes('[Discount:');
-          const modLabel=l.products?.code?'Art.'+l.products.code:l.free_model||'—';
+          const modLabel=l.products?.code?'Art.'+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
           return `<span class="art-tag">${modLabel} · ${l.color||'—'}${hasDisc?' 🏷':''}${l.from_stock?' 📦':''}  </span>`;
         }).join('')
         +(lines.length>3?`<span class="art-tag">+${lines.length-3}</span>`:'')
@@ -835,7 +835,7 @@ function renderOrders(orders){
       const hasDiscount=l.notes&&l.notes.includes('[Discount:');
       const discountText=hasDiscount?l.notes.match(/\[Discount: ([^\]]+)\]/)?.[1]||'':'';
       const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
-      const modLabel=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+      const modLabel=l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
       const stockBadge=l.from_stock?'<span style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 6px;border-radius:3px;margin-left:6px">📦 Din stoc</span>':'';
       return `<div style="padding:10px 0;border-bottom:1px solid #EDE8DF">
         <div style="font-size:13px;font-weight:700;color:#1B1B1B">${modLabel} · ${l.color||'—'} · ${l.total_pairs} per.${val}${stockBadge}</div>
@@ -997,7 +997,7 @@ async function openEditModal(id){
   editArts=o.order_lines.map(l=>({
     id:l.id,
     product_id:l.product_id,
-    code:l.products?.code||l.free_model||'—',
+    code:l.products?.code||l.free_model||(l.color?'['+l.color+']':'—'),
     free_model:l.free_model||null,
     color:l.color||'',
     ponytage:l.ponytage||{},
@@ -1243,7 +1243,7 @@ async function genPDF(oid){
     const notesCleanPDF=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
     return `<tr>
       <td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top">
-        <div style="font-weight:700;font-size:13px">${l.products?.code?'Art. '+l.products.code:l.free_model||'—'}</div>
+        <div style="font-weight:700;font-size:13px">${l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—')}</div>
         <div style="font-size:13px;color:#444;margin-top:2px">${l.color||'—'}</div>
         ${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}
         ${notesCleanPDF?`<div style="font-size:11px;color:#B08D57;margin-top:2px;font-weight:600">Obs: ${notesCleanPDF}</div>`:''}
@@ -1437,6 +1437,8 @@ function addArt(){
   const{pretFinal,discount,discountText}=calcDiscount(pr,discTip,discVal);
   const fromStock=window._fromStock||false;
   window._fromStock=false;
+  const noteBackup='['+code+' · '+col+']';
+  const finalNotes=obs?noteBackup+' '+obs:noteBackup;
   arts.push({
     product_id:mid||null,
     free_model:mid?null:modText,
@@ -1446,7 +1448,7 @@ function addArt(){
     discount,discount_tip:discTip,
     discount_val:parseFloat(discVal)||0,
     discount_text:discountText,
-    notes:obs,
+    notes:finalNotes,
     from_stock:fromStock,
   });
   document.getElementById('artCol').value='';
@@ -1525,7 +1527,7 @@ async function saveOrder(){
     total_pairs:a.total_pairs,
     unit_price:a.pret_final||a.unit_price||null,
     from_stock:a.from_stock||false,
-    notes:a.notes?`${a.discount_text?'[Discount: '+a.discount_text+'] ':''}${a.notes}`:a.discount_text?'[Discount: '+a.discount_text+']':null,
+    notes:a.notes||null,
   })));
   hideLov();
   document.getElementById('succPDF').onclick=()=>genPDF(ord.id);
