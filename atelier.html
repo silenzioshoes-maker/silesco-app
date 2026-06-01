@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SILESCO · Atelier</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#111111}
+.hdr{background:#111111;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px}
+.hdr-title{font-family:'Playfair Display',serif;font-size:20px;color:#fff;font-weight:700}
+.hdr-ws{font-size:12px;color:#B08D57;font-weight:600;margin-top:2px}
+.content{padding:20px;max-width:600px;margin:0 auto}
+.card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:12px;overflow:hidden}
+.card-header{padding:14px 16px;border-bottom:1px solid #EDE8DF}
+.order-no{font-size:10px;font-family:'Courier New',monospace;color:#5A5248;margin-bottom:3px}
+.client{font-family:'Playfair Display',serif;font-size:17px;color:#111111;margin-bottom:4px}
+.deadline{font-size:11px;color:#5A5248}
+.art-row{padding:12px 16px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.art-row:last-child{border-bottom:none}
+.art-info{flex:1}
+.art-name{font-size:14px;font-weight:700;color:#111111}
+.art-color{font-size:12px;color:#5A5248;margin-top:2px}
+.art-total{font-size:13px;font-weight:600;color:#1E4A2E;margin-top:3px}
+.pontaj{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.pchip{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;color:#111111;font-family:monospace}
+.art-status{flex-shrink:0}
+.status-done{font-size:11px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:4px 10px;border-radius:6px}
+.btn-done{padding:10px 18px;border-radius:8px;border:none;background:#1E4A2E;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-done:disabled{background:#C8C0B8;cursor:not-allowed}
+.card-footer{padding:14px 16px;background:#F4F1EA;display:flex;justify-content:flex-end}
+.empty{text-align:center;padding:60px 20px;color:#9E9890}
+.empty svg{width:40px;height:40px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 16px;display:block}
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.lov.show{display:flex}
+.spinner{width:28px;height:28px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lov-text{font-size:13px;color:#2A2A2A;font-weight:600}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.invalid{text-align:center;padding:60px 20px}
+.invalid h2{font-family:'Playfair Display',serif;font-size:24px;color:#7A2418;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="lov" id="lov"><div class="spinner"></div><div class="lov-text" id="lovText">Se încarcă...</div></div>
+<div class="toast" id="toast"></div>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-brand">SILESCO · Producție</div>
+    <div class="hdr-title">Atelier Cusut</div>
+    <div class="hdr-ws" id="wsName">—</div>
+  </div>
+  <button onclick="location.reload()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:6px 12px;color:rgba(255,255,255,.6);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">↻ Reîncarcă</button>
+</div>
+
+<div class="content" id="content">
+  <div class="lov show" id="initLov"><div class="spinner"></div><div class="lov-text">Se verifică accesul...</div></div>
+</div>
+
+<script>
+const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+const{createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+
+let wsName='',wsToken='';
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  const params=new URLSearchParams(window.location.search);
+  const token=params.get('token');
+  if(!token){showInvalid('Link invalid — lipsește token-ul.');return;}
+  wsToken=token;
+  // Verifică token
+  const{data:ws,error}=await sb.from('workshop_tokens').select('workshop_name').eq('token',token).single();
+  document.getElementById('initLov').style.display='none';
+  if(error||!ws){showInvalid('Link invalid sau expirat. Contactează SILESCO.');return;}
+  wsName=ws.workshop_name;
+  document.getElementById('wsName').textContent=wsName.charAt(0).toUpperCase()+wsName.slice(1);
+  await loadOrders();
+});
+
+async function loadOrders(){
+  showLov('Se încarcă comenzile...');
+  // Articolele asignate acestui atelier care nu sunt gata
+  const{data:lines}=await sb.from('order_lines')
+    .select(`id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,
+      products(code,name),
+      orders!inner(id,order_no,status,delivery_date,clients!orders_client_id_fkey(name,company_name))`)
+    .eq('workshop',wsName)
+    .in('orders.status',['la_croit','in_productie','fete_gata_cusut','la_cusut_extern'])
+    .order('created_at',{ascending:true});
+  hideLov();
+  const content=document.getElementById('content');
+  if(!lines?.length){
+    content.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><div style="font-size:16px;font-weight:700;color:#111111;margin-bottom:8px">Nicio comandă asignată</div><div style="font-size:13px">Momentan nu aveți comenzi de cusut.</div></div>`;
+    return;
+  }
+  // Grupează pe comandă
+  const byOrder={};
+  lines.forEach(l=>{
+    const oid=l.orders?.id;
+    if(!oid)return;
+    if(!byOrder[oid])byOrder[oid]={order:l.orders,lines:[]};
+    byOrder[oid].lines.push(l);
+  });
+  content.innerHTML=Object.values(byOrder).map(g=>{
+    const o=g.order;
+    const cl=o.clients?.company_name||o.clients?.name||'Fără client';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    const allDone=g.lines.every(l=>l.production_status==='cusut_gata'||l.production_status==='la_talpuit'||l.production_status==='gata');
+    return `<div class="card">
+      <div class="card-header">
+        <div class="order-no">${o.order_no||'—'}</div>
+        <div class="client">${cl}</div>
+        <div class="deadline">Termen: ${dd}</div>
+      </div>
+      ${g.lines.map(l=>{
+        const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+        const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
+        const isDone=l.production_status==='cusut_gata'||l.production_status==='la_talpuit'||l.production_status==='gata';
+        const notesClean=l.notes?l.notes.replace(/\[[^\]]+\]\s*/g,'').replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
+        return `<div class="art-row">
+          <div class="art-info">
+            <div class="art-name">${mod}</div>
+            <div class="art-color">${l.color||'—'}</div>
+            <div class="art-total">${l.total_pairs} perechi</div>
+            <div class="pontaj">${entries.map(([s,q])=>`<span class="pchip">${s}×${q}</span>`).join('')}</div>
+            ${notesClean?`<div style="font-size:11px;color:#8B6914;margin-top:4px;font-style:italic">${notesClean}</div>`:''}
+          </div>
+          <div class="art-status">
+            ${isDone
+              ?'<span class="status-done">✓ Cusut gata</span>'
+              :`<button class="btn-done" onclick="markDone('${l.id}','${o.id}','${o.order_no}')">✓ Finalizat</button>`
+            }
+          </div>
+        </div>`;
+      }).join('')}
+      ${allDone?`<div class="card-footer"><span style="font-size:12px;font-weight:700;color:#1E4A2E">✓ Toate articolele cusute</span></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function markDone(lineId,orderId,orderNo){
+  showLov('Se salvează...');
+  await sb.from('order_lines').update({production_status:'cusut_gata'}).eq('id',lineId);
+  // Actualizează și un flag pe comandă că atelierul a raportat
+  await sb.from('orders').update({updated_at:new Date().toISOString()}).eq('id',orderId);
+  hideLov();showToast('Marcat ca finalizat!');
+  await loadOrders();
+}
+
+function showInvalid(msg){
+  document.getElementById('content').innerHTML=`<div class="invalid"><h2>⚠ Acces invalid</h2><p style="font-size:14px;color:#5A5248">${msg}</p></div>`;
+}
+function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
+function hideLov(){document.getElementById('lov').classList.remove('show');}
+function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
