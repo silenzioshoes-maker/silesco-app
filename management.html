@@ -1729,10 +1729,7 @@ function renderLots(lots){
   const lc=document.getElementById('lotsCount');if(lc)lc.textContent=lots.length+' comenzi active';
   const el=document.getElementById('lotsTable');
   if(!el)return;
-  if(!lots.length){el.innerHTML='<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px;font-weight:500">Nicio comandă în producție.</div>';return;}
-  el.innerHTML=lots.map(l=>{const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';const sc=l.stage==='la_croit'?'#8B6914':l.stage==='la_talpuit'?'#23394F':'#3A3530';const isU=l.orders?.priority==='urgent';
-    return `<div class="order-row"><div style="display:grid;grid-template-columns:110px 1fr 100px 150px 100px;gap:12px;padding:14px 20px;align-items:center"><div class="order-no-cell">${l.lot_no||'—'}</div><div><div class="order-client-cell">${cl}${isU?'<span class="urgent-flag">⚡</span>':''}</div><div class="order-agent-cell">Art. ${l.products?.code||'—'} · Talpă: ${l.talpaData?.name||'—'}</div></div><div class="order-pairs-cell">${l.qty_planned||0} per.</div><span class="status-pill" style="color:${sc};background:${sc}18"><span style="width:5px;height:5px;border-radius:50%;background:${sc};display:inline-block"></span>${SL[l.stage]||l.stage}</span><div style="font-size:11px;color:#5A5248">${new Date(l.created_at).toLocaleDateString('ro-RO')}</div></div></div>`;
-  }).join('');
+  if(!lots.length){el.innerHTML='<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px">Nicio comandă.</div>';return;}
 }
 
 // ── MESAJ DIN COMANDĂ ─────────────────────────────────────────
