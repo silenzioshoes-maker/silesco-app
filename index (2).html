@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SILESCO · Production OS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100vh;color:#1B1B1B}
+
+/* ── LOGIN ── */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.lcard{background:#fff;border-radius:12px;padding:48px 40px 40px;width:100%;max-width:400px;box-shadow:0 4px 32px rgba(0,0,0,.08);border:1px solid #DDD7CE}
+.logo{text-align:center;margin-bottom:36px}
+.logo-icon{width:52px;height:52px;background:#111111;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}
+.logo-icon svg{width:26px;height:26px;stroke:#B08D57;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.logo h1{font-family:'Playfair Display',serif;font-size:22px;color:#1B1B1B;letter-spacing:.5px}
+.logo p{font-size:12px;color:#3A3530;margin-top:5px;letter-spacing:.3px}
+.lf{margin-bottom:16px}
+.lf label{display:block;font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.lf input{width:100%;padding:12px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;transition:border-color .15s;background:#fff}
+.lf input:focus{border-color:#B08D57}
+.btn-login{width:100%;padding:13px;background:#111111;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;letter-spacing:.3px;transition:background .15s}
+.btn-login:hover{background:#2a2a2a}
+.btn-login:disabled{background:#DDD7CE;color:#4A4540;cursor:not-allowed}
+.lerr{display:none;background:#F5EAE8;border:1px solid rgba(156,58,43,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#9C3A2B;margin-top:12px;text-align:center}
+.lerr.show{display:block}
+
+/* ── AGENT SCREEN ── */
+#agentScreen{display:none;max-width:480px;margin:0 auto;min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:#111111;padding:18px 20px 14px;display:flex;justify-content:space-between;align-items:flex-end}
+.hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:4px}
+.hdr-title{font-family:'Playfair Display',serif;font-size:22px;color:#fff;line-height:1}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px}
+.hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:5px 12px;font-size:11px;color:#B08D57;font-weight:600}
+
+/* ── NAV ── */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid #DDD7CE;display:flex;padding:8px 0 20px;z-index:100}
+.nb{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;font-family:'Inter',sans-serif}
+.nb-icon{width:20px;height:20px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nb.active .nb-icon{stroke:#B08D57}
+.nb-label{font-size:9px;font-weight:600;color:#5A5248;letter-spacing:.5px;text-transform:uppercase}
+.nb.active .nb-label{color:#B08D57}
+
+/* ── LAYOUT ── */
+.wrap{padding:16px 16px 100px}
+.card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:16px;margin-bottom:10px}
+.card-accent{border-left:3px solid #B08D57;border-radius:0 10px 10px 0}
+.sec-label{font-size:9px;font-weight:700;color:#4A4540;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+
+/* ── ORDER CARD ── */
+.ocard{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:8px;border-left:3px solid #B08D57;border-top-left-radius:0;border-bottom-left-radius:0}
+.ocard.modified{border-left-color:#B0892B}
+.order-no{font-size:10px;font-family:'Courier New',monospace;color:#5A5248;margin-bottom:4px;letter-spacing:.5px}
+.order-client{font-family:'Playfair Display',serif;font-size:17px;color:#1B1B1B;margin-bottom:6px}
+.order-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.art-preview{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
+.art-tag{font-size:10px;color:#3A3530;background:#F4F1EA;border:1px solid #DDD7CE;padding:3px 8px;border-radius:4px;white-space:nowrap}
+.modified-badge{font-size:9px;color:#B0892B;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:#FAF3E0;border:1px solid rgba(176,137,43,.25);padding:2px 7px;border-radius:3px}
+.expand-det{display:none;margin-top:14px;padding-top:14px;border-top:1px solid #EDE8DF}
+
+/* ── FORM ── */
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.fld input,.fld select,.fld textarea{width:100%;padding:12px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;background:#fff;transition:border-color .15s}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#B08D57}
+.oa{height:72px;resize:none}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:14px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px;transition:all .15s;letter-spacing:.2px}
+.btn-black{background:#111111;color:#fff}
+.btn-black:hover{background:#2a2a2a}
+.btn-black:disabled{background:#DDD7CE;color:#4A4540;cursor:not-allowed}
+.btn-green{background:#365A43;color:#fff}
+.btn-outline{background:transparent;border:1.5px solid #DDD7CE;color:#3A3530}
+.btn-gold{background:transparent;border:1.5px solid #B08D57;color:#B08D57}
+.btn-red{background:transparent;border:1.5px solid #9C3A2B;color:#9C3A2B}
+.btn-sm{padding:9px 14px;font-size:12px;margin-bottom:0;border-radius:7px}
+
+/* ── STEPS ── */
+.steps-bar{background:#111111;padding:0 20px 14px;display:flex;gap:6px}
+.step-item{flex:1}
+.step-line{height:2px;border-radius:1px;margin-bottom:5px;background:rgba(255,255,255,.12);transition:background .2s}
+.step-line.active{background:#B08D57}
+.step-name{font-size:8px;color:rgba(255,255,255,.3);text-align:center;font-weight:600;letter-spacing:.8px;text-transform:uppercase}
+.step-name.active{color:rgba(255,255,255,.75)}
+
+/* ── SIZES ── */
+.sizes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.size-cell{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:10px 6px;text-align:center}
+.size-nr{font-size:11px;color:#4A4540;font-weight:600;margin-bottom:5px;letter-spacing:.5px}
+.size-controls{display:flex;align-items:center;justify-content:center;gap:5px}
+.size-btn{width:30px;height:30px;border-radius:6px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:17px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+.size-val{font-size:20px;font-weight:700;color:#1B1B1B;min-width:24px;text-align:center;font-family:'Playfair Display',serif}
+
+/* ── TERMEN ── */
+.termen-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.termen-card{border:1.5px solid #DDD7CE;border-radius:8px;padding:13px 10px;cursor:pointer;background:#fff;transition:all .12s}
+.termen-card.sel{border-color:#B08D57;background:#F6F0E5}
+.termen-zile{font-family:'Playfair Display',serif;font-size:19px;color:#1B1B1B}
+.termen-desc{font-size:11px;color:#4A4540;margin-top:2px}
+.termen-card.sel .termen-zile{color:#B08D57}
+
+/* ── TOTAL BOX ── */
+.total-box{background:#111111;border-radius:10px;padding:16px;margin-bottom:10px}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.total-label{font-size:12px;color:rgba(255,255,255,.4)}
+.total-val{font-size:15px;font-weight:700;color:#fff;font-family:'Playfair Display',serif}
+.total-divider{height:1px;background:rgba(255,255,255,.07);margin:6px 0}
+
+/* ── AUTOCOMPLETE ── */
+.autocomplete-wrap{position:relative}
+.autocomplete-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #B08D57;border-top:none;border-radius:0 0 8px 8px;z-index:50;max-height:200px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.autocomplete-item{padding:11px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #F4F1EA;transition:background .1s;display:flex;align-items:center;gap:8px}
+.autocomplete-item:hover{background:#F6F0E5}
+.autocomplete-item:last-child{border-bottom:none}
+.autocomplete-code{font-weight:700;color:#1B1B1B}
+.autocomplete-name{color:#4A4540;font-size:11px}
+
+/* ── CLIENT SEARCH ── */
+.client-result{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:border-color .15s}
+.client-result:hover{border-color:#B08D57}
+
+/* ── NOTIF ── */
+.notif{display:none;background:#EAF0EC;border:1px solid rgba(54,90,67,.2);border-radius:10px;padding:13px 16px;margin-bottom:14px;gap:10px;align-items:flex-start}
+.notif.show{display:flex}
+.notif.show{display:flex}
+.notif-icon{width:16px;height:16px;stroke:#365A43;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
+
+/* ── LOADING ── */
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.95);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.lov.show{display:flex}
+.spinner{width:32px;height:32px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lov-text{font-size:12px;color:#3A3530;font-weight:500;letter-spacing:.3px}
+
+/* ── SUCCESS ── */
+.ssc{display:none;text-align:center;padding:48px 20px}
+.ssc.show{display:block}
+.ssc-icon{font-size:40px;margin-bottom:16px;color:#365A43}
+.ssc-title{font-family:'Playfair Display',serif;font-size:22px;color:#1B1B1B;margin-bottom:8px}
+.ssc-sub{font-size:13px;color:#4A4540;margin-bottom:28px;line-height:1.6}
+.ssc-no{display:inline-block;padding:10px 20px;background:#EAF0EC;border:1px solid rgba(54,90,67,.2);border-radius:8px;font-size:17px;font-weight:700;color:#365A43;font-family:'Courier New',monospace;margin-bottom:24px;letter-spacing:1px}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:48px 20px;color:#5A5248}
+.empty-icon{width:36px;height:36px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 12px}
+.empty-text{font-size:13px;color:#4A4540;line-height:1.6}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;letter-spacing:.2px}
+.toast.show{opacity:1}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:14px 14px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;color:#1B1B1B;margin-bottom:4px}
+.modal-sub{font-size:12px;color:#4A4540;margin-bottom:20px}
+
+/* ── HISTORY ── */
+.history-item{padding:10px 0;border-bottom:1px solid #EDE8DF}
+.history-time{font-size:10px;color:#5A5248;margin-bottom:3px;font-family:'Courier New',monospace}
+.history-text{font-size:12px;color:#3A3530;line-height:1.5}
+
+/* ── DISCOUNT BADGE ── */
+.discount-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:#FAF3E0;border:1px solid rgba(176,137,43,.25);color:#B0892B}
+
+.pontaj-table{display:inline-flex;border:1px solid #DDD7CE;border-radius:6px;overflow:hidden;margin-top:5px}
+.pontaj-col{display:flex;flex-direction:column;border-right:1px solid #EDE8DF}
+.pontaj-col:last-child{border-right:none}
+.pontaj-sz{padding:4px 8px;font-size:10px;color:#4A4540;font-weight:600;text-align:center;background:#F4F1EA;border-bottom:1px solid #EDE8DF}
+.pontaj-qty{padding:5px 8px;font-size:13px;font-weight:700;color:#1B1B1B;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="lov" id="lov"><div class="spinner"></div><div class="lov-text" id="lov-text">Se încarcă...</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL EDITARE COMPLETĂ -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title">Editează comanda</div>
+    <div class="modal-sub" id="editModalSub"></div>
+
+    <!-- Articole din comandă -->
+    <div class="sec-label">Articole</div>
+    <div id="editArticlesList"></div>
+
+    <div style="background:#F4F1EA;border-radius:8px;padding:14px;margin-bottom:16px">
+      <div class="sec-label" style="margin-bottom:10px">Adaugă articol</div>
+      <div class="fld autocomplete-wrap" style="margin-bottom:10px">
+        <label>Model</label>
+        <input type="text" id="editModInput" placeholder="Tastează — ex: 140, 0062..." oninput="filterEditModels(this.value)" onfocus="filterEditModels(this.value)" autocomplete="off"/>
+        <input type="hidden" id="editModId"/>
+        <div class="autocomplete-drop" id="editModDrop"></div>
+      </div>
+      <div class="fld autocomplete-wrap" style="margin-bottom:10px">
+        <label>Culoare / Piele</label>
+        <input type="text" id="editCol" placeholder="ex: Negru Lac" oninput="filterEditColors(this.value)" onfocus="filterEditColors(this.value)" autocomplete="off"/>
+        <div class="autocomplete-drop" id="editColDrop"></div>
+      </div>
+      <div class="fld" style="margin-bottom:10px"><label>Preț/per. (RON)</label><input type="number" id="editPret" placeholder="190" min="0"/></div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <label style="font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px">Mărimi</label>
+          <button onclick="setEditStd()" style="padding:4px 10px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Standard</button>
+        </div>
+        <div class="sizes-grid" id="editSzGrid"></div>
+      </div>
+      <button id="editAddBtn" onclick="addEditArticle()" style="width:100%;padding:10px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă articol</button>
+    </div>
+
+    <div class="fld"><label>Termen livrare</label>
+      <select id="editTermen" style="padding:12px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;width:100%;background:#fff">
+        <option value="5z">5 zile — Urgent</option>
+        <option value="10z">10 zile — Standard</option>
+        <option value="15z">15 zile — Normal</option>
+        <option value="30z">30 zile — Relaxat</option>
+        <option value="prelungit">Prelungit</option>
+      </select>
+    </div>
+    <div class="fld"><label>Modalitate plată</label>
+      <select id="editPlata" style="padding:12px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;width:100%;background:#fff">
+        <option>30 zile</option><option>15 zile</option><option>La livrare</option><option>Avans 50%</option>
+      </select>
+    </div>
+    <div class="fld"><label>Observații</label><textarea class="oa" id="editNotes" placeholder="Observații..."></textarea></div>
+
+    <div style="background:#FAF3E0;border-left:3px solid #B08D57;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:16px;font-size:11px;color:#B0892B;line-height:1.5">
+      Modificările vor fi salvate în istoricul comenzii cu data și ora curentă.
+    </div>
+    <button class="btn btn-green" onclick="saveEdit()">Salvează modificările</button>
+    <button class="btn btn-outline" onclick="closeEditModal()">Anulează</button>
+
+    <!-- Istoric -->
+    <div id="editHistorySection" style="margin-top:20px;display:none">
+      <div class="sec-label">Istoric modificări</div>
+      <div id="editHistoryList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ȘTERGERE -->
+<div class="modal-overlay" id="delModal">
+  <div class="modal-box">
+    <div class="modal-title">Șterge comanda</div>
+    <div class="modal-sub" id="delModalSub"></div>
+    <div style="background:#F5EAE8;border-left:3px solid #9C3A2B;border-radius:0 6px 6px 0;padding:12px 14px;margin-bottom:20px;font-size:12px;color:#9C3A2B;line-height:1.6">
+      Această acțiune este ireversibilă. Comanda și toate articolele asociate vor fi șterse permanent.
+    </div>
+    <button class="btn btn-red" onclick="confirmDelete()">Da, șterge comanda</button>
+    <button class="btn btn-outline" onclick="closeDelModal()">Anulează</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="lcard">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5c0 1-.38 2.42-.75 3.5L8 11M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 2 14 3.8 14 5c0 1 .38 2.42.75 3.5L16 11"/></svg>
+      </div>
+      <h1>SILESCO</h1>
+      <p>Production OS · Autentificare</p>
+    </div>
+    <div class="lf"><label>Email</label><input type="email" id="lem" placeholder="email@silesco.ro" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="lf"><label>Parolă</label><input type="password" id="lpw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn-login" id="lbtn" onclick="doLogin()">Intră în cont</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<!-- AGENT -->
+<div id="agentScreen">
+  <div class="hdr">
+    <div>
+      <div class="hdr-brand">SILESCO · Agent</div>
+      <div class="hdr-title" id="hTitle">Comenzile mele</div>
+      <div class="hdr-sub" id="hSub"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="hdr-badge" id="hBadge">0 active</div>
+      <button onclick="doLogout()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 10px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif">Ieși</button>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div id="vOrders" style="display:none">
+    <div class="wrap">
+      <div class="notif" id="ntf">
+        <svg class="notif-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:#1E4A2E" id="ntfT"></div>
+          <div style="font-size:11px;color:#3A3530;margin-top:2px" id="ntfS"></div>
+        </div>
+        <button onclick="dismissNotif()" style="background:none;border:none;color:#1E4A2E;font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0;font-family:'Inter',sans-serif">×</button>
+      </div>
+      <div class="sec-label">Comenzile mele</div>
+      <div id="oList"></div>
+      <div class="empty-state" id="oEmpty" style="display:none">
+        <svg class="empty-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <div class="empty-text">Nu ai comenzi active.<br>Apasă + pentru a introduce una nouă.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW ORDER -->
+  <div id="vNew" style="display:none">
+    <div class="steps-bar">
+      <div class="step-item"><div class="step-line active" id="sb0"></div><div class="step-name active" id="sn0">Client</div></div>
+      <div class="step-item"><div class="step-line" id="sb1"></div><div class="step-name" id="sn1">Termen</div></div>
+      <div class="step-item"><div class="step-line" id="sb2"></div><div class="step-name" id="sn2">Articole</div></div>
+      <div class="step-item"><div class="step-line" id="sb3"></div><div class="step-name" id="sn3">Final</div></div>
+    </div>
+    <div class="wrap">
+      <!-- S0 CLIENT -->
+      <div id="s0">
+        <div class="fld"><label>Caută client</label>
+          <input type="text" id="cSearch" placeholder="Nume client sau companie..." oninput="searchClients(this.value)" autocomplete="off"/>
+        </div>
+        <div id="cRes" style="margin-bottom:10px"></div>
+        <div class="card" id="cSel" style="display:none">
+          <div style="font-size:9px;color:#4A4540;margin-bottom:4px;text-transform:uppercase;letter-spacing:1.5px">Client selectat</div>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#1B1B1B" id="cSelN"></div>
+          <div style="font-size:11px;color:#4A4540;margin-top:3px" id="cSelM"></div>
+          <button onclick="clearClient()" style="margin-top:10px;padding:5px 10px;border-radius:5px;border:1px solid #DDD7CE;background:#fff;color:#4A4540;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif">× Schimbă</button>
+        </div>
+        <div id="ncForm" style="display:none">
+          <div style="font-size:10px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">+ Client nou</div>
+          <div class="fld"><label>Nume companie *</label><input type="text" id="nc_co" placeholder="Magazin ABC SRL"/></div>
+          <div class="fld"><label>CUI</label><input type="text" id="nc_cui" placeholder="RO12345678"/></div>
+          <div class="fld"><label>Persoană contact</label><input type="text" id="nc_nm" placeholder="Ion Popescu"/></div>
+          <div class="fld"><label>Telefon</label><input type="tel" id="nc_ph" placeholder="07xx xxx xxx"/></div>
+          <div class="fld"><label>Adresă livrare</label><input type="text" id="nc_ad" placeholder="Str. Exemplu 1, Oraș"/></div>
+          <button class="btn btn-green" onclick="saveNewClient()">Salvează client</button>
+          <button class="btn btn-outline" onclick="toggleNCF(false)">Anulează</button>
+        </div>
+        <div id="ncBtn" style="display:none"><button class="btn btn-gold" onclick="toggleNCF(true)">+ Client nou</button></div>
+        <button class="btn btn-black" id="s0next" onclick="goStep(1)" style="margin-top:8px" disabled>Continuă</button>
+      </div>
+
+      <!-- S1 TERMEN -->
+      <div id="s1" style="display:none">
+        <div class="sec-label">Termen de livrare</div>
+        <div class="termen-grid">
+          <div class="termen-card" onclick="selTermen('5z',this)"><div class="termen-zile">5 zile</div><div class="termen-desc">Urgent</div></div>
+          <div class="termen-card sel" onclick="selTermen('10z',this)"><div class="termen-zile">10 zile</div><div class="termen-desc">Standard</div></div>
+          <div class="termen-card" onclick="selTermen('15z',this)"><div class="termen-zile">15 zile</div><div class="termen-desc">Normal</div></div>
+          <div class="termen-card" onclick="selTermen('30z',this)"><div class="termen-zile">30 zile</div><div class="termen-desc">Relaxat</div></div>
+        </div>
+        <div class="termen-card" style="margin-bottom:16px" onclick="selTermen('prelungit',this)">
+          <div class="termen-zile">Prelungit</div>
+          <div class="termen-desc">Așteptare model / material / stoc</div>
+        </div>
+        <div class="fld"><label>Modalitate plată</label>
+          <select id="plata"><option>30 zile</option><option>15 zile</option><option>La livrare</option><option>Avans 50%</option></select>
+        </div>
+        <button class="btn btn-black" onclick="goStep(2)">Continuă</button>
+        <button class="btn btn-outline" onclick="goStep(0)">Înapoi</button>
+      </div>
+
+      <!-- S2 ARTICOLE -->
+      <div id="s2" style="display:none">
+        <div class="sec-label" id="artCnt">Articole: 0</div>
+        <div id="artList"></div>
+
+        <!-- ADAUGĂ DIN STOC -->
+        <div id="stockQuickSection" style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px">Din stoc disponibil</div>
+            <button onclick="toggleStockQuick()" id="stockQuickToggle" style="padding:4px 10px;border-radius:5px;border:1px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Arată ▾</button>
+          </div>
+          <div id="stockQuickList" style="display:none"></div>
+        </div>
+
+        <div class="card">
+          <div style="font-size:10px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">Adaugă articol</div>
+          <div class="fld autocomplete-wrap">
+            <label>Model <span style="color:#5A5248;font-weight:400;font-size:9px;text-transform:none;letter-spacing:0">(scrie orice — ex: 140, model nou, special)</span></label>
+            <input type="text" id="artModInput" placeholder="Scrie codul sau numele modelului..." oninput="filterModels(this.value);document.getElementById('artMod').value=''" onfocus="filterModels(this.value)" autocomplete="off"/>
+            <input type="hidden" id="artMod"/>
+            <div class="autocomplete-drop" id="artModDrop"></div>
+          </div>
+          <div class="fld autocomplete-wrap">
+            <label>Culoare / Piele <span style="color:#5A5248;font-weight:400;font-size:9px;text-transform:none;letter-spacing:0">(scrie orice)</span></label>
+            <input type="text" id="artCol" placeholder="ex: Negru Lac, culoare specială, TBD..." oninput="filterColors(this.value)" onfocus="filterColors(this.value)" autocomplete="off"/>
+            <div class="autocomplete-drop" id="artColDrop"></div>
+          </div>
+          <div class="fld"><label>Preț per pereche (RON)</label><input type="number" id="artPr" placeholder="ex: 190" min="0"/></div>
+          <!-- DISCOUNT -->
+          <div style="margin-bottom:14px">
+            <div style="font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Discount (opțional)</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="artDiscountTip" style="padding:10px 12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;background:#fff;flex:1">
+                <option value="">Fără discount</option>
+                <option value="ron">RON / pereche</option>
+                <option value="pct">Procent %</option>
+              </select>
+              <input type="number" id="artDiscountVal" placeholder="0" min="0" step="0.5" style="padding:10px 12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:#1B1B1B;outline:none;width:100px"/>
+            </div>
+          </div>
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <label style="font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px">Mărimi și cantități</label>
+              <button onclick="setStd()" style="padding:5px 11px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Standard</button>
+            </div>
+            <div class="sizes-grid" id="szGrid"></div>
+            <button onclick="addCustomSizeAgent()" style="width:100%;margin-top:6px;padding:7px;border-radius:6px;border:1.5px dashed #C8C0B8;background:#fff;color:#5A5248;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă mărime</button>
+          </div>
+          <div class="fld"><label>Observații (opțional)</label><textarea class="oa" id="artObs" placeholder="ex: tălpici cu ață neagră..."></textarea></div>
+          <button class="btn btn-black" onclick="addArt()">+ Adaugă articol</button>
+        </div>
+        <button class="btn btn-black" id="s2next" onclick="goStep(3)" disabled>Continuă</button>
+        <button class="btn btn-outline" onclick="goStep(1)">Înapoi</button>
+      </div>
+
+      <!-- S3 FINAL -->
+      <div id="s3" style="display:none">
+        <div class="sec-label">Sumar comandă</div>
+        <div class="card" style="margin-bottom:10px">
+          <div style="font-size:9px;color:#4A4540;margin-bottom:4px;text-transform:uppercase;letter-spacing:1.5px">Client</div>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#1B1B1B" id="sumCl"></div>
+          <div style="font-size:11px;color:#4A4540;margin-top:3px" id="sumT"></div>
+        </div>
+        <div id="sumArt" style="margin-bottom:10px"></div>
+        <div class="total-box">
+          <div class="total-row"><span class="total-label">Total perechi</span><span class="total-val" id="sumP">0</span></div>
+          <div class="total-divider"></div>
+          <div class="total-row"><span class="total-label">Total valoare</span><span class="total-val" id="sumV">0 RON</span></div>
+        </div>
+        <div class="fld"><label>Observații generale</label><textarea class="oa" id="ordObs" placeholder="ex: livrare urgentă..."></textarea></div>
+        <button class="btn btn-green" id="saveBtn" onclick="saveOrder()">Salvează comanda</button>
+        <button class="btn btn-outline" onclick="goStep(2)">Înapoi</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="ssc" id="succSc">
+        <div class="ssc-icon">✓</div>
+        <div class="ssc-title">Comandă salvată</div>
+        <div class="ssc-sub">Trimisă la management pentru aprobare.</div>
+        <div class="ssc-no" id="succNo">—</div>
+        <button class="btn btn-black" onclick="startNew()">+ Comandă nouă</button>
+        <button class="btn btn-outline" onclick="showV('orders')">Înapoi la comenzi</button>
+        <button class="btn btn-gold" id="succPDF">Generează fișă client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STOC -->
+  <div id="vStoc" style="display:none">
+    <div class="wrap">
+      <div class="sec-label">Baxuri gata</div><div id="stBax"></div>
+      <div class="sec-label" style="margin-top:16px">FEȚE disponibile</div><div id="stFete"></div>
+    </div>
+  </div>
+
+  <!-- MESAJE AGENT - redirect la pagina dedicată -->
+  <div id="vMesaje" style="display:none"></div>
+
+  <!-- STOC AGENT -->
+  <div id="vStoc" style="display:none">
+    <div class="wrap">
+      <div class="sec-label">Baxuri disponibile</div>
+      <div style="font-size:11px;color:#5A5248;margin-bottom:12px;line-height:1.5">Selectează un articol din stoc pentru a-l adăuga rapid la o comandă nouă.</div>
+      <div id="stBaxList"></div>
+      <div class="sec-label" style="margin-top:20px">FEȚE disponibile</div>
+      <div id="stFeteList"></div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="bnav">
+    <button class="nb active" id="n_orders" onclick="showV('orders')">
+      <svg class="nb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="nb-label">Comenzi</span>
+    </button>
+    <button class="nb" id="n_new" onclick="showV('new')">
+      <svg class="nb-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span class="nb-label">Nou</span>
+    </button>
+    <button class="nb" id="n_stoc" onclick="showV('stoc')">
+      <svg class="nb-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <span class="nb-label">Stoc</span>
+    </button>
+    <button class="nb" id="n_mesaje" onclick="window.location.href='/agent-messages.html'" style="position:relative">
+      <svg class="nb-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="nb-label">Mesaje</span>
+      <span id="agentMsgBadge" style="display:none;position:absolute;top:2px;right:10px;background:#9C3A2B;color:#fff;font-size:8px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center">0</span>
+    </button>
+  </div>
+</div>
+
+<script>
+const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+const {createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+
+let CU=null,CP=null,selClient=null,curTermen='10z',arts=[],prods=[],allOrders=[];
+let editOrderId=null,delOrderId=null,editArts=[];
+let dismissedNotif=false;
+const SZ=['39','40','41','42','43','44'];
+let szV={};SZ.forEach(s=>szV[s]=0);
+let editSzV={};SZ.forEach(s=>editSzV[s]=0);
+
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){CU=session.user;await initAgent();}
+  sb.auth.onAuthStateChange(async(ev,ses)=>{
+    if(ev==='SIGNED_IN'&&ses&&!CU){CU=ses.user;await initAgent();}
+    else if(ev==='TOKEN_REFRESHED'&&ses){CU=ses.user;}
+    else if(ev==='SIGNED_OUT'){CU=null;showLogin();}
+  });
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('#artModDrop')&&e.target.id!=='artModInput'){
+      const d=document.getElementById('artModDrop');if(d)d.style.display='none';
+    }
+    if(!e.target.closest('#artColDrop')&&e.target.id!=='artCol'){
+      const d=document.getElementById('artColDrop');if(d)d.style.display='none';
+    }
+    if(!e.target.closest('#editColDrop')&&e.target.id!=='editCol'){
+      const d=document.getElementById('editColDrop');if(d)d.style.display='none';
+    }
+  });
+});
+
+async function initAgent(){
+  showLov('Se încarcă...');
+  const{data:p}=await sb.from('user_profiles').select('full_name,role').eq('id',CU.id).single();
+  CP=p;
+  // Redirect per rol
+  if(p?.role==='management'){
+    window.location.href='/management.html';
+    return;
+  }
+  if(p?.role==='croit'){
+    window.location.href='/croit.html';
+    return;
+  }
+  document.getElementById('hSub').textContent=p?.full_name||'';
+  await loadProds();
+  await loadOrders();
+  await loadAgentMsgBadge();
+  hideLov();
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('agentScreen').style.display='block';
+  showV('orders');
+}
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function doLogin(){
+  const em=document.getElementById('lem').value.trim();
+  const pw=document.getElementById('lpw').value;
+  const btn=document.getElementById('lbtn');
+  if(!em||!pw){showLErr('Completează emailul și parola.');return;}
+  btn.disabled=true;
+  document.getElementById('lerr').classList.remove('show');
+  const{error}=await sb.auth.signInWithPassword({email:em,password:pw});
+  if(error){btn.disabled=false;showLErr(error.message.includes('Invalid')?'Email sau parolă incorectă.':error.message);}
+}
+function showLErr(m){const e=document.getElementById('lerr');e.textContent=m;e.classList.add('show');}
+async function doLogout(){await sb.auth.signOut();}
+function showLogin(){
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('agentScreen').style.display='none';
+  document.getElementById('lbtn').disabled=false;
+}
+
+// ── VIEWS ─────────────────────────────────────────────────────
+function showV(n){
+  ['vOrders','vNew','vStoc','vMesaje'].forEach(v=>{const el=document.getElementById(v);if(el)el.style.display='none';});
+  ['orders','new','stoc','mesaje'].forEach(x=>document.getElementById('n_'+x)?.classList.remove('active'));
+  if(n==='orders'){
+    document.getElementById('vOrders').style.display='block';
+    document.getElementById('n_orders').classList.add('active');
+    document.getElementById('hTitle').textContent='Comenzile mele';
+    loadOrders();
+  }else if(n==='new'){
+    document.getElementById('vNew').style.display='block';
+    document.getElementById('n_new').classList.add('active');
+    document.getElementById('hTitle').textContent='Comandă nouă';
+    startNew();
+  }else if(n==='stoc'){
+    document.getElementById('vStoc').style.display='block';
+    document.getElementById('n_stoc').classList.add('active');
+    document.getElementById('hTitle').textContent='Stoc disponibil';
+    loadStoc();
+  }else if(n==='mesaje'){
+    window.location.href='/agent-messages.html';
+  }
+}
+
+// ── PRODUSE ───────────────────────────────────────────────────
+async function loadProds(){
+  const{data}=await sb.from('products').select('*').eq('is_active',true).order('code');
+  prods=data||[];
+  if(!prods.length){await addDefProds();const{data:d2}=await sb.from('products').select('*').eq('is_active',true).order('code');prods=d2||[];}
+  renderSz();renderEditSzGrid();
+}
+async function addDefProds(){
+  await sb.from('products').insert([
+    {code:'140',name:'Oxford Lac',default_box_qty:12,consum_piele_mp:0.95,piele_tip:'Lac',is_active:true},
+    {code:'0062',name:'Derby Cioco',default_box_qty:12,consum_piele_mp:0.85,piele_tip:'Cioco',is_active:true},
+    {code:'2580',name:'Classic',default_box_qty:12,consum_piele_mp:0.90,piele_tip:'Lac',is_active:true},
+    {code:'121',name:'Oxford Standard',default_box_qty:12,consum_piele_mp:0.80,piele_tip:'Lac',is_active:true},
+    {code:'215',name:'Derby Box',default_box_qty:12,consum_piele_mp:0.75,piele_tip:'Box',is_active:true},
+    {code:'315',name:'Casual Velur',default_box_qty:12,consum_piele_mp:0.70,piele_tip:'Velur',is_active:true},
+    {code:'089',name:'Sport Nappa',default_box_qty:12,consum_piele_mp:0.85,piele_tip:'Nappa',is_active:true},
+  ]);
+}
+
+// ── AUTOSUGGESTION CULORI ─────────────────────────────────────
+const CULORI_STANDARD=[
+  'Negru Lac','Negru Cioco','Negru Box','Negru Velur',
+  'Maro Lac','Maro Cioco','Maro Box',
+  'Alb Nappa','Bej','Gri Velur','Bleumarin',
+  'Camel','Cognac','Bordeaux','Verde Velur',
+];
+function filterColors(q){
+  const drop=document.getElementById('artColDrop');
+  if(!drop)return;
+  const filtered=q.trim()
+    ? CULORI_STANDARD.filter(c=>c.toLowerCase().includes(q.toLowerCase()))
+    : CULORI_STANDARD;
+  if(!filtered.length){drop.style.display='none';return;}
+  drop.style.display='block';
+  drop.innerHTML=filtered.map(c=>`
+    <div class="autocomplete-item" onclick="selectColor('${c}')">
+      <span class="autocomplete-code">${c}</span>
+    </div>`).join('');
+}
+function selectColor(c){
+  document.getElementById('artCol').value=c;
+  document.getElementById('artColDrop').style.display='none';
+}
+
+// ── AUTOSUGGESTION CULORI EDITARE ─────────────────────────────
+function filterEditColors(q){
+  const drop=document.getElementById('editColDrop');
+  if(!drop)return;
+  const filtered=q.trim()
+    ? CULORI_STANDARD.filter(c=>c.toLowerCase().includes(q.toLowerCase()))
+    : CULORI_STANDARD;
+  if(!filtered.length){drop.style.display='none';return;}
+  drop.style.display='block';
+  drop.innerHTML=filtered.map(c=>`
+    <div class="autocomplete-item" onclick="selectEditColor('${c}')">
+      <span class="autocomplete-code">${c}</span>
+    </div>`).join('');
+}
+function selectEditColor(c){
+  document.getElementById('editCol').value=c;
+  document.getElementById('editColDrop').style.display='none';
+}
+
+// ── CALCUL DISCOUNT ───────────────────────────────────────────
+function calcDiscount(pret,tip,val){
+  if(!tip||!val||!pret)return{pretFinal:pret,discount:0,discountText:''};
+  const v=parseFloat(val)||0;
+  if(tip==='ron'){
+    return{pretFinal:Math.max(0,pret-v),discount:v,discountText:'-'+v+' RON/per.'};
+  }else if(tip==='pct'){
+    const d=Math.round(pret*v/100*100)/100;
+    return{pretFinal:Math.max(0,pret-d),discount:d,discountText:'-'+v+'%'};
+  }
+  return{pretFinal:pret,discount:0,discountText:''};
+}
+
+// ── STOC RAPID LA COMANDĂ ─────────────────────────────────────
+let stockQuickLoaded=false,stockQuickOpen=false;
+async function toggleStockQuick(){
+  stockQuickOpen=!stockQuickOpen;
+  const list=document.getElementById('stockQuickList');
+  const btn=document.getElementById('stockQuickToggle');
+  list.style.display=stockQuickOpen?'block':'none';
+  btn.textContent=stockQuickOpen?'Ascunde ▴':'Arată ▾';
+  if(stockQuickOpen&&!stockQuickLoaded)await loadStockQuick();
+}
+async function loadStockQuick(){
+  const{data:baxuri}=await sb.from('stock_baxuri').select('*,products(code)').order('created_at',{ascending:false});
+  stockQuickLoaded=true;
+  const el=document.getElementById('stockQuickList');
+  if(!baxuri?.length){el.innerHTML='<div style="font-size:12px;color:#9E9890;padding:8px 0;text-align:center">Niciun bax în stoc.</div>';return;}
+  el.innerHTML=baxuri.map(b=>{
+    const model=b.products?.code?'Art. '+b.products.code:b.free_model||'—';
+    const entries=b.ponytage?Object.entries(b.ponytage).filter(([,q])=>q>0):[];
+    const pontajStr=entries.map(([s,q])=>s+'×'+q).join(' ');
+    const pontajJSON=JSON.stringify(b.ponytage||{});
+    return `<div style="background:#E8EFF6;border:1px solid rgba(47,74,99,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#111111">${model} · ${b.color||'—'}</div>
+        <div style="font-size:10px;color:#3A3530;font-family:monospace;margin-top:2px">${pontajStr}</div>
+        <div style="font-size:11px;color:#23394F;margin-top:2px">
+          ${(b.num_baxuri||1)>1?`<strong>${b.num_baxuri} baxuri</strong> · `:''}${b.total_pairs} per. ${b.price_per_pair?'· '+b.price_per_pair+' RON/per.':''}
+        </div>
+      </div>
+      <button onclick='quickAddFromStock("${model.replace(/"/g,'&quot;')}","${b.color||''}",${b.price_per_pair||0},${pontajJSON})' style="padding:8px 14px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0">
+        + Adaugă
+      </button>
+    </div>`;
+  }).join('');
+}
+function quickAddFromStock(model,color,price,pontaj){
+  document.getElementById('artModInput').value=model;
+  document.getElementById('artMod').value='';
+  document.getElementById('artCol').value=color;
+  document.getElementById('artPr').value=price||'';
+  const pt=typeof pontaj==='object'?pontaj:JSON.parse(pontaj||'{}');
+  agentSizeList=Object.keys(pt).sort((a,b)=>parseInt(a)-parseInt(b));
+  SZ.forEach(s=>{if(!agentSizeList.includes(s))agentSizeList.push(s);});
+  agentSizeList.sort((a,b)=>parseInt(a)-parseInt(b));
+  agentSizeList.forEach(s=>szV[s]=parseInt(pt[s])||0);
+  renderSz();
+  window._fromStock=true;
+  document.querySelector('#s2 .card').scrollIntoView({behavior:'smooth'});
+  showToast('📦 Din stoc — verifică și apasă Adaugă articol!');
+}
+
+// ── AUTOSUGGESTION MODEL ──────────────────────────────────────
+function filterModels(q){
+  const drop=document.getElementById('artModDrop');
+  const filtered=q.trim()?prods.filter(p=>p.code.toLowerCase().includes(q.toLowerCase())||p.name.toLowerCase().includes(q.toLowerCase())):prods;
+  if(!filtered.length){drop.style.display='none';return;}
+  drop.style.display='block';
+  drop.innerHTML=filtered.map(p=>`
+    <div class="autocomplete-item" onclick="selectModel('${p.id}','${p.code}')">
+      <span class="autocomplete-code">Art. ${p.code}</span>
+      <span class="autocomplete-name">${p.name}</span>
+    </div>`).join('');
+}
+function selectModel(id,code){
+  document.getElementById('artMod').value=id;
+  document.getElementById('artModInput').value='Art. '+code;
+  document.getElementById('artModDrop').style.display='none';
+  resetSz();
+}
+
+function filterEditModels(q){
+  const drop=document.getElementById('editModDrop');
+  const filtered=q.trim()?prods.filter(p=>p.code.toLowerCase().includes(q.toLowerCase())||p.name.toLowerCase().includes(q.toLowerCase())):prods;
+  if(!filtered.length){drop.style.display='none';return;}
+  drop.style.display='block';
+  drop.innerHTML=filtered.map(p=>`
+    <div class="autocomplete-item" onclick="selectEditModel('${p.id}','${p.code}')">
+      <span class="autocomplete-code">Art. ${p.code}</span>
+      <span class="autocomplete-name">${p.name}</span>
+    </div>`).join('');
+}
+function selectEditModel(id,code){
+  document.getElementById('editModId').value=id;
+  document.getElementById('editModInput').value='Art. '+code;
+  document.getElementById('editModDrop').style.display='none';
+  renderEditSzGrid();
+}
+
+// ── COMENZI ───────────────────────────────────────────────────
+async function loadOrders(){
+  const{data:orders,error}=await sb.from('orders')
+    .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
+      clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
+      order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,products(code,name))`)
+    .eq('agent_id',CU.id)
+    .order('created_at',{ascending:false});
+  if(error){console.error(error);return;}
+  allOrders=orders||[];
+  renderOrders(allOrders);
+  const active=allOrders.filter(o=>o.status!=='livrat'&&o.status!=='anulat').length;
+  document.getElementById('hBadge').textContent=active+' active';
+}
+
+function renderOrders(orders){
+  const list=document.getElementById('oList');
+  const empty=document.getElementById('oEmpty');
+  if(!orders.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  const gata=orders.find(o=>o.status==='finalizat');
+  const ntf=document.getElementById('ntf');
+  if(gata&&!dismissedNotif){
+    ntf.classList.add('show');
+    document.getElementById('ntfT').textContent='Comanda '+gata.order_no+' este gata de livrare';
+    document.getElementById('ntfS').textContent=(gata.clients?.company_name||gata.clients?.name||'')+' · '+gata.total_pairs+' perechi';
+  }else{ntf.classList.remove('show');}
+
+  const SC={
+    nou:              {l:'Comandă nouă',  c:'#23394F',b:'#E8EFF6'},
+    aprobat:          {l:'Aprobat',       c:'#8B6914',b:'#F6F0E5'},
+    modificat_pending:{l:'Aprobare modificări',c:'#7A5A00',b:'#FFF3CD'},
+    in_productie:     {l:'În producție',  c:'#8B6914',b:'#FAF3E0'},
+    finalizat:        {l:'Gata livrare',  c:'#1E4A2E',b:'#D8EEE0'},
+    livrat:           {l:'Livrat',        c:'#3A3530',b:'#EDEAE4'},
+    anulat:           {l:'Anulat',        c:'#7A2418',b:'#F5EAE8'},
+  };
+  const canEdit=s=>['nou','aprobat'].includes(s);
+
+  list.innerHTML=orders.map((o,i)=>{
+    const cfg=SC[o.status]||SC.nou;
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    const dl=o.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
+    const dc=dl===null?'#4A4540':dl<0?'#9C3A2B':dl<=3?'#B0892B':'#4A4540';
+    const dt=dl===null?'':dl<0?'+'+Math.abs(dl)+'z întârziere':dl===0?'Azi':dl+'z rămase';
+    const lines=o.order_lines||[];
+    const wasEdited=o.updated_at&&o.updated_at!==o.created_at;
+    const isPending=o.status==='modificat_pending';
+    const wasRejected=!!o.rejection_reason;
+
+    // Preview articole cu model+culoare
+    const preview=lines.length
+      ? lines.slice(0,3).map(l=>{
+          const hasDisc=l.notes&&l.notes.includes('[Discount:');
+          const modLabel=l.products?.code?'Art.'+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
+          return `<span class="art-tag">${modLabel} · ${l.color||'—'}${hasDisc?' 🏷':''}${l.from_stock?' 📦':''}  </span>`;
+        }).join('')
+        +(lines.length>3?`<span class="art-tag">+${lines.length-3}</span>`:'')
+      :'<span style="font-size:10px;color:#5A5248">—</span>';
+
+    // Detalii expandabile cu pontaj orizontal
+    const det=lines.map(l=>{
+      const entries=l.ponytage?Object.entries(l.ponytage):[];
+      const pontajHTML=entries.length?`
+        <div class="pontaj-table">
+          ${entries.map(([s,q])=>`<div class="pontaj-col"><div class="pontaj-sz">${s}</div><div class="pontaj-qty">${q}</div></div>`).join('')}
+        </div>`:'—';
+      const val=l.unit_price?` · ${(l.unit_price*l.total_pairs).toLocaleString('ro-RO')} RON`:'';
+      const hasDiscount=l.notes&&l.notes.includes('[Discount:');
+      const discountText=hasDiscount?l.notes.match(/\[Discount: ([^\]]+)\]/)?.[1]||'':'';
+      const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
+      const modLabel=l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
+      const stockBadge=l.from_stock?'<span style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 6px;border-radius:3px;margin-left:6px">📦 Din stoc</span>':'';
+      return `<div style="padding:10px 0;border-bottom:1px solid #EDE8DF">
+        <div style="font-size:13px;font-weight:700;color:#1B1B1B">${modLabel} · ${l.color||'—'} · ${l.total_pairs} per.${val}${stockBadge}</div>
+        ${hasDiscount?`<span class="discount-badge" style="margin:3px 0;display:inline-flex">${discountText}</span>`:''}
+        ${pontajHTML}
+        ${l.unit_price?`<div style="font-size:11px;color:#4A4540;margin-top:3px">${l.unit_price} RON/per.</div>`:''}
+        ${notesClean?`<div style="font-size:11px;color:#B08D57;margin-top:3px;font-style:italic">${notesClean}</div>`:''}
+      </div>`;
+    }).join('');
+
+    return `<div class="ocard${wasEdited?' modified':''}">
+      <div onclick="togDet(${i},'${o.id}')" style="cursor:pointer;user-select:none">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <div class="order-no">${o.order_no||'—'}</div>
+              ${wasEdited?'<span class="modified-badge">Modificat</span>':''}
+            </div>
+            <div class="order-client">${cl}</div>
+            <div class="art-preview">${preview}</div>
+            <div class="order-meta">
+              <span class="status-pill" style="color:${cfg.c};background:${cfg.b}">
+                <span class="status-dot" style="background:${cfg.c}"></span>${cfg.l}
+              </span>
+              <span style="font-size:11px;color:#4A4540">${o.total_pairs||0} per.</span>
+              <span style="font-size:11px;color:${dc};font-weight:${dl!==null&&dl<=3?600:400}">${dt}</span>
+            </div>
+            <div style="font-size:10px;color:#5A5248;margin-top:5px;letter-spacing:.3px">Livrare: ${dd}</div>
+          </div>
+          <svg id="arr${i}" style="width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-left:10px;margin-top:4px;transition:transform .2s;flex-shrink:0" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="expand-det" id="det${i}">
+        ${isPending?`<div style="background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:#7A5A00;margin-bottom:4px">⏳ Modificări în așteptare — necesită aprobare management</div>
+          <div style="font-size:11px;color:#8B6914">${(o.pending_changes?.changes||[]).map(c=>'• '+c).join('<br>')}</div>
+        </div>`:''}
+        ${wasRejected?`<div style="background:#F5EAE8;border:1.5px solid #9C3A2B;border-radius:8px;padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:#7A2418;margin-bottom:4px">✗ Modificări respinse de management</div>
+          <div style="font-size:11px;color:#9C3A2B">Motiv: ${o.rejection_reason}</div>
+        </div>`:''}
+        <div class="sec-label" style="margin-bottom:8px">Articole (${lines.length})</div>
+        ${det||'<div style="font-size:12px;color:#5A5248;padding:8px 0">Nicio linie.</div>'}
+        <!-- Mesaje comandă -->
+        <div id="omsg_${o.id}" style="margin-top:10px"></div>
+        <!-- Istoric modificări -->
+        <div id="ohist_${o.id}" style="margin-top:4px"></div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+          <button onclick="genPDF('${o.id}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #111111;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px">
+            Generează fișă client
+          </button>
+          <button onclick="goToMsgs('${o.id}','${(o.order_no||'').replace(/'/g,'')}')" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg style="width:13px;height:13px;stroke:#23394F;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Mesaje despre această comandă
+          </button>
+          ${canEdit(o.status)?`
+          <div style="display:flex;gap:8px">
+            <button onclick="openEditModal('${o.id}')" style="flex:1;padding:10px;border-radius:7px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+              Editează
+            </button>
+            <button onclick="openDelModal('${o.id}','${o.order_no||'—'}','${cl.replace(/'/g,"\\'")}')" style="flex:1;padding:10px;border-radius:7px;border:1.5px solid #9C3A2B;background:#F5EAE8;color:#9C3A2B;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+              Șterge
+            </button>
+          </div>`:`
+          <div style="padding:8px 12px;background:#F4F1EA;border-radius:6px;font-size:11px;color:#4A4540;text-align:center">
+            Comanda e în producție — pentru modificări contactează managementul
+          </div>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadOrderMsgs(orderId){
+  const el=document.getElementById('omsg_'+orderId);
+  if(!el)return;
+  const{data}=await sb.from('internal_messages')
+    .select(`id,from_user_id,message,reply,created_at,to_department,
+      user_profiles!internal_messages_from_user_id_fkey(full_name,role)`)
+    .eq('order_id',orderId)
+    .is('parent_id',null)
+    .order('created_at',{ascending:false})
+    .limit(5);
+  if(!data||!data.length){el.innerHTML='';return;}
+  el.innerHTML=`
+    <div style="border-top:1px solid #EDE8DF;padding-top:10px">
+      <div style="font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Mesaje comandă</div>
+      ${data.map(m=>{
+        const isMine=m.from_user_id===CU.id;
+        const sender=isMine?'Tu':m.user_profiles?.full_name||'Management';
+        return `<div style="background:${isMine?'#F4F1EA':'#E8EFF6'};border-radius:8px;padding:9px 12px;margin-bottom:6px">
+          <div style="font-size:10px;font-weight:700;color:#3A3530;margin-bottom:3px">${sender}</div>
+          <div style="font-size:12px;color:#111111;line-height:1.5">${m.message}</div>
+          ${m.reply?`<div style="margin-top:6px;padding:6px 8px;background:rgba(54,90,67,.1);border-radius:5px;font-size:11px;color:#1E4A2E"><strong>Răspuns:</strong> ${m.reply}</div>`:''}
+        </div>`;
+      }).join('')}
+      <a href="/agent-messages.html" style="font-size:11px;color:#B08D57;font-weight:700;text-decoration:none">Vezi toate mesajele →</a>
+    </div>`;
+}
+
+function dismissNotif(){dismissedNotif=true;document.getElementById('ntf').classList.remove('show');}
+
+function goToMsgs(orderId,orderNo){
+  window.location.href='/agent-messages.html?order='+orderId+'&no='+encodeURIComponent(orderNo);
+}
+
+function togDet(i, orderId){
+  const d=document.getElementById('det'+i);
+  const a=document.getElementById('arr'+i);
+  const open=d.style.display==='block';
+  d.style.display=open?'none':'block';
+  if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+  if(!open&&orderId){
+    loadOrderMsgs(orderId);
+    loadOrderHistory(orderId);
+  }
+}
+
+async function loadOrderHistory(orderId){
+  const el=document.getElementById('ohist_'+orderId);
+  if(!el)return;
+  const{data}=await sb.from('audit_log')
+    .select('id,new_data,created_at')
+    .eq('record_id',orderId).eq('action','update')
+    .order('created_at',{ascending:false}).limit(5);
+  if(!data||!data.length){el.innerHTML='';return;}
+  el.innerHTML=`
+    <div style="border-top:1px solid #EDE8DF;padding-top:10px;margin-top:4px">
+      <div style="font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Istoric modificări</div>
+      ${data.map(h=>{
+        const changes=(h.new_data?.action||'Modificare').split(' · ');
+        const t=new Date(h.created_at).toLocaleString('ro-RO');
+        const op=h.new_data?.operator||'—';
+        return `<div style="padding:8px 10px;background:#F4F1EA;border-radius:7px;margin-bottom:6px">
+          <div style="font-size:10px;color:#5A5248;font-family:monospace;margin-bottom:5px">${t} · ${op}</div>
+          ${changes.map(c=>`<div style="display:flex;gap:5px;align-items:baseline;margin-top:2px">
+            <span style="color:#B08D57;font-size:11px;flex-shrink:0">•</span>
+            <span style="font-size:12px;color:#111111;font-weight:500">${c}</span>
+          </div>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ── EDITARE COMPLETĂ ──────────────────────────────────────────
+async function openEditModal(id){
+  editOrderId=id;
+  showLov('Se încarcă comanda...');
+  const{data:o}=await sb.from('orders').select('*,clients!orders_client_id_fkey(*),order_lines(*,products(code,name))').eq('id',id).single();
+  const{data:history}=await sb.from('audit_log').select('*').eq('record_id',id).order('created_at',{ascending:false}).limit(10);
+  hideLov();
+
+  document.getElementById('editModalSub').textContent=(o.order_no||'—')+' · '+(o.clients?.company_name||o.clients?.name||'—');
+  document.getElementById('editTermen').value=o.delivery_preset||'10z';
+  document.getElementById('editPlata').value=o.plata||'30 zile';
+  document.getElementById('editNotes').value=o.notes||'';
+
+  // Populează articolele existente
+  editArts=o.order_lines.map(l=>({
+    id:l.id,
+    product_id:l.product_id,
+    code:l.products?.code||l.free_model||(l.color?'['+l.color+']':'—'),
+    free_model:l.free_model||null,
+    color:l.color||'',
+    ponytage:l.ponytage||{},
+    total_pairs:l.total_pairs||0,
+    unit_price:l.unit_price||0,
+    notes:l.notes||'',
+    from_stock:l.from_stock||false,
+    isNew:false,
+  }));
+  renderEditArticles();
+
+  // Istoric
+  const histSection=document.getElementById('editHistorySection');
+  const histList=document.getElementById('editHistoryList');
+  if(history&&history.length){
+    histSection.style.display='block';
+    histList.innerHTML=history.map(h=>`
+      <div class="history-item">
+        <div class="history-time">${new Date(h.created_at).toLocaleString('ro-RO')} · ${h.new_data?.operator||'Agent'}</div>
+        <div class="history-text" style="margin-top:3px">
+          ${(h.new_data?.action||'Modificare').split(' · ').map(c=>`<div style="display:flex;gap:6px;align-items:baseline;margin-top:2px"><span style="color:#B08D57;font-size:10px">•</span><span>${c}</span></div>`).join('')}
+        </div>
+      </div>`).join('');
+  }else{histSection.style.display='none';}
+
+  // Reset câmpuri de adăugare
+  SZ.forEach(s=>editSzV[s]=0);
+  document.getElementById('editModInput').value='';
+  document.getElementById('editModId').value='';
+  document.getElementById('editCol').value='';
+  document.getElementById('editPret').value='';
+  renderEditSzGrid();
+
+  document.getElementById('editModal').classList.add('show');
+}
+
+function closeEditModal(){document.getElementById('editModal').classList.remove('show');editOrderId=null;editArts=[];}
+
+function renderEditArticles(){
+  const div=document.getElementById('editArticlesList');
+  if(!editArts.length){div.innerHTML='<div style="font-size:12px;color:#4A4540;padding:8px 0">Niciun articol. Adaugă mai jos.</div>';return;}
+  div.innerHTML=editArts.map((a,i)=>`
+    <div style="background:#fff;border:1.5px solid ${a.from_stock?'rgba(47,74,99,.4)':'#DDD7CE'};border-radius:8px;padding:12px 14px;margin-bottom:8px;${a.from_stock?'background:#F0F6FF':''}">
+      ${a.from_stock?'<div style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📦 Din stoc — nu se poate modifica</div>':''}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:#111111">${a.product_id?'Art. '+a.code:a.code} · ${a.color}</div>
+          <div style="font-size:11px;color:#3A3530;margin-top:2px;font-weight:500">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
+          <div style="font-size:10px;color:#4A4540;margin-top:2px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
+        </div>
+        ${!a.from_stock?`<div style="display:flex;gap:6px;flex-shrink:0">
+          <button onclick="editExistingArt(${i})" style="background:#F6F0E5;border:1px solid #B08D57;border-radius:5px;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px;font-family:'Inter',sans-serif">Editează</button>
+          <button onclick="removeEditArt(${i})" style="background:#F5EAE8;border:1px solid #9C3A2B;border-radius:5px;color:#7A2418;font-size:14px;cursor:pointer;padding:3px 9px;font-family:'Inter',sans-serif">×</button>
+        </div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function removeEditArt(i){editArts.splice(i,1);renderEditArticles();}
+
+// Editare articol existent — îl încarcă în formular și îl scoate din listă
+let editingArtIdx=null;
+function editExistingArt(i){
+  const a=editArts[i];
+  editingArtIdx=i;
+  document.getElementById('editModId').value=a.product_id;
+  document.getElementById('editModInput').value='Art. '+a.code;
+  document.getElementById('editCol').value=a.color;
+  document.getElementById('editPret').value=a.unit_price||'';
+  SZ.forEach(s=>editSzV[s]=a.ponytage[s]||0);
+  renderEditSzGrid();
+  // Scoate temporar din listă (se readaugă la salvare)
+  editArts.splice(i,1);
+  renderEditArticles();
+  document.getElementById('editAddBtn').textContent='Salvează articolul';
+  showToast('Editezi Art. '+a.code+' — modifică și salvează');
+}
+
+function renderEditSzGrid(){
+  const g=document.getElementById('editSzGrid');if(!g)return;
+  g.innerHTML=SZ.map(s=>`
+    <div class="size-cell">
+      <div class="size-nr">Nr. ${s}</div>
+      <div class="size-controls">
+        <button class="size-btn" onclick="adjEditSz('${s}',-1)">−</button>
+        <span class="size-val" id="esv_${s}">${editSzV[s]}</span>
+        <button class="size-btn" onclick="adjEditSz('${s}',1)">+</button>
+      </div>
+    </div>`).join('');
+}
+function adjEditSz(s,d){editSzV[s]=Math.max(0,editSzV[s]+d);document.getElementById('esv_'+s).textContent=editSzV[s];}
+function setEditStd(){SZ.forEach(s=>editSzV[s]={'39':1,'40':2,'41':3,'42':3,'43':2,'44':1}[s]||0);renderEditSzGrid();}
+
+function addEditArticle(){
+  const mid=document.getElementById('editModId').value;
+  const modText=document.getElementById('editModInput').value.trim();
+  const col=document.getElementById('editCol').value.trim();
+  const pr=parseFloat(document.getElementById('editPret').value)||0;
+  const prod=mid?prods.find(p=>p.id===mid):null;
+  if(!modText||!col){showToast('Completează modelul și culoarea!');return;}
+  const pt={};let tot=0;SZ.forEach(s=>{if(editSzV[s]>0){pt[s]=editSzV[s];tot+=editSzV[s];}});
+  if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
+  const code=prod?.code||modText;
+  editArts.push({
+    product_id:mid||null,
+    free_model:mid?null:modText,
+    code,color:col,ponytage:pt,total_pairs:tot,unit_price:pr,notes:''
+  });
+  document.getElementById('editModInput').value='';document.getElementById('editModId').value='';
+  document.getElementById('editCol').value='';document.getElementById('editPret').value='';
+  SZ.forEach(s=>editSzV[s]=0);renderEditSzGrid();renderEditArticles();
+  document.getElementById('editAddBtn').textContent='+ Adaugă articol';
+  editingArtIdx=null;
+  showToast('Articol salvat!');
+}
+
+async function saveEdit(){
+  if(!editOrderId)return;
+  // Dacă există un articol în curs de editare, îl salvăm automat
+  if(editingArtIdx!==null){
+    addEditArticle();
+    // Dacă tot e în editare după addEditArticle (eroare validare), stop
+    if(editingArtIdx!==null)return;
+  }
+  const termen=document.getElementById('editTermen').value;
+  const plata=document.getElementById('editPlata').value;
+  const notes=document.getElementById('editNotes').value.trim();
+  const tp=editArts.reduce((s,a)=>s+a.total_pairs,0);
+  const tv=editArts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
+
+  // Construiește descrierea detaliată a modificărilor
+  const{data:original}=await sb.from('orders').select('*,order_lines(*,products(code))').eq('id',editOrderId).single();
+  const changes=[];
+  const tl={'5z':'5 zile','10z':'10 zile','15z':'15 zile','30z':'30 zile','prelungit':'Prelungit'};
+  if(original.delivery_preset!==termen)
+    changes.push('Termen: '+(tl[original.delivery_preset]||original.delivery_preset)+' → '+(tl[termen]||termen));
+  if(original.plata!==plata)
+    changes.push('Plată: '+original.plata+' → '+plata);
+  if((original.notes||'')!==notes)
+    changes.push('Observații: '+(original.notes||'—')+' → '+(notes||'—'));
+
+  const origLines=(original.order_lines||[]).filter(l=>!l.from_stock);
+  const editableArts=editArts.filter(a=>!a.from_stock);
+  if(origLines.length!==editableArts.length){
+    changes.push('Articole: '+origLines.length+' → '+editableArts.length);
+  }else{
+    editableArts.forEach((a,i)=>{
+      const orig=origLines[i];if(!orig)return;
+      if(orig.color!==a.color)
+        changes.push('Art. '+(a.product_id?a.code:a.free_model||a.code)+': culoare '+orig.color+' → '+a.color);
+      if(orig.total_pairs!==a.total_pairs)
+        changes.push('Art. '+(a.product_id?a.code:a.free_model||a.code)+': perechi '+orig.total_pairs+' → '+a.total_pairs);
+      if((orig.unit_price||0)!==(a.unit_price||0))
+        changes.push('Art. '+(a.product_id?a.code:a.free_model||a.code)+': preț '+(orig.unit_price||0)+' → '+(a.unit_price||0)+' RON/per.');
+      const origPt=JSON.stringify(orig.ponytage||{});
+      const newPt=JSON.stringify(a.ponytage||{});
+      if(origPt!==newPt){
+        const ptStr=Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join(' ');
+        changes.push('Art. '+(a.product_id?a.code:a.free_model||a.code)+': pontaj modificat → '+ptStr);
+      }
+    });
+  }
+  if(!changes.length)changes.push('Modificare generală');
+
+  showLov('Salvează modificările...');
+
+  // Salvează modificările ca pending — necesită aprobare management
+  const pendingData={
+    changes,
+    termen,plata,notes,
+    arts:editArts.map(a=>({
+      product_id:a.product_id,free_model:a.free_model||null,color:a.color,
+      ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null,
+      from_stock:a.from_stock||false,
+    })),
+    operator:CP?.full_name||'Agent',
+    timestamp:new Date().toISOString(),
+  };
+
+  await sb.from('orders').update({
+    status:'modificat_pending',
+    pending_changes:pendingData,
+    updated_at:new Date().toISOString(),
+  }).eq('id',editOrderId);
+
+  // Audit log
+  await sb.from('audit_log').insert({
+    table_name:'orders',record_id:editOrderId,action:'update',
+    new_data:{action:changes.join(' · '),operator:CP?.full_name||'Agent',pending:true},
+    done_by:CU.id,
+  });
+
+  // Notificare management
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:'management',
+    order_id:editOrderId,
+    subject:'Modificare în așteptare — '+(original.order_no||''),
+    message:(CP?.full_name||'Agent')+' a modificat comanda '+(original.order_no||'')+'. Modificări: '+changes.join(', '),
+    priority:'normal',is_read:false,
+  });
+
+  hideLov();
+  closeEditModal();
+  showToast('Modificările sunt trimise la management pentru aprobare.');
+  await loadOrders();
+}
+
+// ── ȘTERGERE ──────────────────────────────────────────────────
+function openDelModal(id,orderNo,client){
+  delOrderId=id;
+  document.getElementById('delModalSub').textContent=orderNo+' · '+client;
+  document.getElementById('delModal').classList.add('show');
+}
+function closeDelModal(){document.getElementById('delModal').classList.remove('show');delOrderId=null;}
+async function confirmDelete(){
+  if(!delOrderId)return;
+  showLov('Se șterge...');
+  await sb.from('order_lines').delete().eq('order_id',delOrderId);
+  await sb.from('orders').delete().eq('id',delOrderId);
+  hideLov();closeDelModal();
+  showToast('Comanda a fost ștearsă.');
+  await loadOrders();
+}
+
+// ── PDF FIȘĂ CLIENT ───────────────────────────────────────────
+async function genPDF(oid){
+  showLov('Se generează fișa...');
+  const{data:o}=await sb.from('orders').select('*,clients!orders_client_id_fkey(*),order_lines(*,products(code,name))').eq('id',oid).single();
+  hideLov();
+  if(!o){showToast('Eroare!');return;}
+  const cl=o.clients?.company_name||o.clients?.name||'—';
+  const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+  const azi=new Date().toLocaleDateString('ro-RO');
+  const tp=o.order_lines.reduce((s,l)=>s+l.total_pairs,0);
+  const tv=o.order_lines.reduce((s,l)=>s+(l.unit_price||0)*l.total_pairs,0);
+
+  const artRows=o.order_lines.map((l,i)=>{
+    const entries=l.ponytage?Object.entries(l.ponytage):[];
+    const cellStyle='border:1px solid #ddd;padding:5px 8px;text-align:center;';
+    const sizeRow=entries.map(([s])=>`<td style="${cellStyle}font-size:10px;color:#888;font-weight:700">${s}</td>`).join('');
+    const qtyRow=entries.map(([,q])=>`<td style="${cellStyle}font-size:14px;font-weight:700;color:#1A1814">${q}</td>`).join('');
+    const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
+    const notesCleanPDF=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
+    return `<tr>
+      <td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top">
+        <div style="font-weight:700;font-size:13px">${l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—')}</div>
+        <div style="font-size:13px;color:#444;margin-top:2px">${l.color||'—'}</div>
+        ${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}
+        ${notesCleanPDF?`<div style="font-size:11px;color:#B08D57;margin-top:2px;font-weight:600">Obs: ${notesCleanPDF}</div>`:''}
+      </td>
+      <td style="border:1px solid #ddd;padding:6px">
+        <table style="border-collapse:collapse;width:100%">
+          <tr>${sizeRow}</tr>
+          <tr>${qtyRow}</tr>
+        </table>
+      </td>
+      <td style="border:1px solid #ddd;padding:10px 12px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td>
+      <td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:13px">${val}</td>
+    </tr>`;
+  }).join('');
+
+  const html=`<html><head><meta charset="UTF-8"><style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:28px;max-width:680px;margin:0 auto}
+    h1{font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:3px}
+    .sub{font-size:10px;color:#aaa;margin-bottom:24px;letter-spacing:1px;text-transform:uppercase}
+    .row{display:flex;gap:40px;margin-bottom:24px}.col{flex:1}
+    .lbl{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;font-weight:700}
+    .val{font-size:14px;font-weight:700}
+    .meta{font-size:11px;color:#888;margin-top:3px}
+    table.main{width:100%;border-collapse:collapse;margin:18px 0}
+    table.main th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ddd;text-align:left;background:#f9f9f9;font-weight:700}
+    .footer{margin-top:48px;display:flex;gap:60px}
+    .sig{border-top:1.5px solid #1A1814;padding-top:8px;font-size:10px;color:#888;width:220px;min-height:50px}
+    @media print{.noprint{display:none}}
+  </style></head><body>
+  <h1>SILESCO</h1>
+  <div class="sub">Fișă de Comandă · ${o.order_no||'—'} · ${azi}</div>
+  <div class="row">
+    <div class="col">
+      <div class="lbl">Client</div><div class="val">${cl}</div>
+      ${o.clients?.cui?`<div class="meta">CUI: ${o.clients.cui}</div>`:''}
+      ${o.clients?.delivery_address?`<div class="meta">Livrare: ${o.clients.delivery_address}</div>`:''}
+      ${o.clients?.phone?`<div class="meta">Tel: ${o.clients.phone}</div>`:''}
+    </div>
+    <div class="col">
+      <div class="lbl">Termen livrare</div><div class="val">${dd}</div>
+      <div class="meta">Plată: ${o.plata||'—'}</div>
+      <div class="meta">Agent: ${CP?.full_name||'—'}</div>
+    </div>
+  </div>
+  <table class="main">
+    <thead><tr>
+      <th style="width:32%">Model / Culoare</th>
+      <th>Pontaj pe mărimi</th>
+      <th style="width:60px;text-align:center">Total</th>
+      <th style="width:110px;text-align:right">Valoare</th>
+    </tr></thead>
+    <tbody>${artRows}</tbody>
+    <tfoot><tr style="background:#f5f2ee">
+      <td colspan="2" style="border:1px solid #ddd;padding:10px 12px;font-weight:700;font-size:13px">TOTAL COMANDĂ</td>
+      <td style="border:1px solid #ddd;padding:10px;text-align:center;font-weight:700;font-size:16px">${tp}</td>
+      <td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700">${tv.toLocaleString('ro-RO')} RON</td>
+    </tr></tfoot>
+  </table>
+  ${o.notes?`<div style="padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;font-size:12px;margin-bottom:16px;line-height:1.5"><strong>Observații:</strong> ${o.notes}</div>`:''}
+  <div style="font-size:10px;color:#aaa;margin-bottom:28px;line-height:1.7;text-transform:uppercase;letter-spacing:.5px">Prin semnarea prezentei fișe, clientul confirmă comanda și condițiile de livrare agreate cu SILESCO SRL.</div>
+  <div class="footer">
+    <div class="sig">Persoana care plasează comanda</div>
+    <div class="sig">SILESCO SRL · ${CP?.full_name||'—'}</div>
+  </div>
+  <br><button class="noprint" onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#111111;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:700;letter-spacing:.5px">Printează / Salvează PDF</button>
+  </body></html>`;
+  const w=window.open('','_blank','width=720,height=960');
+  w.document.write(html);w.document.close();
+}
+
+// ── NEW ORDER ─────────────────────────────────────────────────
+function startNew(){
+  selClient=null;curTermen='10z';arts=[];agentSizeList=[...SZ];SZ.forEach(s=>szV[s]=0);
+  stockQuickLoaded=false;stockQuickOpen=false;
+  ['cSearch','artCol','artPr','artObs','ordObs','artModInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('cRes').innerHTML='';
+  document.getElementById('cSel').style.display='none';
+  document.getElementById('ncForm').style.display='none';
+  document.getElementById('ncBtn').style.display='none';
+  document.getElementById('s0next').disabled=true;
+  document.getElementById('succSc').classList.remove('show');
+  const am=document.getElementById('artMod');if(am)am.value='';
+  const amd=document.getElementById('artModDrop');if(amd)amd.style.display='none';
+  const sql=document.getElementById('stockQuickList');if(sql)sql.style.display='none';
+  const sqb=document.getElementById('stockQuickToggle');if(sqb)sqb.textContent='Arată ▾';
+  renderSz();goStep(0);
+}
+
+function goStep(n){
+  for(let i=0;i<=3;i++){
+    document.getElementById('s'+i).style.display=i===n?'block':'none';
+    document.getElementById('sb'+i).classList.toggle('active',i<=n);
+    document.getElementById('sn'+i).classList.toggle('active',i<=n);
+  }
+  document.getElementById('succSc').classList.remove('show');
+  if(n===2)renderArtList();
+  if(n===3)renderSum();
+}
+
+// ── CLIENT ────────────────────────────────────────────────────
+let sTimer=null;
+async function searchClients(q){
+  clearTimeout(sTimer);
+  const res=document.getElementById('cRes');
+  const btn=document.getElementById('ncBtn');
+  if(!q.trim()){res.innerHTML='';btn.style.display='none';return;}
+  sTimer=setTimeout(async()=>{
+    const{data}=await sb.from('clients').select('id,name,company_name,phone,cui,delivery_address').or(`name.ilike.%${q}%,company_name.ilike.%${q}%`).limit(6);
+    if(!data?.length){res.innerHTML=`<div style="font-size:12px;color:#4A4540;padding:8px 0">Niciun client găsit.</div>`;btn.style.display='block';return;}
+    btn.style.display='block';
+    res.innerHTML=data.map(c=>`
+      <div class="client-result" onclick='selC(${JSON.stringify(c)})'>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1B1B1B">${c.company_name||c.name}</div>
+          <div style="font-size:11px;color:#4A4540;margin-top:2px">${c.phone||''} ${c.cui?'· CUI: '+c.cui:''}</div>
+        </div>
+        <svg style="width:16px;height:16px;stroke:#B08D57;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`).join('');
+  },300);
+}
+function selC(c){
+  selClient=c;
+  document.getElementById('cRes').innerHTML='';document.getElementById('cSearch').value='';
+  document.getElementById('ncBtn').style.display='none';document.getElementById('ncForm').style.display='none';
+  document.getElementById('cSel').style.display='block';
+  document.getElementById('cSelN').textContent=c.company_name||c.name;
+  document.getElementById('cSelM').textContent=[c.phone,c.cui?'CUI: '+c.cui:'',c.delivery_address].filter(Boolean).join(' · ');
+  document.getElementById('s0next').disabled=false;
+}
+function clearClient(){selClient=null;document.getElementById('cSel').style.display='none';document.getElementById('s0next').disabled=true;}
+function toggleNCF(s){document.getElementById('ncForm').style.display=s?'block':'none';document.getElementById('ncBtn').style.display=s?'none':'block';}
+async function saveNewClient(){
+  const co=document.getElementById('nc_co').value.trim();
+  if(!co){showToast('Completează numele companiei!');return;}
+  showLov('Salvează client...');
+  const{data,error}=await sb.from('clients').insert({
+    company_name:co,name:document.getElementById('nc_nm').value.trim()||co,
+    cui:document.getElementById('nc_cui').value.trim(),phone:document.getElementById('nc_ph').value.trim(),
+    delivery_address:document.getElementById('nc_ad').value.trim(),agent_id:CU.id,
+  }).select().single();
+  hideLov();
+  if(error){showToast('Eroare: '+error.message);return;}
+  selC(data);toggleNCF(false);showToast('Client salvat!');
+}
+
+// ── TERMEN ────────────────────────────────────────────────────
+function selTermen(v,el){curTermen=v;document.querySelectorAll('.termen-card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+function calcDD(t){const d=new Date();const z={'5z':5,'10z':10,'15z':15,'30z':30,'prelungit':90};d.setDate(d.getDate()+(z[t]||30));return d.toISOString().split('T')[0];}
+
+// ── MĂRIMI ────────────────────────────────────────────────────
+let agentSizeList=[...SZ]; // lista dinamică de mărimi pentru articolul curent
+
+function resetSz(){agentSizeList=[...SZ];SZ.forEach(s=>szV[s]=0);renderSz();}
+function setStd(){agentSizeList=[...SZ];szV={'39':1,'40':2,'41':3,'42':3,'43':2,'44':1};renderSz();showToast('Pontaj standard aplicat!');}
+function renderSz(){
+  const g=document.getElementById('szGrid');if(!g)return;
+  g.innerHTML=agentSizeList.map(s=>`<div class="size-cell"><div class="size-nr">Nr. ${s}</div><div class="size-controls"><button class="size-btn" onclick="adjSz('${s}',-1)">−</button><span class="size-val" id="sv_${s}">${szV[s]||0}</span><button class="size-btn" onclick="adjSz('${s}',1)">+</button></div></div>`).join('');
+}
+function adjSz(s,d){szV[s]=Math.max(0,(szV[s]||0)+d);document.getElementById('sv_'+s).textContent=szV[s];}
+function addCustomSizeAgent(){
+  const n=prompt('Introdu mărimea (ex: 37, 45, 46):');
+  if(!n)return;
+  const c=n.trim();
+  if(!c||agentSizeList.includes(c)){showToast('Mărime invalidă sau există deja!');return;}
+  agentSizeList.push(c);
+  agentSizeList.sort((a,b)=>parseInt(a)-parseInt(b));
+  szV[c]=0;
+  renderSz();
+  showToast('Mărimea '+c+' adăugată!');
+}
+
+// ── ARTICOLE ──────────────────────────────────────────────────
+function addArt(){
+  const midRaw=document.getElementById('artMod').value;
+  const isValidUUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(midRaw);
+  const mid=isValidUUID?midRaw:null;
+  const modText=document.getElementById('artModInput').value.trim();
+  const col=document.getElementById('artCol').value.trim();
+  const pr=parseFloat(document.getElementById('artPr').value)||0;
+  const obs=document.getElementById('artObs').value.trim();
+  const discTip=document.getElementById('artDiscountTip').value;
+  const discVal=document.getElementById('artDiscountVal').value;
+  // Model poate fi din catalog SAU text liber — nu blocăm
+  if(!modText){showToast('Scrie modelul!');return;}
+  if(!col){showToast('Scrie culoarea sau pielea!');return;}
+  const pt={};let tot=0;agentSizeList.forEach(s=>{if(szV[s]>0){pt[s]=szV[s];tot+=szV[s];}});
+  if(!tot){showToast('Adaugă cel puțin o pereche!');return;}
+  const prod=mid?prods.find(p=>p.id===mid):null;
+  const code=prod?.code||modText; // dacă nu e din catalog, folosim textul liber
+  const{pretFinal,discount,discountText}=calcDiscount(pr,discTip,discVal);
+  const fromStock=window._fromStock||false;
+  window._fromStock=false;
+  const noteBackup='['+code+' · '+col+']';
+  const finalNotes=obs?noteBackup+' '+obs:noteBackup;
+  arts.push({
+    product_id:mid||null,
+    free_model:mid?null:modText,
+    code,color:col,
+    ponytage:pt,total_pairs:tot,
+    unit_price:pr,pret_final:pretFinal,
+    discount,discount_tip:discTip,
+    discount_val:parseFloat(discVal)||0,
+    discount_text:discountText,
+    notes:finalNotes,
+    from_stock:fromStock,
+  });
+  document.getElementById('artCol').value='';
+  document.getElementById('artPr').value='';
+  document.getElementById('artObs').value='';
+  document.getElementById('artMod').value='';
+  document.getElementById('artModInput').value='';
+  document.getElementById('artDiscountTip').value='';
+  document.getElementById('artDiscountVal').value='';
+  document.getElementById('artModDrop').style.display='none';
+  document.getElementById('artColDrop').style.display='none';
+  resetSz();renderArtList();
+  document.getElementById('s2next').disabled=arts.length===0;
+  showToast('Art. '+code+' adăugat!');
+}
+function renderArtList(){
+  document.getElementById('artCnt').textContent='Articole: '+arts.length;
+  document.getElementById('s2next').disabled=arts.length===0;
+  document.getElementById('artList').innerHTML=arts.map((a,i)=>`
+    <div class="card card-accent" style="margin-bottom:8px;border-left-color:${a.from_stock?'#2F4A63':'#B08D57'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          ${a.from_stock?'<div style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">📦 Din stoc — nu produce</div>':''}
+          <div style="font-size:14px;font-weight:700;color:#1B1B1B">${a.product_id?'Art. '+a.code:a.code} · ${a.color}</div>
+          <div style="font-size:11px;color:#4A4540;margin-top:2px">
+            ${a.total_pairs} per.
+            ${a.unit_price?` · ${a.unit_price} RON/per.`:''}
+            ${a.discount?` → <strong style="color:#365A43">${a.pret_final} RON/per.</strong>`:''}
+          </div>
+          ${a.discount_text?`<span class="discount-badge" style="margin-top:4px;display:inline-flex">${a.discount_text}</span>`:''}
+          <div style="font-size:10px;color:#5A5248;margin-top:3px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
+        </div>
+        <button onclick="remArt(${i})" style="background:none;border:none;color:#5A5248;font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0">×</button>
+      </div>
+    </div>`).join('');
+}
+function remArt(i){arts.splice(i,1);renderArtList();}
+
+// ── SUMAR ─────────────────────────────────────────────────────
+function renderSum(){
+  const tl={'5z':'5 zile','10z':'10 zile','15z':'15 zile','30z':'30 zile','prelungit':'Prelungit'};
+  document.getElementById('sumCl').textContent=selClient?.company_name||selClient?.name||'—';
+  document.getElementById('sumT').textContent='Termen: '+tl[curTermen]+' · Plată: '+document.getElementById('plata').value;
+  const tp=arts.reduce((s,a)=>s+a.total_pairs,0);
+  const tv=arts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
+  document.getElementById('sumP').textContent=tp+' per.';
+  document.getElementById('sumV').textContent=tv.toLocaleString('ro-RO')+' RON';
+  document.getElementById('sumArt').innerHTML=arts.map(a=>`
+    <div class="card" style="margin-bottom:6px;padding:12px 14px">
+      <div style="font-size:13px;font-weight:700;color:#1B1B1B">${a.product_id?'Art. '+a.code:a.code} · ${a.color}${a.from_stock?' <span style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:1px 6px;border-radius:3px;margin-left:4px">📦 Stoc</span>':''}</div>
+      <div style="font-size:11px;color:#4A4540;margin-top:2px">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div>
+      <div style="font-size:10px;color:#5A5248;margin-top:2px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
+    </div>`).join('');
+}
+
+// ── SAVE ORDER ────────────────────────────────────────────────
+async function saveOrder(){
+  document.getElementById('saveBtn').disabled=true;
+  showLov('Salvează comanda...');
+  const tp=arts.reduce((s,a)=>s+a.total_pairs,0);
+  const tv=arts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
+  const{data:ord,error:ordErr}=await sb.from('orders').insert({
+    client_id:selClient.id,agent_id:CU.id,status:'nou',
+    delivery_date:calcDD(curTermen),delivery_preset:curTermen,
+    plata:document.getElementById('plata').value,
+    total_pairs:tp,total_value:tv,
+    notes:document.getElementById('ordObs').value.trim(),
+  }).select().single();
+  if(ordErr){hideLov();showToast('Eroare: '+ordErr.message);document.getElementById('saveBtn').disabled=false;return;}
+  await sb.from('order_lines').insert(arts.map(a=>({
+    order_id:ord.id,
+    product_id:a.product_id||null,
+    free_model:a.free_model||null,
+    color:a.color||null,
+    ponytage:a.ponytage,
+    total_pairs:a.total_pairs,
+    unit_price:a.pret_final||a.unit_price||null,
+    from_stock:a.from_stock||false,
+    notes:a.notes||null,
+  })));
+  hideLov();
+  document.getElementById('succPDF').onclick=()=>genPDF(ord.id);
+  for(let i=0;i<=3;i++)document.getElementById('s'+i).style.display='none';
+  document.getElementById('succSc').classList.add('show');
+  document.getElementById('succNo').textContent=ord.order_no||ord.id.slice(0,8);
+  document.getElementById('saveBtn').disabled=false;
+}
+
+// ── MESAGERIE AGENT ───────────────────────────────────────────
+async function loadAgentMessages(){
+  const{data}=await sb.from('internal_messages')
+    .select(`id,from_user_id,to_department,order_id,message,subject,priority,is_read,created_at,parent_id,
+      user_profiles!internal_messages_from_user_id_fkey(full_name,role),
+      orders(order_no)`)
+    .or(`to_department.eq.agent,from_user_id.eq.${CU.id}`)
+    .is('parent_id',null)
+    .order('created_at',{ascending:false})
+    .limit(30);
+  const msgs=data||[];
+  // Badge
+  const unread=msgs.filter(m=>!m.is_read&&m.from_user_id!==CU.id).length;
+  const badge=document.getElementById('agentMsgBadge');
+  if(unread>0){badge.style.display='block';badge.textContent=unread;}else{badge.style.display='none';}
+  // Render
+  const el=document.getElementById('agentMsgList');
+  if(!msgs.length){el.innerHTML='<div style="text-align:center;padding:32px;color:#5A5248;font-size:13px;font-weight:500">Niciun mesaj.</div>';return;}
+  el.innerHTML=msgs.map(m=>{
+    const isMine=m.from_user_id===CU.id;
+    const isUnread=!m.is_read&&!isMine;
+    const sender=isMine?'Tu (→ Management)':m.user_profiles?.full_name||'Management';
+    const t=new Date(m.created_at);
+    const timeStr=t.toLocaleDateString('ro-RO')===new Date().toLocaleDateString('ro-RO')
+      ?t.toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'})
+      :t.toLocaleDateString('ro-RO');
+    const isUrgent=m.priority==='urgent';
+    return `<div style="background:#fff;border:${isUnread?'1.5px solid #B08D57':'1px solid #DDD7CE'};border-radius:10px;padding:14px;margin-bottom:8px;${isUnread?'border-left:3px solid #9C3A2B':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          ${m.orders?`<div style="font-size:9px;font-weight:700;color:#8B6914;font-family:'Courier New',monospace;margin-bottom:3px">${m.orders.order_no}</div>`:''}
+          <div style="font-size:12px;font-weight:700;color:${isUrgent?'#7A2418':'#111111'}">${sender}${isUrgent?' ⚡':''}</div>
+        </div>
+        <div style="font-size:10px;color:#5A5248">${timeStr}</div>
+      </div>
+      <div style="font-size:13px;color:#111111;line-height:1.5;margin-bottom:${m.reply?8:0}px">${m.message}</div>
+      ${m.reply?`<div style="background:#F4F1EA;border-radius:6px;padding:10px 12px;margin-top:8px"><div style="font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Răspuns Management</div><div style="font-size:12px;color:#111111">${m.reply}</div></div>`:''}
+      ${!isMine&&!m.reply?`<button onclick="openAgentReply('${m.id}')" style="margin-top:10px;padding:6px 14px;border-radius:6px;border:1.5px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Răspunde</button>`:''}
+    </div>`;
+  }).join('');
+  // Marchează necitite ca citite
+  const unreadIds=msgs.filter(m=>!m.is_read&&m.from_user_id!==CU.id).map(m=>m.id);
+  if(unreadIds.length)await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).in('id',unreadIds);
+}
+
+function openNewAgentMsg(orderId=null,orderNo=null){
+  // Populează lista comenzi
+  const sel=document.getElementById('amOrderSel');
+  sel.innerHTML='<option value="">Fără comandă specifică</option>';
+  (allOrders||[]).forEach(o=>{
+    const cl=o.clients?.company_name||o.clients?.name||'';
+    const opt=document.createElement('option');
+    opt.value=o.id;
+    opt.textContent=(o.order_no||'—')+' · '+cl;
+    if(o.id===orderId)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  document.getElementById('amText').value='';
+  document.getElementById('amDept').value='management';
+  if(orderId){
+    document.getElementById('amTitle').textContent='Mesaj despre '+orderNo;
+    document.getElementById('amSub').textContent='Comanda selectată automat';
+  }else{
+    document.getElementById('amTitle').textContent='Mesaj nou';
+    document.getElementById('amSub').textContent='Trimite un mesaj către un departament';
+  }
+  document.getElementById('agentMsgModal').classList.add('show');
+}
+function closeAgentMsgModal(){document.getElementById('agentMsgModal').classList.remove('show');}
+
+async function sendAgentMsg(){
+  const text=document.getElementById('amText').value.trim();
+  const orderId=document.getElementById('amOrderSel').value||null;
+  const dept=document.getElementById('amDept').value;
+  if(!text){showToast('Scrie mesajul!');return;}
+  showLov('Se trimite...');
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:dept,
+    order_id:orderId,message:text,priority:'normal',is_read:false
+  });
+  hideLov();closeAgentMsgModal();
+  showToast('Mesaj trimis!');
+  loadAgentMessages();
+}
+
+async function openAgentReply(parentId){
+  const text=prompt('Răspunsul tău:');
+  if(!text)return;
+  showLov('Se trimite...');
+  await sb.from('internal_messages').update({
+    reply:text,
+    replied_at:new Date().toISOString()
+  }).eq('id',parentId);
+  hideLov();showToast('Răspuns trimis!');loadAgentMessages();
+}
+
+async function loadAgentMsgBadge(){
+  const{data}=await sb.from('internal_messages').select('id').eq('to_department','agent').eq('is_read',false);
+  const n=(data||[]).length;
+  const badge=document.getElementById('agentMsgBadge');
+  if(badge){if(n>0){badge.style.display='block';badge.textContent=n;}else{badge.style.display='none';}}
+}
+
+// ── STOC ──────────────────────────────────────────────────────
+async function loadStoc(){
+  const[{data:baxuri},{data:fete}]=await Promise.all([
+    sb.from('stock_baxuri').select('*,products(code,name)').order('created_at',{ascending:false}),
+    sb.from('stock_fete').select('*').order('created_at',{ascending:false}),
+  ]);
+  const baxEl=document.getElementById('stBaxList');
+  if(!baxuri?.length){baxEl.innerHTML='<div style="text-align:center;padding:20px;color:#9E9890;font-size:13px;font-weight:500">Niciun bax în stoc.</div>';}
+  else{baxEl.innerHTML=(baxuri||[]).map(b=>{
+    const model=b.products?.code?'Art. '+b.products.code:b.free_model||'—';
+    const entries=b.ponytage?Object.entries(b.ponytage).filter(([,q])=>q>0):[];
+    const pontajStr=entries.map(([s,q])=>s+'×'+q).join('  ');
+    const pontajJSON=JSON.stringify(b.ponytage||{});
+    return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
+      ${b.photo_url?`<img src="${b.photo_url}" style="width:100%;height:160px;object-fit:cover" onerror="this.style.display='none'"/>`:''}
+      <div style="padding:14px">
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111111">${model}</div>
+        <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${b.color||'—'}</div>
+        <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#1E4A2E">${b.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per.</span></div>
+          ${b.price_per_pair?`<span style="font-size:14px;font-weight:700;color:#8B6914">${b.price_per_pair} RON/per.</span>`:''}
+        </div>
+        ${b.notes?`<div style="font-size:11px;color:#5A5248;font-style:italic;margin-top:4px">${b.notes}</div>`:''}
+        <button onclick='addFromStock("${b.id}","${model.replace(/"/g,"&quot;")}","${b.color||''}",${b.price_per_pair||0},${pontajJSON})' style="width:100%;margin-top:12px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+          + Adaugă la comandă
+        </button>
+      </div>
+    </div>`;
+  }).join('');}
+  const feteEl=document.getElementById('stFeteList');
+  if(!fete?.length){feteEl.innerHTML='<div style="text-align:center;padding:20px;color:#9E9890;font-size:13px;font-weight:500">Nicio FEȚE în stoc.</div>';}
+  else{feteEl.innerHTML=(fete||[]).map(f=>{
+    const entries=f.ponytage?Object.entries(f.ponytage).filter(([,q])=>q>0):[];
+    const pontajStr=entries.map(([s,q])=>s+'×'+q).join('  ');
+    return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
+      ${f.photo_url?`<img src="${f.photo_url}" style="width:100%;height:160px;object-fit:cover" onerror="this.style.display='none'"/>`:''}
+      <div style="padding:14px">
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111111">${f.model_name}</div>
+        <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${f.color||'—'}</div>
+        <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
+        <div style="margin-top:10px"><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#2F4A63">${f.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per. FEȚE</span></div>
+        ${f.notes?`<div style="font-size:11px;color:#5A5248;font-style:italic;margin-top:4px">${f.notes}</div>`:''}
+        <div style="margin-top:10px;padding:8px 10px;background:#E8EFF6;border-radius:6px;font-size:11px;color:#23394F;font-weight:500">FEȚE — discută cu clientul și plasează comanda manual.</div>
+      </div>
+    </div>`;
+  }).join('');}
+}
+
+function addFromStock(stockId,model,color,price,pontaj){
+  showV('new');
+  setTimeout(()=>{
+    document.getElementById('artModInput').value=model;
+    document.getElementById('artMod').value='';
+    document.getElementById('artCol').value=color;
+    document.getElementById('artPr').value=price||'';
+    const pt=typeof pontaj==='object'?pontaj:(JSON.parse(pontaj||'{}'));
+    SZ.forEach(s=>szV[s]=0);
+    Object.entries(pt).forEach(([s,q])=>{szV[s]=parseInt(q)||0;});
+    renderSz();
+    goStep(2);
+    showToast('Articol din stoc pre-completat! Ajustează dacă e nevoie.');
+  },250);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function showLov(t){document.getElementById('lov-text').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
+function hideLov(){document.getElementById('lov').classList.remove('show');}
+function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
