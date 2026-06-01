@@ -36,29 +36,31 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .cmd-prog-label{font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px}
 .cmd-arrow{width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex-shrink:0;margin-top:4px}
 .cmd-body{display:none;border-top:1px solid #EDE8DF}
-.art-row{padding:12px 15px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.art-row{padding:12px 15px;border-bottom:1px solid #EDE8DF}
 .art-row:last-child{border-bottom:none}
-.art-info{flex:1}
 .art-name{font-size:13px;font-weight:700;color:#111111}
 .art-color{font-size:12px;color:#5A5248;margin-top:1px}
 .art-pairs{font-size:11px;color:#5A5248;margin-top:2px}
 .pontaj{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}
 .pchip{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:3px 7px;font-size:12px;font-weight:700;font-family:'Playfair Display',serif}
-.btn-lansa{padding:8px 14px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
-.btn-talpuit{padding:8px 14px;border-radius:7px;border:none;background:#B08D57;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-receptie{padding:8px 14px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-lansa{padding:8px 14px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-talpuit{padding:8px 14px;border-radius:7px;border:none;background:#B08D57;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
 .btn-talpuit svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .empty{text-align:center;padding:40px 20px;color:#9E9890}
 .empty svg{width:32px;height:32px;stroke:#C8C0B8;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:8px}
+/* PONTAJ EDIT */
+.pontaj-edit{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;padding:8px;background:#F8F5F0;border-radius:6px}
+.pe-item{text-align:center}
+.pe-item label{display:block;font-size:10px;font-weight:700;color:#5A5248;margin-bottom:3px}
+.pe-item input{width:44px;padding:4px;border:1.5px solid #DDD7CE;border-radius:5px;text-align:center;font-size:13px;font-weight:700;font-family:'Playfair Display',serif;outline:none}
+/* STOC TAB */
+.stoc-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:10px}
 .lov-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
 .lov-overlay.show{display:flex}
 .lov-box{background:#fff;border-radius:12px;padding:20px 28px;font-size:14px;font-weight:600;color:#111111}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
-/* STOC TAB */
-.stoc-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:10px}
-.stoc-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.stoc-label{font-size:10px;font-weight:700;color:#5A5248;width:70px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px}
-.stoc-badge{font-size:11px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:3px 8px;border-radius:4px}
 </style>
 </head>
 <body>
@@ -68,7 +70,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="hdr-title">Atelier Talpuit</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <div class="hdr-badge" id="hdrBadge">0 lansate</div>
+    <div class="hdr-badge" id="hdrBadge">—</div>
     <button class="logout-btn" onclick="sb.auth.signOut().then(()=>window.location.href='/silesco-app/index.html')">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </button>
@@ -78,25 +80,15 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 <div class="tabs">
   <div class="tab active" id="tab_receptie" onclick="setTab('receptie')">Recepție cusut</div>
   <div class="tab" id="tab_lansate" onclick="setTab('lansate')">Lansate</div>
-  <div class="tab" id="tab_stoc" onclick="setTab('stoc')">Stoc materiale</div>
+  <div class="tab" id="tab_talpuit" onclick="setTab('talpuit')">De talpuit</div>
+  <div class="tab" id="tab_stoc" onclick="setTab('stoc')">Stoc</div>
 </div>
 
 <div class="stats-bar">
-  <div class="stat-item">
-    <div class="stat-label">De lansat</div>
-    <div class="stat-val" id="stReceptie">—</div>
-    <div class="stat-sub">articole</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-label">Lansate</div>
-    <div class="stat-val" id="stLansate">—</div>
-    <div class="stat-sub">articole</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-label">Finalizate</div>
-    <div class="stat-val" id="stGata">—</div>
-    <div class="stat-sub">perechi total</div>
-  </div>
+  <div class="stat-item"><div class="stat-label">Recepție</div><div class="stat-val" id="stReceptie">—</div><div class="stat-sub">articole</div></div>
+  <div class="stat-item"><div class="stat-label">Lansate</div><div class="stat-val" id="stLansate">—</div><div class="stat-sub">articole</div></div>
+  <div class="stat-item"><div class="stat-label">De talpuit</div><div class="stat-val" id="stDeTalpuit">—</div><div class="stat-sub">articole</div></div>
+  <div class="stat-item"><div class="stat-label">Finalizate</div><div class="stat-val" id="stGata">—</div><div class="stat-sub">perechi</div></div>
 </div>
 
 <div class="wrap">
@@ -113,16 +105,23 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   <div id="viewLansate" style="display:none">
     <div id="lansateList"></div>
     <div class="empty" id="lansateEmpty" style="display:none">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       <div style="font-size:13px;font-weight:600">Niciun articol lansat</div>
     </div>
   </div>
 
-  <!-- STOC MATERIALE -->
+  <!-- DE TALPUIT -->
+  <div id="viewTalpuit" style="display:none">
+    <div id="talpuitList"></div>
+    <div class="empty" id="talpuitEmpty" style="display:none">
+      <div style="font-size:13px;font-weight:600">Niciun articol de talpuit</div>
+    </div>
+  </div>
+
+  <!-- STOC -->
   <div id="viewStoc" style="display:none">
-    <div style="font-size:12px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Talpi în stoc</div>
+    <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Talpi</div>
     <div id="stocTalpiGrid"></div>
-    <div style="font-size:12px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px">Branturi în stoc</div>
+    <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Branturi</div>
     <div id="stocBranturiGrid"></div>
   </div>
 </div>
@@ -136,6 +135,9 @@ const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 let CU=null;
+let allTalpi=[],allBranturi=[];
+// Pontaj modificat per linie
+const modPontaj={};
 
 window.addEventListener('DOMContentLoaded',async()=>{
   const{data:{session}}=await sb.auth.getSession();
@@ -144,34 +146,34 @@ window.addEventListener('DOMContentLoaded',async()=>{
   const{data:p}=await sb.from('user_profiles').select('role').eq('id',CU.id).single();
   if(!['management','talpuit'].includes(p?.role)){window.location.href='/silesco-app/index.html';return;}
   sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT')window.location.href='/silesco-app/index.html';});
+  // Încarcă materiale
+  const[{data:t},{data:b}]=await Promise.all([
+    sb.from('talpi').select('id,cod,name,stoc,min_alert').order('cod'),
+    sb.from('branturi').select('id,cod,nume,stoc,min_alert').order('cod'),
+  ]);
+  allTalpi=t||[];allBranturi=b||[];
   await loadAll();
 });
 
 function setTab(t){
-  ['receptie','lansate','stoc'].forEach(x=>{
+  ['receptie','lansate','talpuit','stoc'].forEach(x=>{
     document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1)).style.display='none';
     document.getElementById('tab_'+x).classList.remove('active');
   });
   document.getElementById('view'+t.charAt(0).toUpperCase()+t.slice(1)).style.display='block';
   document.getElementById('tab_'+t).classList.add('active');
-  if(t==='stoc')loadStoc();
+  if(t==='stoc')renderStoc();
 }
 
 function getModName(l){
   return l.products?.code?'Art. '+l.products.code:l.free_model||(l.notes?.match(/\[([^\]]+)\]/)?.[1]||l.color)||'—';
 }
 
-function renderPontaj(ponytage){
-  if(!ponytage)return '';
-  return Object.entries(ponytage).filter(([,q])=>q>0)
-    .map(([s,q])=>`<span class="pchip">${s}×${q}</span>`).join('');
-}
-
 async function loadAll(){
   showLov('Se încarcă...');
   const{data:lines}=await sb.from('order_lines')
-    .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,sort_order,products(code,name)')
-    .in('production_status',['cusut_gata','la_talpuit','gata'])
+    .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,sort_order,talpa_id,brant_id,products(code,name)')
+    .in('production_status',['cusut_gata','la_talpuit','la_impachetat_talpuit','gata'])
     .order('sort_order',{ascending:true});
 
   const orderIds=[...new Set((lines||[]).map(l=>l.order_id).filter(Boolean))];
@@ -186,16 +188,59 @@ async function loadAll(){
 
   const cusutGata=(lines||[]).filter(l=>l.production_status==='cusut_gata');
   const lansate=(lines||[]).filter(l=>l.production_status==='la_talpuit');
+  const deTalpuit=(lines||[]).filter(l=>l.production_status==='la_impachetat_talpuit');
   const gata=(lines||[]).filter(l=>l.production_status==='gata');
 
   document.getElementById('hdrBadge').textContent=lansate.length+' lansate';
   document.getElementById('stReceptie').textContent=cusutGata.length;
   document.getElementById('stLansate').textContent=lansate.length;
+  document.getElementById('stDeTalpuit').textContent=deTalpuit.length;
   document.getElementById('stGata').textContent=gata.reduce((s,l)=>s+(l.total_pairs||0),0);
 
   renderReceptie(cusutGata);
   renderLansate(lansate);
+  renderDeTalpuit(deTalpuit);
   hideLov();
+}
+
+function renderPontaj(ponytage){
+  if(!ponytage)return '';
+  return Object.entries(ponytage).filter(([,q])=>q>0)
+    .map(([s,q])=>`<span class="pchip">${s}×${q}</span>`).join('');
+}
+
+function renderPontajEdit(lineId,ponytage,tip){
+  if(!ponytage)return '';
+  const entries=Object.entries(ponytage).filter(([,q])=>q>0);
+  if(!entries.length)return '';
+  return `<div style="margin-top:6px">
+    <div style="font-size:10px;font-weight:700;color:#5A5248;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">${tip==='talpa'?'Pontaj talpă':'Pontaj branț'} (modificabil)</div>
+    <div class="pontaj-edit">
+      ${entries.map(([s,q])=>`
+        <div class="pe-item">
+          <label>${s}</label>
+          <input type="number" min="0" value="${q}" 
+            onchange="updateModPontaj('${lineId}','${tip}','${s}',this.value)"
+            id="pe_${lineId}_${tip}_${s}"/>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function updateModPontaj(lineId,tip,sz,val){
+  if(!modPontaj[lineId])modPontaj[lineId]={};
+  if(!modPontaj[lineId][tip])modPontaj[lineId][tip]={};
+  modPontaj[lineId][tip][sz]=parseInt(val)||0;
+}
+
+function groupByOrder(lines){
+  const byOrder={};
+  lines.forEach(l=>{
+    const oid=l.order_id;
+    if(!byOrder[oid])byOrder[oid]={order:l.orders,lines:[]};
+    byOrder[oid].lines.push(l);
+  });
+  return Object.values(byOrder);
 }
 
 function renderReceptie(lines){
@@ -203,14 +248,7 @@ function renderReceptie(lines){
   const empty=document.getElementById('receptieEmpty');
   if(!lines.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  // Grupează pe comandă
-  const byOrder={};
-  lines.forEach(l=>{
-    const oid=l.order_id;
-    if(!byOrder[oid])byOrder[oid]={order:l.orders,lines:[]};
-    byOrder[oid].lines.push(l);
-  });
-  el.innerHTML=Object.values(byOrder).map((g,gi)=>{
+  el.innerHTML=groupByOrder(lines).map((g,gi)=>{
     const o=g.order||{};
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
@@ -221,21 +259,18 @@ function renderReceptie(lines){
           <div class="cmd-client">${cl}</div>
           <div class="cmd-meta">Livrare: ${dd}</div>
         </div>
-        <div class="cmd-progress">
-          <div class="cmd-prog-num" style="color:#2F4A63">${g.lines.length}</div>
-          <div class="cmd-prog-label">art.</div>
-        </div>
+        <div class="cmd-progress"><div class="cmd-prog-num" style="color:#2F4A63">${g.lines.length}</div><div class="cmd-prog-label">art.</div></div>
         <svg class="cmd-arrow" id="recarr_${gi}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="cmd-body" id="rec_${gi}">
         ${g.lines.map(l=>`
-          <div class="art-row">
-            <div class="art-info">
+          <div class="art-row" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+            <div style="flex:1">
               <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
-              <div class="art-pairs">${l.total_pairs} perechi · ${l.workshop||'intern'}</div>
+              <div class="art-pairs">${l.total_pairs} per. · ${l.workshop||'intern'}</div>
               <div class="pontaj">${renderPontaj(l.ponytage)}</div>
             </div>
-            <button class="btn-lansa" onclick="markLanseza('${l.id}')">Lansează →</button>
+            <button class="btn-receptie" onclick="markReceptionat('${l.id}')">Recepționat ✓</button>
           </div>`).join('')}
       </div>
     </div>`;
@@ -247,13 +282,7 @@ function renderLansate(lines){
   const empty=document.getElementById('lansateEmpty');
   if(!lines.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  const byOrder={};
-  lines.forEach(l=>{
-    const oid=l.order_id;
-    if(!byOrder[oid])byOrder[oid]={order:l.orders,lines:[]};
-    byOrder[oid].lines.push(l);
-  });
-  el.innerHTML=Object.values(byOrder).map((g,gi)=>{
+  el.innerHTML=groupByOrder(lines).map((g,gi)=>{
     const o=g.order||{};
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
@@ -264,59 +293,91 @@ function renderLansate(lines){
           <div class="cmd-client">${cl}</div>
           <div class="cmd-meta">Livrare: ${dd}</div>
         </div>
-        <div class="cmd-progress">
-          <div class="cmd-prog-num" style="color:#B08D57">${g.lines.length}</div>
-          <div class="cmd-prog-label">art.</div>
-        </div>
+        <div class="cmd-progress"><div class="cmd-prog-num" style="color:#1E4A2E">${g.lines.length}</div><div class="cmd-prog-label">art.</div></div>
         <svg class="cmd-arrow" id="lanarr_${gi}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="cmd-body" id="lan_${gi}">
         ${g.lines.map(l=>`
-          <div class="art-row">
-            <div class="art-info">
+          <div class="art-row" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+            <div style="flex:1">
               <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
-              <div class="art-pairs">${l.total_pairs} perechi · ${l.workshop||'intern'}</div>
+              <div class="art-pairs">${l.total_pairs} per. · ${l.workshop||'intern'}</div>
               <div class="pontaj">${renderPontaj(l.ponytage)}</div>
             </div>
-            <button class="btn-talpuit" onclick="markTalpuit('${l.id}','${l.order_id}')">
-              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-              Talpuit ✓
-            </button>
+            <button class="btn-lansa" onclick="markLanseza('${l.id}')">Lansează →</button>
           </div>`).join('')}
       </div>
     </div>`;
   }).join('');
 }
 
-async function loadStoc(){
-  showLov('Se încarcă stoc...');
-  const[{data:talpi},{data:branturi}]=await Promise.all([
-    sb.from('talpi').select('cod,name,stoc').order('cod'),
-    sb.from('branturi').select('cod,nume,stoc').order('cod'),
-  ]);
-  hideLov();
-
-  const renderMat=(items,nameKey)=>items?.length?items.map(t=>{
-    const stoc=t.stoc||{};
-    const entries=Object.entries(stoc).filter(([,q])=>q>0).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
-    const total=entries.reduce((s,[,q])=>s+q,0);
-    return `<div class="stoc-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700">${t.cod} <span style="font-size:12px;color:#5A5248;font-family:'Inter',sans-serif">${t[nameKey]||''}</span></div>
-        <span class="stoc-badge">${total} per.</span>
+function renderDeTalpuit(lines){
+  const el=document.getElementById('talpuitList');
+  const empty=document.getElementById('talpuitEmpty');
+  if(!lines.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  el.innerHTML=groupByOrder(lines).map((g,gi)=>{
+    const o=g.order||{};
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    return `<div class="cmd-card">
+      <div class="cmd-header" onclick="togCmd('tp_${gi}','tparr_${gi}')">
+        <div style="flex:1;min-width:0">
+          <div class="cmd-no">${o.order_no||'—'}</div>
+          <div class="cmd-client">${cl}</div>
+          <div class="cmd-meta">Livrare: ${dd}</div>
+        </div>
+        <div class="cmd-progress"><div class="cmd-prog-num" style="color:#B08D57">${g.lines.length}</div><div class="cmd-prog-label">art.</div></div>
+        <svg class="cmd-arrow" id="tparr_${gi}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div style="display:flex;gap:0;border:1px solid #DDD7CE;border-radius:6px;overflow:hidden">
-        ${entries.map(([s,q])=>`
-          <div style="flex:1;text-align:center;border-right:1px solid #DDD7CE;min-width:32px">
-            <div style="font-size:10px;font-weight:700;color:#5A5248;background:#F4F1EA;padding:3px 2px;border-bottom:1px solid #DDD7CE">${s}</div>
-            <div style="font-size:13px;font-weight:700;color:${q>0?'#111111':'#C8C0B8'};padding:4px 2px;font-family:'Playfair Display',serif">${q}</div>
+      <div class="cmd-body" id="tp_${gi}">
+        ${g.lines.map(l=>`
+          <div class="art-row">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+              <div style="flex:1">
+                <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
+                <div class="art-pairs">${l.total_pairs} per. · ${l.workshop||'intern'}</div>
+                <div class="pontaj">${renderPontaj(l.ponytage)}</div>
+              </div>
+              <button class="btn-talpuit" onclick="markTalpuit('${l.id}','${l.order_id}','${l.talpa_id||''}','${l.brant_id||''}')">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Talpuit ✓
+              </button>
+            </div>
+            ${renderPontajEdit(l.id,l.ponytage,'talpa')}
+            ${renderPontajEdit(l.id,l.ponytage,'brant')}
           </div>`).join('')}
       </div>
     </div>`;
-  }).join(''):'<div style="color:#9E9890;font-size:13px;padding:10px 0">Niciun articol</div>';
+  }).join('');
+}
 
-  document.getElementById('stocTalpiGrid').innerHTML=renderMat(talpi,'name');
-  document.getElementById('stocBranturiGrid').innerHTML=renderMat(branturi,'nume');
+function renderStoc(){
+  const renderMat=(items,nameKey)=>items.length?items.map(t=>{
+    const stoc=t.stoc||{};
+    const entries=Object.entries(stoc).filter(([,q])=>q>0).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+    const total=entries.reduce((s,[,q])=>s+q,0);
+    const alert=t.min_alert&&total<=t.min_alert;
+    return `<div class="stoc-card" style="${alert?'border-color:#9C3A2B;background:#FDF4F2':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700">${t.cod} <span style="font-size:12px;color:#5A5248;font-family:'Inter',sans-serif">${t[nameKey]||''}</span></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${alert?'<span style="font-size:10px;font-weight:700;color:#9C3A2B;background:#F5EAE8;padding:2px 7px;border-radius:4px">⚠ Sub limită</span>':''}
+          <span style="font-size:12px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:2px 8px;border-radius:4px">${total} per.</span>
+        </div>
+      </div>
+      ${entries.length?`<div style="display:flex;gap:0;border:1px solid #DDD7CE;border-radius:6px;overflow:hidden">
+        ${entries.map(([s,q])=>`<div style="flex:1;text-align:center;border-right:1px solid #DDD7CE;min-width:32px">
+          <div style="font-size:10px;font-weight:700;color:#5A5248;background:#F4F1EA;padding:3px 2px;border-bottom:1px solid #DDD7CE">${s}</div>
+          <div style="font-size:13px;font-weight:700;color:${q>0?'#111111':'#C8C0B8'};padding:4px 2px;font-family:'Playfair Display',serif">${q}</div>
+        </div>`).join('')}
+      </div>`:'<div style="font-size:11px;color:#9E9890;font-style:italic">Fără stoc înregistrat</div>'}
+      ${t.min_alert?`<div style="font-size:10px;color:#5A5248;margin-top:6px">Alertă la: ${t.min_alert} per.</div>`:''}
+    </div>`;
+  }).join(''):'<div style="font-size:12px;color:#9E9890;padding:10px 0">Niciun articol</div>';
+
+  document.getElementById('stocTalpiGrid').innerHTML=renderMat(allTalpi,'name');
+  document.getElementById('stocBranturiGrid').innerHTML=renderMat(allBranturi,'nume');
 }
 
 function togCmd(bodyId,arrowId){
@@ -326,27 +387,77 @@ function togCmd(bodyId,arrowId){
   if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
 }
 
-async function markLanseza(lineId){
-  showLov('Se lansează...');
+async function markReceptionat(lineId){
+  showLov('Se recepționează...');
   await sb.from('order_lines').update({production_status:'la_talpuit'}).eq('id',lineId);
-  hideLov();showToast('Lansat la talpuit!');
-  await loadAll();setTab('lansate');
+  hideLov();showToast('Recepționat!');
+  await loadAll();
 }
 
-async function markTalpuit(lineId,orderId){
+async function markLanseza(lineId){
+  showLov('Se lansează...');
+  await sb.from('order_lines').update({production_status:'la_impachetat_talpuit'}).eq('id',lineId);
+  hideLov();showToast('Lansat la talpuit!');
+  await loadAll();setTab('talpuit');
+}
+
+async function markTalpuit(lineId,orderId,talpaId,brantId){
   showLov('Se finalizează...');
   await sb.from('order_lines').update({production_status:'gata'}).eq('id',lineId);
+
+  // Scade stoc talpi per mărime
+  if(talpaId){
+    const talpa=allTalpi.find(t=>t.id===talpaId);
+    if(talpa){
+      const pontajTalpa=modPontaj[lineId]?.talpa||null;
+      // Ia pontajul din input-uri dacă există modificări
+      const stocNou={...talpa.stoc||{}};
+      const linePontaj=pontajTalpa||{};
+      // Citește din DOM dacă există input-uri
+      Object.keys(stocNou).forEach(sz=>{
+        const inp=document.getElementById(`pe_${lineId}_talpa_${sz}`);
+        const consum=inp?parseInt(inp.value)||0:(linePontaj[sz]||0);
+        if(consum>0)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-consum);
+      });
+      await sb.from('talpi').update({stoc:stocNou}).eq('id',talpaId);
+      // Update local + check alert
+      talpa.stoc=stocNou;
+      const total=Object.values(stocNou).reduce((s,q)=>s+q,0);
+      if(talpa.min_alert&&total<=talpa.min_alert){
+        // Salvează notificare în DB
+        await sb.from('stock_alerts').insert({tip:'talpa',item_id:talpaId,cod:talpa.cod,stoc_total:total,min_alert:talpa.min_alert}).catch(()=>{});
+      }
+    }
+  }
+
+  // Scade stoc branturi per mărime
+  if(brantId){
+    const brant=allBranturi.find(t=>t.id===brantId);
+    if(brant){
+      const stocNou={...brant.stoc||{}};
+      Object.keys(stocNou).forEach(sz=>{
+        const inp=document.getElementById(`pe_${lineId}_brant_${sz}`);
+        const consum=inp?parseInt(inp.value)||0:0;
+        if(consum>0)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-consum);
+      });
+      await sb.from('branturi').update({stoc:stocNou}).eq('id',brantId);
+      brant.stoc=stocNou;
+      const total=Object.values(stocNou).reduce((s,q)=>s+q,0);
+      if(brant.min_alert&&total<=brant.min_alert){
+        await sb.from('stock_alerts').insert({tip:'brant',item_id:brantId,cod:brant.cod,stoc_total:total,min_alert:brant.min_alert}).catch(()=>{});
+      }
+    }
+  }
+
   // Verifică dacă toate articolele comenzii sunt gata
   const{data:remaining}=await sb.from('order_lines')
-    .select('id,production_status')
-    .eq('order_id',orderId)
-    .neq('from_stock',true);
+    .select('id,production_status').eq('order_id',orderId).neq('from_stock',true);
   const allGata=(remaining||[]).every(l=>l.production_status==='gata'||l.id===lineId);
   if(allGata){
     await sb.from('orders').update({status:'la_impachetat'}).eq('id',orderId);
-    showToast('✓ Comandă gata — trimisă la ambalat!');
+    showToast('✓ Comandă gata — la ambalat!');
   }else{
-    showToast('Articol talpuit!');
+    showToast('Talpuit ✓ — stoc actualizat!');
   }
   hideLov();await loadAll();
 }
