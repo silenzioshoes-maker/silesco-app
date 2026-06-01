@@ -1259,6 +1259,7 @@ function closeDelModal(){document.getElementById('delModal').classList.remove('s
 async function confirmDelete(){
   if(!delOrderId)return;
   showLov('Se șterge...');
+  await sb.from('internal_messages').delete().eq('order_id',delOrderId);
   await sb.from('order_lines').delete().eq('order_id',delOrderId);
   await sb.from('orders').delete().eq('id',delOrderId);
   hideLov();closeDelModal();
