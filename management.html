@@ -960,30 +960,28 @@ async function loadProdAlerts(){
   const{data:restante}=await sb.from('order_lines').select('id,notes').not('notes','is',null);
   const restanteReal=(restante||[]).filter(l=>l.notes?.includes('[RESTANȚĂ:'));
   if(restanteReal.length){
-    alerts.push({color:'#7A5A00',bg:'#FFF3CD',border:'#B0892B',icon:'✂',text:`<strong>${restanteReal.length} articole</strong> cu restanțe la croit`});
+    alerts.push({color:'#7A5A00',bg:'#FFF3CD',border:'#B0892B',icon:'✂',text:`<strong>${restanteReal.length} articole</strong> cu restanțe la croit`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('in_productie',document.querySelector('.filter-btn:nth-child(4)'));`});
   }
   // Cusut — de recepționat
   const{data:cusutGata}=await sb.from('order_lines').select('id').eq('production_status','cusut_gata');
   if(cusutGata?.length){
-    alerts.push({color:'#23394F',bg:'#E8EFF6',border:'#2F4A63',icon:'🧵',text:`<strong>${cusutGata.length} articole</strong> cusute — de recepționat la talpuit`});
+    alerts.push({color:'#23394F',bg:'#E8EFF6',border:'#2F4A63',icon:'🧵',text:`<strong>${cusutGata.length} articole</strong> cusute — de recepționat la talpuit`,onclick:`showSection('productie',document.getElementById('nav_productie'));`});
   }
-  // Talpuit — comenzi finalizate
   const finalizate=allOrders.filter(o=>o.status==='finalizat').length;
   if(finalizate>0){
-    alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${finalizate} comenzi</strong> gata — de ambalat și livrat`});
+    alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${finalizate} comenzi</strong> gata — de ambalat și livrat`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('finalizat',document.querySelector('.filter-btn'));`});
   }
-  // Întârziate
   const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
   if(intarz>0){
-    alerts.push({color:'#7A2418',bg:'#F5EAE8',border:'#9C3A2B',icon:'⚠',text:`<strong>${intarz} comenzi</strong> au depășit termenul de livrare`});
+    alerts.push({color:'#7A2418',bg:'#F5EAE8',border:'#9C3A2B',icon:'⚠',text:`<strong>${intarz} comenzi</strong> au depășit termenul de livrare`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('intarziate',document.querySelector('.filter-btn'));`});
   }
   const panel=document.getElementById('alertsProdPanel');
   if(!panel)return;
   if(!alerts.length){panel.style.display='none';return;}
   panel.style.display='block';
   panel.innerHTML=alerts.map(a=>`
-    <div style="background:${a.bg};border-left:3px solid ${a.border};border-radius:0 7px 7px 0;padding:8px 12px;margin-bottom:6px;font-size:12px;color:${a.color}">
-      ${a.icon} ${a.text}
+    <div onclick="${a.onclick||''}" style="background:${a.bg};border-left:3px solid ${a.border};border-radius:0 7px 7px 0;padding:8px 12px;margin-bottom:6px;font-size:12px;color:${a.color};cursor:${a.onclick?'pointer':'default'}">
+      ${a.icon} ${a.text} ${a.onclick?'<span style="float:right;font-size:10px">→</span>':''}
     </div>`).join('');
 }
 
@@ -1184,11 +1182,8 @@ function _buildOrdersHTML(orders,prefix='ord'){
             ${workshopHTML}
             ${materialeHTML}
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-            <span style="font-size:9px;font-weight:700;color:${psColor.c};background:${psColor.b};padding:2px 8px;border-radius:4px;white-space:nowrap">${psLabels[ps]||ps}</span>
-            <select onchange="updateLineStatus('${l.id}','${o.id}',this.value)" style="font-size:10px;padding:3px 6px;border-radius:5px;border:1px solid #DDD7CE;background:#fff;color:#3A3530;cursor:pointer;font-family:'Inter',sans-serif;max-width:110px">
-              ${Object.entries(psLabels).map(([v,lb])=>`<option value="${v}"${ps===v?' selected':''}>${lb}</option>`).join('')}
-            </select>
+          <div style="flex-shrink:0">
+            <span style="font-size:9px;font-weight:700;color:${psColor.c};background:${psColor.b};padding:2px 8px;border-radius:4px;white-space:nowrap;display:inline-block">${psLabels[ps]||ps}</span>
           </div>
         </div>
       </div>`;
