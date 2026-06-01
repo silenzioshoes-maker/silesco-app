@@ -701,6 +701,7 @@ const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
 let CU=null,CP=null,allOrders=[],filteredOrders=[],activeFilter='toate';
+let allTalpi=[],allBranturi=[],allSireturi=[],allCutii=[];
 let approveOrderId=null,approveLines=[],delOrderId=null,atelierOrderId=null;
 let prods=[],clientsList=[],ateliere=[];
 let omArts=[],omEditId=null,omEditingArtIdx=null;
@@ -734,7 +735,7 @@ async function doLogout(){await sb.auth.signOut();}
 // LOAD
 async function loadAll(){
   showLov('Se încarcă datele...');
-  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadWorkshopTokens(),loadMsgBadge(),loadMsgPanel(),loadDiffs(),loadProdStats(),loadDailyReports(),loadProdAlerts()]);
+  await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadMaterii(),loadAteliere(),loadWorkshopTokens(),loadMsgBadge(),loadMsgPanel(),loadDiffs(),loadProdStats(),loadDailyReports(),loadProdAlerts()]);
   // Asigură că dashboard e vizibil la start
   if(document.getElementById('sectionDashboard').style.display==='none'&&
      document.getElementById('sectionOrders').style.display==='none'&&
@@ -987,6 +988,23 @@ async function loadMsgBadge(){
 }
 async function loadProds(){const{data}=await sb.from('products').select('*').eq('is_active',true).order('code');prods=data||[];}
 async function loadClients(){const{data}=await sb.from('clients').select('id,name,company_name,cui,phone,delivery_address').order('company_name');clientsList=data||[];}
+async function loadMaterii(){
+  const[{data:talpi},{data:branturi},{data:sireturi},{data:cutii}]=await Promise.all([
+    sb.from('talpi').select('id,cod,name').order('cod'),
+    sb.from('branturi').select('id,cod,nume').order('cod'),
+    sb.from('sireturi').select('id,cod,nume').order('cod'),
+    sb.from('cutii').select('id,cod,nume').order('cod'),
+  ]);
+  allTalpi=talpi||[];allBranturi=branturi||[];allSireturi=sireturi||[];allCutii=cutii||[];
+}
+
+async function updateLineMaterial(lineId,field,value){
+  await sb.from('order_lines').update({[field]:value||null}).eq('id',lineId);
+  showToast('Material salvat!');
+  // Update local
+  allOrders.forEach(o=>{const l=o.order_lines?.find(x=>x.id===lineId);if(l)l[field]=value||null;});
+}
+
 async function loadAteliere(){
   const{data}=await sb.from('external_workshops').select('id,name').eq('is_active',true);
   ateliere=data||[];
@@ -997,7 +1015,7 @@ async function loadOrders(){
     .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       user_profiles!orders_agent_id_fkey(full_name),
-      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,products(id,code,name,default_sole_id))`)
+      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,talpa_id,brant_id,siret_id,cutie_id,products(id,code,name,default_sole_id))`)
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
   allOrders=data||[];
@@ -1122,6 +1140,31 @@ function _buildOrdersHTML(orders){
           </select>
           ${ws?`<span style="font-size:10px;font-weight:700;color:#1E4A2E">✓ ${ws.charAt(0).toUpperCase()+ws.slice(1)}</span>`:''}
         </div>`:'';
+      // Materiale per articol
+      const talpaNume=l.talpa_id?(allTalpi.find(t=>t.id===l.talpa_id)?.cod||'—'):'—';
+      const brantNume=l.brant_id?(allBranturi.find(t=>t.id===l.brant_id)?.cod||'—'):'—';
+      const siretNume=l.siret_id?(allSireturi.find(t=>t.id===l.siret_id)?.cod||'—'):'—';
+      const cutieNume=l.cutie_id?(allCutii.find(t=>t.id===l.cutie_id)?.cod||'—'):'—';
+      const materialeHTML=`
+        <div style="margin-top:6px;padding:6px 8px;background:#F4F1EA;border-radius:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+          <span style="font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px">Materiale:</span>
+          <select onchange="updateLineMaterial('${l.id}','talpa_id',this.value)" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid #DDD7CE;background:#fff;color:#111111;cursor:pointer;font-family:'Inter',sans-serif" title="Talpă">
+            <option value="">👟 Talpă</option>
+            ${allTalpi.map(t=>`<option value="${t.id}"${l.talpa_id===t.id?' selected':''}>${t.cod}</option>`).join('')}
+          </select>
+          <select onchange="updateLineMaterial('${l.id}','brant_id',this.value)" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid #DDD7CE;background:#fff;color:#111111;cursor:pointer;font-family:'Inter',sans-serif" title="Branț">
+            <option value="">🦶 Branț</option>
+            ${allBranturi.map(t=>`<option value="${t.id}"${l.brant_id===t.id?' selected':''}>${t.cod}</option>`).join('')}
+          </select>
+          <select onchange="updateLineMaterial('${l.id}','siret_id',this.value)" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid #DDD7CE;background:#fff;color:#111111;cursor:pointer;font-family:'Inter',sans-serif" title="Șiret">
+            <option value="">🎀 Șiret</option>
+            ${allSireturi.map(t=>`<option value="${t.id}"${l.siret_id===t.id?' selected':''}>${t.cod}</option>`).join('')}
+          </select>
+          <select onchange="updateLineMaterial('${l.id}','cutie_id',this.value)" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid #DDD7CE;background:#fff;color:#111111;cursor:pointer;font-family:'Inter',sans-serif" title="Cutie">
+            <option value="">📫 Cutie</option>
+            ${allCutii.map(t=>`<option value="${t.id}"${l.cutie_id===t.id?' selected':''}>${t.cod}</option>`).join('')}
+          </select>
+        </div>`;
       return `<div style="padding:8px 0;border-bottom:1px solid #EDE8DF">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
           <div style="flex:1">
@@ -1129,6 +1172,7 @@ function _buildOrdersHTML(orders){
             ${notesCleanLine?`<div style="font-size:11px;color:#B08D57;margin-top:2px;font-style:italic">${notesCleanLine}</div>`:''}
             ${pt}
             ${workshopHTML}
+            ${materialeHTML}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
             <span style="font-size:9px;font-weight:700;color:${psColor.c};background:${psColor.b};padding:2px 8px;border-radius:4px;white-space:nowrap">${psLabels[ps]||ps}</span>
