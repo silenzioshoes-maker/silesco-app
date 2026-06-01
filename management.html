@@ -560,6 +560,9 @@ async function loadMsgPanel(){
       user_profiles!internal_messages_from_user_id_fkey(full_name,role),
       orders(order_no,clients!orders_client_id_fkey(name,company_name))`)
     .is('parent_id',null)
+    .not('subject','like','Croit finalizat%')
+    .not('subject','like','Modificări aprobate%')
+    .not('subject','like','Modificări respinse%')
     .order('created_at',{ascending:false})
     .limit(8);
   const msgs=data||[];
@@ -676,13 +679,21 @@ function applyFilter(){
 }
 
 const SC={
-  nou:              {l:'Comandă nouă',      c:'#23394F',b:'#E8EFF6'},
-  aprobat:          {l:'Aprobat',           c:'#8B6914',b:'#F6F0E5'},
-  modificat_pending:{l:'Modificare pending',c:'#7A5A00',b:'#FFF3CD'},
-  in_productie:     {l:'În producție',      c:'#8B6914',b:'#FAF3E0'},
-  finalizat:        {l:'Gata livrare',      c:'#1E4A2E',b:'#D8EEE0'},
-  livrat:           {l:'Livrat',            c:'#3A3530',b:'#EDEAE4'},
-  anulat:           {l:'Anulat',            c:'#7A2418',b:'#F5EAE8'},
+  nou:              {l:'Comandă nouă',       c:'#23394F',b:'#E8EFF6'},
+  aprobat:          {l:'Aprobat',             c:'#8B6914',b:'#F6F0E5'},
+  modificat_pending:{l:'Modificare pending',  c:'#7A5A00',b:'#FFF3CD'},
+  la_croit:         {l:'La croit',            c:'#5A3E1B',b:'#F5ECD7'},
+  in_productie:     {l:'În producție',        c:'#8B6914',b:'#FAF3E0'},
+  fete_gata_cusut:  {l:'Fețe gata — la cusut',c:'#2F4A63',b:'#E8EFF6'},
+  la_cusut_extern:  {l:'La cusut extern',     c:'#2F4A63',b:'#E8EFF6'},
+  cusut_extern_finalizat:{l:'Cusut fin.',     c:'#365A43',b:'#EAF0EC'},
+  receptie_fete:    {l:'Recepție fețe',       c:'#365A43',b:'#EAF0EC'},
+  la_talpuit:       {l:'La talpuit',          c:'#1E4A2E',b:'#D8EEE0'},
+  la_impachetat:    {l:'La împachetat',       c:'#3A3530',b:'#EDEAE4'},
+  gata_livrare:     {l:'Gata livrare',        c:'#1E4A2E',b:'#D8EEE0'},
+  finalizat:        {l:'Gata livrare',        c:'#1E4A2E',b:'#D8EEE0'},
+  livrat:           {l:'Livrat',              c:'#3A3530',b:'#EDEAE4'},
+  anulat:           {l:'Anulat',              c:'#7A2418',b:'#F5EAE8'},
 };
 
 function renderOrders(){
@@ -704,7 +715,7 @@ function renderOrders(){
     const linesHTML=lines.map(l=>{
       const entries=l.ponytage?Object.entries(l.ponytage):[];
       const pt=entries.length?`<div class="pontaj-table">${entries.map(([s,q])=>`<div class="pontaj-col"><div class="pontaj-sz">${s}</div><div class="pontaj-qty">${q}</div></div>`).join('')}</div>`:'—';
-      const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||'—');
+      const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
       const stockBadge=l.from_stock?'<span style="font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);padding:2px 7px;border-radius:3px;margin-left:6px;text-transform:uppercase;letter-spacing:.5px">📦 Din stoc</span>':'';
       return `<div style="padding:8px 0;border-bottom:1px solid #EDE8DF"><div style="font-size:13px;font-weight:700;color:#111111">${modName} · ${l.color||'—'} · ${l.total_pairs} per.${stockBadge}</div>${pt}</div>`;
     }).join('');
@@ -910,7 +921,7 @@ function renderTimeline(o){
 // APROBARE
 function openApprove(id,e){e.stopPropagation();approveOrderId=id;const o=allOrders.find(x=>x.id===id);if(!o)return;
   document.getElementById('approveSub').textContent=o.order_no+' · '+(o.clients?.company_name||o.clients?.name||'—')+' · '+o.total_pairs+' per.';
-  document.getElementById('approvePreview').innerHTML=(o.order_lines||[]).map(l=>`<div style="background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:#111111">${l.products?.code?'Art. '+l.products.code:l.free_model||'—'} · ${l.color||'—'}</div><div style="font-size:11px;color:#3A3530;margin-top:2px">${l.total_pairs} per. · Comandă nouă de producție</div></div>`).join('');
+  document.getElementById('approvePreview').innerHTML=(o.order_lines||[]).map(l=>`<div style="background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:#111111">${l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—')} · ${l.color||'—'}</div><div style="font-size:11px;color:#3A3530;margin-top:2px">${l.total_pairs} per. · Comandă nouă de producție</div></div>`).join('');
   approveLines=o.order_lines||[];document.getElementById('approveModal').classList.add('show');}
 async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...');
   await sb.from('orders').update({status:'aprobat'}).eq('id',approveOrderId);
@@ -919,7 +930,17 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
   hideLov();closeModal('approveModal');showToast('Comandă aprobată — producție creată!');await loadAll();}
 
 // LANSARE CROIT
-async function sendToCroit(id,e){e.stopPropagation();if(!confirm('Lansezi comanda la Croit?'))return;showLov('Se lansează...');
+async function sendToCroit(id,e){
+  e.stopPropagation();
+  // Verifică că toate articolele au model
+  const o=allOrders.find(x=>x.id===id);
+  const missingModel=(o?.order_lines||[]).filter(l=>!l.product_id&&!l.free_model);
+  if(missingModel.length){
+    alert('⚠ Nu se poate lansa la croit!\n\nUrmătoarele articole nu au model specificat:\n'+missingModel.map(l=>'• '+l.color+' ('+l.total_pairs+' per.)').join('\n')+'\n\nEditeaza comanda și completează modelul pentru fiecare articol.');
+    return;
+  }
+  if(!confirm('Lansezi comanda la Croit?'))return;
+  showLov('Se lansează...');
   const{data:lots}=await sb.from('production_lots').select('id').eq('order_id',id);
   if(lots?.length)await sb.from('production_lots').update({stage:'la_croit',started_at:new Date().toISOString()}).in('id',lots.map(l=>l.id));
   await sb.from('orders').update({status:'la_croit'}).eq('id',id);
@@ -1026,7 +1047,7 @@ async function openEditOrder(id,e){e.stopPropagation();showLov('Se încarcă...'
   document.getElementById('omPlata').value=o.plata||'30 zile';
   document.getElementById('omPriority').value=o.priority||'normal';
   document.getElementById('omNotes').value=o.notes||'';
-  omArts=(o.order_lines||[]).map(l=>({product_id:l.product_id,free_model:l.free_model||null,code:l.products?.code||l.free_model||'—',color:l.color||'',ponytage:l.ponytage||{},total_pairs:l.total_pairs||0,unit_price:l.unit_price||0}));
+  omArts=(o.order_lines||[]).map(l=>({product_id:l.product_id,free_model:l.free_model||null,code:l.products?.code||l.free_model||(l.color?'['+l.color+']':'—'),color:l.color||'',ponytage:l.ponytage||{},total_pairs:l.total_pairs||0,unit_price:l.unit_price||0}));
   document.getElementById('omAddArtBtn').textContent='+ Adaugă articol';
   ['omModInput','omModId','omColor','omPret'].forEach(x=>document.getElementById(x).value='');
   renderOmSizes();renderOmArts();document.getElementById('orderModal').classList.add('show');}
@@ -1157,7 +1178,7 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
   // Partea 1 - sumar (fără prețuri)
   const sumar=lines.map(l=>{
     const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`${s}×${q}`).join('  '):'';
-    const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||'—');
+    const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
     const obs=l.notes?` <em style="color:#888;font-size:11px">${l.notes}</em>`:'';
     const stockBadge=l.from_stock?'<span style="background:#E8EFF6;color:#23394F;border:1px solid rgba(47,74,99,.4);font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px">📦 DIN STOC</span>':'';
     return `<tr${l.from_stock?' style="background:#F0F6FF"':''}>
@@ -1170,7 +1191,7 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
   // Părțile 2-3 - fâșii tăiabile (doar articolele de produs, nu din stoc)
   const fasii=lines.filter(l=>!l.from_stock).map(l=>{
     const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`<span style="display:inline-block;margin-right:14px;font-size:15px"><strong>${s}</strong>×${q}</span>`).join(''):'';
-    const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||'—');
+    const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
     const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
     const detailsText=[notesClean,o.notes].filter(Boolean).join(' | ');
     return `<div style="border:2px dashed #999;border-radius:4px;padding:14px 18px;margin-bottom:10px;page-break-inside:avoid">
@@ -1228,7 +1249,7 @@ async function genFisaClient(id,e){e.stopPropagation();showLov('Se generează...
     const sr=entries.map(([s])=>`<td style="${cs}font-size:10px;color:#888;font-weight:700">${s}</td>`).join('');
     const qr=entries.map(([,q])=>`<td style="${cs}font-size:14px;font-weight:700">${q}</td>`).join('');
     const val=l.unit_price?(l.unit_price*l.total_pairs).toLocaleString('ro-RO')+' RON':'—';
-    return `<tr><td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top"><div style="font-weight:700;font-size:13px">${l.products?.code?'Art. '+l.products.code:l.free_model||'—'}</div><div style="font-size:13px;color:#444">${l.color||'—'}</div>${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}</td><td style="border:1px solid #ddd;padding:6px"><table style="border-collapse:collapse;width:100%"><tr>${sr}</tr><tr>${qr}</tr></table></td><td style="border:1px solid #ddd;padding:10px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td><td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:13px">${val}</td></tr>`;
+    return `<tr><td style="border:1px solid #ddd;padding:10px 12px;vertical-align:top"><div style="font-weight:700;font-size:13px">${l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—')}</div><div style="font-size:13px;color:#444">${l.color||'—'}</div>${l.unit_price?`<div style="font-size:11px;color:#888;margin-top:2px">${l.unit_price} RON/per.</div>`:''}</td><td style="border:1px solid #ddd;padding:6px"><table style="border-collapse:collapse;width:100%"><tr>${sr}</tr><tr>${qr}</tr></table></td><td style="border:1px solid #ddd;padding:10px;text-align:center;font-weight:700;font-size:15px">${l.total_pairs}</td><td style="border:1px solid #ddd;padding:10px 12px;text-align:right;font-weight:700;font-size:13px">${val}</td></tr>`;
   }).join('');
   const html=`<html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;color:#1A1814;padding:28px;max-width:680px;margin:0 auto}h1{font-size:22px;letter-spacing:2px;margin-bottom:3px}.sub{font-size:10px;color:#aaa;margin-bottom:24px;letter-spacing:1px;text-transform:uppercase}.row{display:flex;gap:40px;margin-bottom:24px}.col{flex:1}.lbl{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;font-weight:700}.val{font-size:14px;font-weight:700}.meta{font-size:11px;color:#888;margin-top:3px}table.main{width:100%;border-collapse:collapse;margin:18px 0}table.main th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ddd;text-align:left;background:#f9f9f9}.footer{margin-top:48px;display:flex;gap:60px}.sig{border-top:1.5px solid #1A1814;padding-top:8px;font-size:10px;color:#888;width:220px;min-height:50px}@media print{.noprint{display:none}}</style></head><body>
   <h1>SILESCO</h1><div class="sub">Fișă Client · ${o.order_no||'—'} · ${azi}</div>
@@ -1283,7 +1304,7 @@ async function sendOrderMsg(){
 // ── ALOCARE STOC LA CLIENT ────────────────────────────────────
 let allocOrderId=null;
 function openAllocate(id,e){e.stopPropagation();allocOrderId=id;const o=allOrders.find(x=>x.id===id);
-  const arts=(o.order_lines||[]).map(l=>(l.products?.code?'Art. '+l.products.code:l.free_model||'—')+' '+(l.color||'')).join(', ');
+  const arts=(o.order_lines||[]).map(l=>(l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—'))+' '+(l.color||'')).join(', ');
   document.getElementById('allocSub').textContent=o.order_no+' · '+arts;
   document.getElementById('allocClient').value='';document.getElementById('allocClientId').value='';
   document.getElementById('allocModal').classList.add('show');}
