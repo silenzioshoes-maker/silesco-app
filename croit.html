@@ -349,11 +349,16 @@ async function loadRestanteBanner(){
     ${restante.map(l=>{
       const mod=l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
       const m=l.notes?.match(/\[RESTANȚĂ: (\d+) per\.\]/);
-      return `<div style="font-size:11px;color:#8B6914;padding:3px 0;border-bottom:1px solid rgba(176,137,43,.15)">
-        ${mod} · ${l.color||'—'} — <strong>${m?m[1]:'?'} per. restante</strong>
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(176,137,43,.15)">
+        <div style="font-size:11px;color:#8B6914">
+          ${mod} · ${l.color||'—'} — <strong>${m?m[1]:'?'} per. restante</strong>
+        </div>
+        <button onclick="openCompleteRestanta('${l.id}','${mod}','${l.color||''}',${m?m[1]:0})" 
+          style="padding:5px 10px;border-radius:6px;border:none;background:#B0892B;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap">
+          ✂ Completează
+        </button>
       </div>`;
-    }).join('')}
-    <div style="font-size:10px;color:#8B6914;margin-top:6px">Completează pontajul și finalizează comanda pentru a șterge restanța.</div>`;
+    }).join('')}`;
 }
 
 async function loadCroitStats(){
@@ -988,6 +993,57 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
+
+// ── COMPLETARE RESTANȚĂ ──────────────────────────────────────
+let restantaLineId=null,restantaMax=0,restantaQtyVal=0;
+function openCompleteRestanta(lineId,mod,color,maxQty){
+  restantaLineId=lineId;restantaMax=maxQty;restantaQtyVal=maxQty;
+  document.getElementById('restantaModalSub').textContent=mod+' · '+color;
+  document.getElementById('restantaQty').textContent=maxQty;
+  document.getElementById('restantaMax').textContent='/ '+maxQty+' restante';
+  document.getElementById('restantaModal').classList.add('show');
+}
+function adjRestanta(d){
+  restantaQtyVal=Math.max(0,Math.min(restantaMax,restantaQtyVal+d));
+  document.getElementById('restantaQty').textContent=restantaQtyVal;
+}
+async function saveCompleteRestanta(){
+  if(!restantaLineId||restantaQtyVal<=0){showToast('Introdu câte perechi ai croit!');return;}
+  showLov('Se salvează...');
+  // Obține datele curente
+  const{data:line}=await sb.from('order_lines').select('notes,total_pairs').eq('id',restantaLineId).single();
+  if(!line){hideLov();showToast('Eroare!');return;}
+  const newTotal=(line.total_pairs||0)+restantaQtyVal;
+  const restantaRamasa=restantaMax-restantaQtyVal;
+  let newNotes=line.notes||'';
+  // Actualizează sau șterge flagul restanță
+  if(restantaRamasa>0){
+    newNotes=newNotes.replace(/\[RESTANȚĂ: \d+ per\.\]/,'[RESTANȚĂ: '+restantaRamasa+' per.]');
+  }else{
+    newNotes=newNotes.replace(/\s*\[RESTANȚĂ: \d+ per\.\]/g,'').trim();
+  }
+  await sb.from('order_lines').update({total_pairs:newTotal,notes:newNotes||null}).eq('id',restantaLineId);
+  hideLov();closeModal('restantaModal');
+  showToast(restantaRamasa>0?'Salvat! Rămân '+restantaRamasa+' per. restante.':'Restanță completată! ✓');
+  await loadAll();
+}
 </script>
+
+<!-- MODAL COMPLETARE RESTANȚĂ -->
+<div class="modal-overlay" id="restantaModal" style="z-index:300">
+  <div style="background:#fff;border-radius:14px;padding:24px;width:100%;max-width:360px">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:4px">Completează restanța</div>
+    <div style="font-size:12px;color:#5A5248;margin-bottom:16px" id="restantaModalSub">—</div>
+    <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Perechi croite acum</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button onclick="adjRestanta(-1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:18px;font-weight:700;cursor:pointer">−</button>
+      <span id="restantaQty" style="font-size:28px;font-weight:700;color:#111111;font-family:'Playfair Display',serif;min-width:40px;text-align:center">0</span>
+      <button onclick="adjRestanta(1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:18px;font-weight:700;cursor:pointer">+</button>
+      <span style="font-size:11px;color:#9E9890" id="restantaMax">/ 0 restante</span>
+    </div>
+    <button onclick="saveCompleteRestanta()" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px">Salvează</button>
+    <button onclick="closeModal('restantaModal')" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Anulează</button>
+  </div>
+</div>
 </body>
 </html>
