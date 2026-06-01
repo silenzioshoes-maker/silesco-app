@@ -878,46 +878,41 @@ async function loadDailyReports(){
     if(h.created_at>=aziStart)croitAzi+=total;
     croitSapt+=total;
   });
-  document.getElementById('rCroitAzi').textContent=croitAzi||0;
-  document.getElementById('rCroitSapt').textContent=croitSapt||0;
+  const rc1=document.getElementById('rCroitAzi');if(rc1)rc1.textContent=croitAzi||0;
+  const rc2=document.getElementById('rCroitSapt');if(rc2)rc2.textContent=croitSapt||0;
 
-  // Cusut per atelier
+  // Cusut per atelier — fără updated_at
   const{data:cusutLines}=await sb.from('order_lines')
-    .select('workshop,total_pairs,updated_at')
+    .select('workshop,total_pairs')
     .eq('production_status','cusut_gata');
   const atelierStats={};
   (cusutLines||[]).forEach(l=>{
     const ws=l.workshop||'intern';
-    if(!atelierStats[ws])atelierStats[ws]={azi:0,sapt:0};
-    const t=l.updated_at||'';
-    if(t>=saptStart)atelierStats[ws].sapt+=(l.total_pairs||0);
-    if(t>=aziStart)atelierStats[ws].azi+=(l.total_pairs||0);
+    if(!atelierStats[ws])atelierStats[ws]={total:0};
+    atelierStats[ws].total+=(l.total_pairs||0);
   });
   const atelEl=document.getElementById('rCusutAteliere');
-  if(Object.keys(atelierStats).length){
-    atelEl.innerHTML=Object.entries(atelierStats).map(([ws,s])=>`
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#F4F1EA;border-radius:6px">
-        <span style="font-size:11px;font-weight:700;color:#2F4A63;text-transform:capitalize">${ws}</span>
-        <span style="font-size:11px;color:#3A3530"><strong>${s.azi}</strong> azi · ${s.sapt} săpt.</span>
-      </div>`).join('');
-  }else{
-    atelEl.innerHTML='<div style="font-size:11px;color:#9E9890;font-style:italic">Nicio activitate</div>';
+  if(atelEl){
+    if(Object.keys(atelierStats).length){
+      atelEl.innerHTML=Object.entries(atelierStats).map(([ws,s])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#F4F1EA;border-radius:6px">
+          <span style="font-size:11px;font-weight:700;color:#2F4A63;text-transform:capitalize">${ws}</span>
+          <span style="font-size:11px;color:#3A3530"><strong>${s.total}</strong> per. cusute</span>
+        </div>`).join('');
+    }else{
+      atelEl.innerHTML='<div style="font-size:11px;color:#9E9890;font-style:italic">Nicio activitate</div>';
+    }
   }
   const notifEl=document.getElementById('rCusutNotif');
   if(notifEl)notifEl.innerHTML='';
 
-  // Talpuit
+  // Talpuit — fără updated_at
   const{data:talpLines}=await sb.from('order_lines')
-    .select('total_pairs,updated_at')
+    .select('total_pairs')
     .eq('production_status','gata');
-  let talpAzi=0,talpSapt=0;
-  (talpLines||[]).forEach(l=>{
-    const t=l.updated_at||'';
-    if(t>=saptStart)talpSapt+=(l.total_pairs||0);
-    if(t>=aziStart)talpAzi+=(l.total_pairs||0);
-  });
-  document.getElementById('rTalpuitAzi').textContent=talpAzi||0;
-  document.getElementById('rTalpuitSapt').textContent=talpSapt||0;
+  const talpTotal=(talpLines||[]).reduce((s,l)=>s+(l.total_pairs||0),0);
+  const rt1=document.getElementById('rTalpuitAzi');if(rt1)rt1.textContent=0;
+  const rt2=document.getElementById('rTalpuitSapt');if(rt2)rt2.textContent=talpTotal||0;
 }
 
 async function loadProdStats(){
@@ -926,7 +921,6 @@ async function loadProdStats(){
   const day=now.getDay()||7;
   const saptStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day+1).toISOString();
   const lunaStart=new Date(now.getFullYear(),now.getMonth(),1).toISOString();
-  // Statistici croit din audit
   const{data:auditData}=await sb.from('audit_log')
     .select('new_data,created_at').eq('action','update')
     .like('new_data->>action','Croit finalizat%')
@@ -938,16 +932,15 @@ async function loadProdStats(){
     if(h.created_at>=aziStart)croitAzi+=total;
     croitSapt+=total;
   });
-  document.getElementById('mgStatCroitAzi').textContent=croitAzi;
-  document.getElementById('mgStatCroitSapt').textContent=croitSapt;
-  // Statistici comenzi
+  const s1=document.getElementById('mgStatCroitAzi');if(s1)s1.textContent=croitAzi;
+  const s2=document.getElementById('mgStatCroitSapt');if(s2)s2.textContent=croitSapt;
   const saptOrders=allOrders.filter(o=>new Date(o.created_at)>=new Date(saptStart)&&o.status!=='anulat');
   const lunaOrders=allOrders.filter(o=>new Date(o.created_at)>=new Date(lunaStart)&&o.status!=='anulat');
   const fmt=v=>v>=1000?(v/1000).toFixed(1)+'k RON':v+' RON';
-  document.getElementById('mgStatOrdSapt').textContent=saptOrders.length;
-  document.getElementById('mgStatOrdSaptVal').textContent='com. · '+fmt(saptOrders.reduce((s,o)=>s+(o.total_value||0),0));
-  document.getElementById('mgStatOrdLuna').textContent=lunaOrders.length;
-  document.getElementById('mgStatOrdLunaVal').textContent='com. · '+fmt(lunaOrders.reduce((s,o)=>s+(o.total_value||0),0));
+  const s3=document.getElementById('mgStatOrdSapt');if(s3)s3.textContent=saptOrders.length;
+  const s4=document.getElementById('mgStatOrdSaptVal');if(s4)s4.textContent='com. · '+fmt(saptOrders.reduce((s,o)=>s+(o.total_value||0),0));
+  const s5=document.getElementById('mgStatOrdLuna');if(s5)s5.textContent=lunaOrders.length;
+  const s6=document.getElementById('mgStatOrdLunaVal');if(s6)s6.textContent='com. · '+fmt(lunaOrders.reduce((s,o)=>s+(o.total_value||0),0));
 }
 
 async function loadMsgBadge(){
@@ -1729,7 +1722,10 @@ function renderLots(lots){
   const lc=document.getElementById('lotsCount');if(lc)lc.textContent=lots.length+' comenzi active';
   const el=document.getElementById('lotsTable');
   if(!el)return;
-  if(!lots.length){el.innerHTML='<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px">Nicio comandă.</div>';return;}
+  if(!lots.length){el.innerHTML='<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px;font-weight:500">Nicio comandă în producție.</div>';return;}
+  el.innerHTML=lots.map(l=>{const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';const sc=l.stage==='la_croit'?'#8B6914':l.stage==='la_talpuit'?'#23394F':'#3A3530';const isU=l.orders?.priority==='urgent';
+    return `<div class="order-row"><div style="display:grid;grid-template-columns:110px 1fr 100px 150px 100px;gap:12px;padding:14px 20px;align-items:center"><div class="order-no-cell">${l.lot_no||'—'}</div><div><div class="order-client-cell">${cl}${isU?'<span class="urgent-flag">⚡</span>':''}</div><div class="order-agent-cell">Art. ${l.products?.code||'—'} · Talpă: ${l.talpaData?.name||'—'}</div></div><div class="order-pairs-cell">${l.qty_planned||0} per.</div><span class="status-pill" style="color:${sc};background:${sc}18"><span style="width:5px;height:5px;border-radius:50%;background:${sc};display:inline-block"></span>${SL[l.stage]||l.stage}</span><div style="font-size:11px;color:#5A5248">${new Date(l.created_at).toLocaleDateString('ro-RO')}</div></div></div>`;
+  }).join('');
 }
 
 // ── MESAJ DIN COMANDĂ ─────────────────────────────────────────
