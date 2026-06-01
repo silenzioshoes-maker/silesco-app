@@ -456,12 +456,12 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span>Clienți</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='/messages.html'">
+    <div class="nav-item" id="nav_mesaje" onclick="showSection('mesaje',this)">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Mesaje</span>
       <span class="nav-badge" id="msgBadge" style="display:none">0</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='/stock.html'">
+    <div class="nav-item" onclick="showSection('stoc',this)">
       <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
       <span>Stoc</span>
     </div>
@@ -485,7 +485,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <button class="btn btn-gold" onclick="openNewOrder()">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Comandă nouă
       </button>
-      <button class="btn btn-outline" onclick="window.location.href='/messages.html'" style="position:relative">
+      <button class="btn btn-outline" onclick="showSection('mesaje',document.getElementById('nav_mesaje'))" style="position:relative">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span id="topbarMsgBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:16px;text-align:center">0</span>
       </button>
@@ -524,7 +524,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
               Mesaje
               <span id="msgPanelBadge" style="display:none;background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:1px 6px">0</span>
             </div>
-            <button onclick="window.location.href='/messages.html'" style="padding:3px 8px;border-radius:4px;border:none;background:#111111;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Toate →</button>
+            <button onclick="showSection('mesaje',document.querySelector('[onclick*=\"mesaje\"]'))" style="padding:3px 8px;border-radius:4px;border:none;background:#111111;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Toate →</button>
           </div>
           <div id="msgPanelList" style="max-height:220px;overflow-y:auto"></div>
         </div>
@@ -628,6 +628,16 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       </div>
       <input type="text" id="clientSearch" placeholder="Caută client..." oninput="filterClientiList(this.value)" style="width:100%;padding:10px 14px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;outline:none;margin-bottom:12px"/>
       <div id="clientiList"></div>
+    </div>
+
+    <!-- MESAJE -->
+    <div id="sectionMesaje" style="display:none;margin:-16px">
+      <iframe src="/messages.html" id="iframeMesaje" style="width:100%;height:calc(100vh - 57px);border:none;display:block"></iframe>
+    </div>
+
+    <!-- STOC -->
+    <div id="sectionStoc" style="display:none;margin:-16px">
+      <iframe src="/stock.html" id="iframeStoc" style="width:100%;height:calc(100vh - 57px);border:none;display:block"></iframe>
     </div>
 
     <!-- PRODUCȚIE DASHBOARD -->
@@ -777,7 +787,7 @@ async function loadMsgPanel(){
       ?t.toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'})
       :t.toLocaleDateString('ro-RO');
     return `<div style="padding:10px 20px;border-bottom:1px solid #EDE8DF;cursor:pointer;background:${isUnread?'#FFF9F0':'#fff'};display:flex;gap:12px;align-items:flex-start"
-      onclick="window.location.href='/messages.html'">
+      onclick="showSection('mesaje',document.getElementById('nav_mesaje'))">
       ${isUnread?'<div style="width:7px;height:7px;border-radius:50%;background:#9C3A2B;flex-shrink:0;margin-top:5px"></div>':'<div style="width:7px;height:7px;flex-shrink:0"></div>'}
       <div style="flex:1;min-width:0">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
@@ -1871,14 +1881,14 @@ function toggleSidebar(open){
 
 // SECTIONS
 function showSection(name,el){
-  ['sectionDashboard','sectionOrders','sectionProductie','sectionClienti'].forEach(s=>{
-    const el2=document.getElementById(s);if(el2)el2.style.display='none';
+  ['sectionDashboard','sectionOrders','sectionProductie','sectionClienti','sectionMesaje','sectionStoc'].forEach(s=>{
+    const e=document.getElementById(s);if(e)e.style.display='none';
   });
   const sec=document.getElementById('section'+name.charAt(0).toUpperCase()+name.slice(1));
   if(sec)sec.style.display='block';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el)el.classList.add('active');
-  const titles={dashboard:'Dashboard',orders:'Comenzi',productie:'Producție',clienti:'Clienți'};
+  const titles={dashboard:'Dashboard',orders:'Comenzi',productie:'Producție',clienti:'Clienți',mesaje:'Mesaje',stoc:'Stoc'};
   document.getElementById('pageTitle').textContent=titles[name]||name;
   toggleSidebar(false);
   if(name==='productie')loadProdDashboard();
