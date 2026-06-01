@@ -292,12 +292,16 @@ async function loadOrders(){
 }
 
 async function loadMsgs(){
-  // Încarcă toate mesajele root (parent_id null)
+  // Încarcă toate mesajele root (parent_id null) — exclude mesajele automate de sistem
+  const autoSubjects=['Croit finalizat','Modificare în așteptare','Modificări aprobate','Modificări respinse'];
   const{data}=await sb.from('internal_messages')
     .select(`id,from_user_id,to_department,order_id,message,subject,priority,is_read,created_at,parent_id,
       user_profiles!internal_messages_from_user_id_fkey(full_name,role),
       orders(order_no,clients!orders_client_id_fkey(name,company_name))`)
     .is('parent_id',null)
+    .not('subject','like','Croit finalizat%')
+    .not('subject','like','Modificări aprobate%')
+    .not('subject','like','Modificări respinse%')
     .order('created_at',{ascending:false});
   allMsgs=data||[];
 
