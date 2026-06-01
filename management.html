@@ -1730,13 +1730,19 @@ function calcDD(t){const d=new Date();const z={'5z':5,'10z':10,'15z':15,'30z':30
 
 // ── FIȘĂ DE PRODUCȚIE (fâșii tăiabile) ────────────────────────
 async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează fișa...');
-  const{data:o}=await sb.from('orders').select(`*,clients!orders_client_id_fkey(*),
-    order_lines(*,products(code,name),
-      talpa:talpi(cod),brant:branturi(cod),siret:sireturi(cod),cutie:cutii(cod))`).eq('id',id).single();
-  // Încarcă și calapoadele + model_materiale
-  const{data:modMat}=await sb.from('model_materiale').select('*,calapod:calapode(cod)');
+  const{data:o,error}=await sb.from('orders').select(`*,clients!orders_client_id_fkey(*),
+    order_lines(*,products(code,name))`).eq('id',id).single();
+  if(error||!o){hideLov();showToast('Eroare la încărcare');return;}
+  // Încarcă materialele separat
+  const lineIds=(o.order_lines||[]).map(l=>l.id);
+  const{data:matLines}=lineIds.length?await sb.from('order_lines')
+    .select('id,talpa_id,brant_id,siret_id,cutie_id,talpi(cod),branturi(cod),sireturi(cod),cutii(cod)')
+    .in('id',lineIds):{data:[]};
+  const matMap={};(matLines||[]).forEach(l=>matMap[l.id]=l);
+  // Încarcă model_materiale cu calapod
+  const{data:modMat}=await sb.from('model_materiale').select('*,calapode(cod)');
   const matByProd={};(modMat||[]).forEach(m=>matByProd[m.product_id]=m);
-  hideLov();if(!o)return;
+  hideLov();
   const cl=o.clients?.company_name||o.clients?.name||'—';
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const azi=new Date().toLocaleDateString('ro-RO');
@@ -1749,11 +1755,12 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
     const obs=l.notes?` <em style="color:#888;font-size:11px">${l.notes.replace(/\[RESTANȚĂ:[^\]]+\]/g,'').replace(/\[Discount:[^\]]+\]/g,'').replace(/\[[^\]]+\]/g,'').trim()}</em>`:'';
     const stockBadge=l.from_stock?'<span style="background:#E8EFF6;color:#23394F;border:1px solid rgba(47,74,99,.4);font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px">📦 DIN STOC</span>':'';
     const mat=matByProd[l.product_id]||{};
-    const talpaCod=l.talpa?.cod||mat.talpa_cod||'—';
-    const calapodCod=mat.calapod?.cod||'—';
-    const brantCod=l.brant?.cod||'—';
-    const siretCod=l.siret?.cod||'—';
-    const cutieCod=l.cutie?.cod||'—';
+    const lMat=matMap[l.id]||{};
+    const talpaCod=lMat.talpi?.cod||'—';
+    const calapodCod=mat.calapode?.cod||'—';
+    const brantCod=lMat.branturi?.cod||'—';
+    const siretCod=lMat.sireturi?.cod||'—';
+    const cutieCod=lMat.cutii?.cod||'—';
     const decalaj=mat.notes?` <span style="color:#888;font-size:10px">(decalaj ${mat.notes})</span>`:'';
     const materialeRow=l.from_stock?'':`<tr style="background:#fafafa"><td colspan="3" style="border:1px solid #ccc;padding:5px 10px;font-size:10px;color:#555">
       <span style="margin-right:14px">👟 Talpă: <strong>${talpaCod}</strong>${decalaj}</span>
@@ -1775,11 +1782,12 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
     const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').replace(/\[RESTANȚĂ:[^\]]+\]\s*/,'').replace(/\[[^\]]+\]\s*/g,'').trim():'';
     const mat=matByProd[l.product_id]||{};
-    const talpaCod=l.talpa?.cod||'—';
-    const calapodCod=mat.calapod?.cod||'—';
-    const brantCod=l.brant?.cod||'—';
-    const siretCod=l.siret?.cod||'—';
-    const cutieCod=l.cutie?.cod||'—';
+    const lMat=matMap[l.id]||{};
+    const talpaCod=lMat.talpi?.cod||'—';
+    const calapodCod=mat.calapode?.cod||'—';
+    const brantCod=lMat.branturi?.cod||'—';
+    const siretCod=lMat.sireturi?.cod||'—';
+    const cutieCod=lMat.cutii?.cod||'—';
     const decalaj=mat.notes?` (decalaj ${mat.notes})`:'';
     return `<div style="border:2px dashed #999;border-radius:4px;padding:14px 18px;margin-bottom:10px;page-break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
