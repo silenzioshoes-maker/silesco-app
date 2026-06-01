@@ -1532,6 +1532,7 @@ function openDelete(id,e){e.stopPropagation();delOrderId=id;const o=allOrders.fi
   document.getElementById('delSub').textContent=o.order_no+' · '+(o.clients?.company_name||o.clients?.name||'—');
   document.getElementById('delModal').classList.add('show');}
 async function confirmDelete(){if(!delOrderId)return;showLov('Se șterge...');
+  await sb.from('internal_messages').delete().eq('order_id',delOrderId);
   await sb.from('production_lots').delete().eq('order_id',delOrderId);
   await sb.from('order_lines').delete().eq('order_id',delOrderId);
   await sb.from('orders').delete().eq('id',delOrderId);
