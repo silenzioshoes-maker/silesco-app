@@ -588,6 +588,13 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         </div>
         <div id="diffList" style="max-height:160px;overflow-y:auto"></div>
       </div>
+
+      <!-- COMENZI RECENTE ÎN DASHBOARD -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1.5px">Comenzi recente</div>
+        <button onclick="showSection('orders',document.getElementById('nav_orders'))" style="padding:3px 10px;border-radius:5px;border:none;background:#111111;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Toate →</button>
+      </div>
+      <div id="dashOrdersTable"></div>
     </div>
 
     <!-- ORDERS -->
@@ -609,85 +616,61 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <!-- PRODUCȚIE DASHBOARD -->
     <div id="sectionProductie" style="display:none">
       <!-- SUB-TABS PRODUCȚIE -->
-      <div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap">
-        <button class="filter-btn active" id="ptab_croit" onclick="setProdTab('croit')">✂ Croit</button>
-        <button class="filter-btn" id="ptab_cusut" onclick="setProdTab('cusut')">🧵 Cusut</button>
-        <button class="filter-btn" id="ptab_talpuit" onclick="setProdTab('talpuit')">👟 Talpuit</button>
-        <button class="filter-btn" id="ptab_ambalat" onclick="setProdTab('ambalat')">📦 Ambalat</button>
-      </div>
+      <!-- PRODUCȚIE — toate secțiunile vizibile simultan -->
 
       <!-- CROIT -->
-      <div id="prod_croit">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-          <div style="background:#F5ECD7;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:9px;color:#8B6914;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">La croit</div>
-            <div style="font-size:24px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif" id="pc_active">—</div>
-            <div style="font-size:9px;color:#8B6914">comenzi</div>
-          </div>
-          <div style="background:#FFF9F0;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:9px;color:#8B6914;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Croit azi</div>
-            <div style="font-size:24px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif" id="pc_azi">—</div>
-            <div style="font-size:9px;color:#8B6914">perechi</div>
-          </div>
-          <div style="background:#F5EAE8;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:9px;color:#7A2418;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Restanțe</div>
-            <div style="font-size:24px;font-weight:700;color:#7A2418;font-family:'Playfair Display',serif" id="pc_restante">0</div>
-            <div style="font-size:9px;color:#7A2418">articole</div>
-          </div>
+      <div style="background:#F5ECD7;border-left:3px solid #8B6914;border-radius:0 8px 8px 0;padding:8px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:11px;font-weight:700;color:#5A3E1B;text-transform:uppercase;letter-spacing:1.5px">✂ Croit</div>
+        <div style="display:flex;gap:12px">
+          <span style="font-size:11px;color:#5A3E1B">La croit: <strong id="pc_active">—</strong></span>
+          <span style="font-size:11px;color:#5A3E1B">Croit azi: <strong id="pc_azi">—</strong> per.</span>
+          <span style="font-size:11px;color:#7A2418">Restanțe: <strong id="pc_restante">0</strong></span>
         </div>
-        <div style="font-size:10px;font-weight:700;color:#5A3E1B;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Comenzi active la croit</div>
+      </div>
+      <div id="prod_croit" style="margin-bottom:20px">
         <div id="pc_list"></div>
         <div id="pc_restante_list"></div>
       </div>
 
       <!-- CUSUT -->
-      <div id="prod_cusut" style="display:none">
-        <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Per atelier</div>
-        <div id="pcu_ateliere" style="margin-bottom:14px"></div>
-        <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Finalizat azi</div>
-        <div id="pcu_azi"></div>
-        <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;margin-top:14px">În lucru</div>
+      <div style="background:#E8EFF6;border-left:3px solid #2F4A63;border-radius:0 8px 8px 0;padding:8px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:11px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px">🧵 Cusut</div>
+        <div style="font-size:11px;color:#2F4A63">Per atelier · Finalizat azi</div>
+      </div>
+      <div id="prod_cusut" style="margin-bottom:20px">
+        <div id="pcu_ateliere" style="margin-bottom:10px"></div>
+        <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Finalizat azi</div>
+        <div id="pcu_azi" style="margin-bottom:10px"></div>
+        <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">În lucru</div>
         <div id="pcu_list"></div>
       </div>
 
       <!-- TALPUIT -->
-      <div id="prod_talpuit" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-          <div style="background:#D8EEE0;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">De recepționat</div>
-            <div style="font-size:24px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="pt_receptie">—</div>
-            <div style="font-size:9px;color:#365A43">articole cusut_gata</div>
-          </div>
-          <div style="background:#EAF0EC;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">În talpuit</div>
-            <div style="font-size:24px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="pt_active">—</div>
-            <div style="font-size:9px;color:#365A43">articole</div>
-          </div>
+      <div style="background:#D8EEE0;border-left:3px solid #1E4A2E;border-radius:0 8px 8px 0;padding:8px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:11px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px">👟 Talpuit</div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <span style="font-size:11px;color:#1E4A2E">De recepționat: <strong id="pt_receptie">—</strong></span>
+          <span style="font-size:11px;color:#1E4A2E">În talpuit: <strong id="pt_active">—</strong></span>
+          <a href="/talpuit.html" style="font-size:10px;color:#1E4A2E;font-weight:700;text-decoration:none;padding:3px 8px;border:1px solid #1E4A2E;border-radius:4px">Deschide →</a>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px">De recepționat din cusut</div>
-          <a href="/talpuit.html" style="font-size:11px;color:#1E4A2E;font-weight:700;text-decoration:none;padding:4px 10px;border:1px solid #1E4A2E;border-radius:5px">Deschide Talpuit →</a>
-        </div>
-        <div id="pt_receptie_list" style="margin-bottom:14px"></div>
-        <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">În lucru la talpuit</div>
+      </div>
+      <div id="prod_talpuit" style="margin-bottom:20px">
+        <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">De recepționat din cusut</div>
+        <div id="pt_receptie_list" style="margin-bottom:10px"></div>
+        <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">În lucru la talpuit</div>
         <div id="pt_list"></div>
       </div>
 
       <!-- AMBALAT -->
-      <div id="prod_ambalat" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-          <div style="background:#EAF0EC;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Gata de ambalat</div>
-            <div style="font-size:24px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="pa_gata">—</div>
-            <div style="font-size:9px;color:#365A43">comenzi</div>
-          </div>
-          <div style="background:#D8EEE0;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Ambalate azi</div>
-            <div style="font-size:24px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="pa_azi">—</div>
-            <div style="font-size:9px;color:#365A43">comenzi</div>
-          </div>
+      <div style="background:#EAF0EC;border-left:3px solid #365A43;border-radius:0 8px 8px 0;padding:8px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:11px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px">📦 Ambalat</div>
+        <div style="display:flex;gap:12px">
+          <span style="font-size:11px;color:#1E4A2E">Gata de ambalat: <strong id="pa_gata">—</strong></span>
+          <span style="font-size:11px;color:#1E4A2E">Ambalate azi: <strong id="pa_azi">—</strong></span>
         </div>
-        <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Comenzi finalizate — gata de livrat</div>
+      </div>
+      <div id="prod_ambalat">
+        <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Comenzi finalizate — gata de livrat</div>
         <div id="pa_list"></div>
       </div>
     </div>
@@ -1039,10 +1022,21 @@ const SC={
 };
 
 function renderOrders(){
-  document.getElementById('ordersCount').textContent=filteredOrders.length+' comenzi';
+  const cnt=document.getElementById('ordersCount');
+  if(cnt)cnt.textContent=filteredOrders.length+' comenzi';
   const el=document.getElementById('ordersTable');
-  if(!filteredOrders.length){el.innerHTML='<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px;font-weight:500">Nicio comandă găsită.</div>';return;}
-  el.innerHTML=filteredOrders.map((o,i)=>{
+  const dash=document.getElementById('dashOrdersTable');
+  const html=_buildOrdersHTML(filteredOrders);
+  if(el)el.innerHTML=html;
+  // Dashboard arată ultimele 10 comenzi fără filtre
+  if(dash){
+    const recent=allOrders.filter(o=>o.status!=='anulat').slice(0,10);
+    dash.innerHTML=_buildOrdersHTML(recent);
+  }
+}
+function _buildOrdersHTML(orders){
+  if(!orders||!orders.length)return '<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px;font-weight:500">Nicio comandă găsită.</div>';
+  return orders.map((o,i)=>{
     const cfg=SC[o.status]||SC.nou;
     const isStock=o.is_stock;
     const cl=isStock?(o.allocated_to_client&&o.clients?(o.clients.company_name||o.clients.name):'STOC'):(o.clients?.company_name||o.clients?.name||'—');
@@ -1797,20 +1791,8 @@ function showSection(name,el){
   if(name==='productie')loadProdDashboard();
 }
 
-function setProdTab(t){
-  ['croit','cusut','talpuit','ambalat'].forEach(x=>{
-    const el=document.getElementById('prod_'+x);if(el)el.style.display=x===t?'block':'none';
-    const btn=document.getElementById('ptab_'+x);if(btn)btn.classList.toggle('active',x===t);
-  });
-  loadProdTab(t);
-}
-
-async function loadProdDashboard(){setProdTab('croit');}
-async function loadProdTab(t){
-  if(t==='croit')await loadProdCroit();
-  else if(t==='cusut')await loadProdCusut();
-  else if(t==='talpuit')await loadProdTalpuit();
-  else if(t==='ambalat')await loadProdAmbalat();
+async function loadProdDashboard(){
+  await Promise.all([loadProdCroit(),loadProdCusut(),loadProdTalpuit(),loadProdAmbalat()]);
 }
 
 async function loadProdCroit(){
