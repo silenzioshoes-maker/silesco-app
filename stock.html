@@ -726,15 +726,15 @@ function renderMaterieGrid(elId,items,tip){
       ${entries.length?`
       <div style="margin-top:8px">
         <div style="font-size:9px;font-weight:700;color:#9E9890;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Alertă minimă per mărime</div>
-        <div style="display:flex;gap:0;border:1px solid #DDD7CE;border-radius:6px;overflow:hidden">
+        <div style="display:flex;gap:0;border:1px solid #DDD7CE;border-radius:6px;overflow:hidden;margin-bottom:6px">
           ${entries.map(([s])=>{const minSz=(item.min_alert_sz||{})[s]||0;return `
             <div style="flex:1;text-align:center;border-right:1px solid #DDD7CE;min-width:32px">
               <div style="font-size:10px;font-weight:700;color:#5A5248;background:#F4F1EA;padding:3px 2px;border-bottom:1px solid #DDD7CE">${s}</div>
-              <input type="number" min="0" value="${minSz}" 
-                onchange="updateMinAlertSz('${item.id}','${tip}','${s}',this.value,${JSON.stringify(item.min_alert_sz||{})})"
+              <input type="number" min="0" value="${minSz}" id="minsz_${item.id}_${s}"
                 style="width:100%;padding:3px 2px;border:none;text-align:center;font-size:11px;font-weight:700;color:#9C3A2B;background:#FDF4F2;outline:none"/>
             </div>`}).join('')}
         </div>
+        <button onclick="saveMinAlertSz('${item.id}','${tip}',${JSON.stringify(entries.map(([s])=>s))})" style="width:100%;padding:6px;border-radius:5px;border:1px solid #9C3A2B;background:#FDF4F2;color:#9C3A2B;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salvează alerte minime</button>
       </div>`:''}
       <div style="display:flex;gap:6px;margin-top:10px;align-items:center">
         <button onclick="editMaterie('${item.id}','${tip}')" style="flex:1;padding:7px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Editează</button>
@@ -768,14 +768,18 @@ function renderSimpleGrid(elId,items,tip){
     </div>`).join('');
 }
 
-async function updateMinAlertSz(id,tip,sz,val,currentSz){
-  const newSz={...currentSz,[sz]:parseInt(val)||0};
+async function saveMinAlertSz(id,tip,sizes){
+  const newSz={};
+  sizes.forEach(s=>{
+    const el=document.getElementById('minsz_'+id+'_'+s);
+    if(el)newSz[s]=parseInt(el.value)||0;
+  });
   await sb.from(tip).update({min_alert_sz:newSz}).eq('id',id);
-  // Update local array
-  const arr=tip==='talpi'?allMaterii.talpi:tip==='branturi'?allMaterii.branturi:[];
+  // Update local
+  const arr=tip==='talpi'?allMaterii?.talpi||[]:allMaterii?.branturi||[];
   const item=arr.find(x=>x.id===id);
   if(item)item.min_alert_sz=newSz;
-  showToast('Alert salvat!');
+  showToast('Alerte salvate!');
 }
 
 async function saveTalpaInline(){
