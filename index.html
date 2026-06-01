@@ -767,7 +767,7 @@ async function loadOrders(){
   const{data:orders,error}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
-      order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
+      order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,products(code,name))`)
     .eq('agent_id',CU.id)
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
@@ -847,10 +847,12 @@ function renderOrders(orders){
       const psLabels={in_lucru:'În lucru',la_croit:'La croit',croit_gata:'Croit ✓',la_cusut:'La cusut',cusut_gata:'Cusut ✓',la_talpuit:'La talpuit',gata:'✓ Gata livrare'};
       const psColors={in_lucru:'#5A5248',la_croit:'#5A3E1B',croit_gata:'#2F4A63',la_cusut:'#2F4A63',cusut_gata:'#365A43',la_talpuit:'#1E4A2E',gata:'#1E4A2E'};
       const psBgs={in_lucru:'#F4F1EA',la_croit:'#F5ECD7',croit_gata:'#E8EFF6',la_cusut:'#E8EFF6',cusut_gata:'#EAF0EC',la_talpuit:'#D8EEE0',gata:'#C8E6C9'};
+      const wsLabels={intern:'Intern',oradea:'Oradea',ceica:'Ceica',altul:'Altul'};
+      const wsText=l.workshop?`<span style="font-size:9px;color:#365A43;font-weight:600;background:#EAF0EC;padding:1px 6px;border-radius:3px;margin-left:6px">✂ ${wsLabels[l.workshop]||l.workshop}</span>`:'';
       return `<div style="padding:10px 0;border-bottom:1px solid #EDE8DF">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:#1B1B1B">${modLabel} · ${l.color||'—'} · ${l.total_pairs} per.${val}${stockBadge}</div>
+            <div style="font-size:13px;font-weight:700;color:#1B1B1B">${modLabel} · ${l.color||'—'} · ${l.total_pairs} per.${val}${stockBadge}${wsText}</div>
             ${hasDiscount?`<span class="discount-badge" style="margin:3px 0;display:inline-flex">${discountText}</span>`:''}
             ${pontajHTML}
             ${l.unit_price?`<div style="font-size:11px;color:#4A4540;margin-top:3px">${l.unit_price} RON/per.</div>`:''}
