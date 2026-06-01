@@ -174,6 +174,37 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   </div>
 </div>
 
+<!-- MODAL COMANDĂ SIMPLĂ CROIT -->
+<div class="modal-overlay" id="croitOrderModal">
+  <div class="modal-box">
+    <div class="modal-title">Comandă nouă</div>
+    <div class="modal-sub">Introdu comanda simplu — eu o voi confirma din management</div>
+    <div class="fld">
+      <label>Client / Destinatar <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+      <input type="text" id="coClient" placeholder="ex: Magazin ABC sau lasă gol" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
+    </div>
+    <div class="fld">
+      <label>Articole <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(un articol per linie)</span></label>
+      <textarea id="coArticole" placeholder="ex:&#10;Cizme dans popular 39×2 40×1 41×2 42×3&#10;Oxford negru 40×2 41×3 42×3 43×2" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;height:120px"></textarea>
+    </div>
+    <div class="fld">
+      <label>Termen</label>
+      <select id="coTermen" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff">
+        <option value="5z">5 zile — Urgent</option>
+        <option value="10z" selected>10 zile — Standard</option>
+        <option value="15z">15 zile — Normal</option>
+        <option value="30z">30 zile — Relaxat</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Observații <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+      <textarea id="coNotes" placeholder="ex: urgent pentru targul de sâmbătă..." style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;height:60px"></textarea>
+    </div>
+    <button class="btn-black" onclick="saveCroitOrder()">Trimite la Management</button>
+    <button class="btn-cancel" onclick="closeModal('croitOrderModal')">Anulează</button>
+  </div>
+</div>
+
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-left">
@@ -181,6 +212,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="hdr-title">Atelier Croit</div>
   </div>
   <div class="hdr-right">
+    <button onclick="openCroitOrder()" style="background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:8px;padding:6px 12px;color:#B08D57;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Comandă</button>
     <div class="hdr-badge" id="hdrBadge">0 comenzi</div>
     <button class="msg-btn" onclick="setTab('mesaje')">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -203,6 +235,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 <!-- CONTENT -->
 <div class="wrap">
   <div id="viewComenzi">
+    <div id="diffBanner" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:#7A5A00;margin-bottom:6px">⚠ Articole necroite complet</div>
+      <div id="diffBannerList" style="font-size:11px;color:#8B6914;line-height:1.7"></div>
+    </div>
     <div id="cmdList"></div>
     <div class="empty" id="cmdEmpty" style="display:none">
       <svg viewBox="0 0 24 24"><path d="M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M20 4 8.12 15.88"/></svg>
@@ -285,6 +321,8 @@ async function loadOrders(){
   document.getElementById('hdrBadge').textContent=orders.length+(orders.length===1?' comandă':' comenzi');
   renderOrders();
   renderFinalizate();
+  // Detectează diferențe necroite din artState
+  renderDiffBanner();
 }
 
 async function loadMsgBadge(){
@@ -727,6 +765,61 @@ async function sendMsg(){
   showLov('Se trimite...');
   await sb.from('internal_messages').insert({from_user_id:CU.id,to_department:'management',message:text,priority,is_read:false});
   hideLov();closeModal('newMsgModal');showToast('Mesaj trimis!');loadMsgs();
+}
+
+function renderDiffBanner(){
+  const diffs=[];
+  orders.forEach(o=>{
+    const workLines=(o.order_lines||[]).filter(l=>!l.from_stock);
+    workLines.forEach(l=>{
+      const st=artState[l.id];
+      if(!st||!st.done)return;
+      const totalPlan=l.total_pairs;
+      const totalCroit=Object.values(st.ponytage_done||{}).reduce((s,q)=>s+q,0);
+      if(totalCroit<totalPlan){
+        const mod=getModName(l);
+        diffs.push(`${o.order_no} · ${mod} · ${l.color}: croit ${totalCroit}/${totalPlan} per. — lipsesc ${totalPlan-totalCroit} per.`);
+      }
+    });
+  });
+  const banner=document.getElementById('diffBanner');
+  const list=document.getElementById('diffBannerList');
+  if(!diffs.length){banner.style.display='none';return;}
+  banner.style.display='block';
+  list.innerHTML=diffs.map(d=>`<div>• ${d}</div>`).join('');
+}
+
+function openCroitOrder(){
+  document.getElementById('coClient').value='';
+  document.getElementById('coArticole').value='';
+  document.getElementById('coTermen').value='10z';
+  document.getElementById('coNotes').value='';
+  document.getElementById('croitOrderModal').classList.add('show');
+}
+
+async function saveCroitOrder(){
+  const articole=document.getElementById('coArticole').value.trim();
+  if(!articole){showToast('Completează articolele!');return;}
+  const client=document.getElementById('coClient').value.trim();
+  const termen=document.getElementById('coTermen').value;
+  const notes=document.getElementById('coNotes').value.trim();
+  const msg=[
+    client?'Client: '+client:'',
+    'Articole:\n'+articole,
+    notes?'Obs: '+notes:'',
+  ].filter(Boolean).join('\n');
+  showLov('Se trimite...');
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,
+    to_department:'management',
+    subject:'Comandă nouă croit — '+(client||'fără client'),
+    message:msg,
+    priority:'normal',
+    is_read:false,
+  });
+  hideLov();
+  closeModal('croitOrderModal');
+  showToast('Comandă trimisă la management!');
 }
 
 function closeModal(id){document.getElementById(id).classList.remove('show');}
