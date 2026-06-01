@@ -439,12 +439,16 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   <div class="sidebar-divider"></div>
   <div style="padding:0 8px;flex:1;overflow-y:auto">
     <div class="sidebar-section" style="padding-top:4px">Principal</div>
-    <div class="nav-item" onclick="showSection('orders',this)">
+    <div class="nav-item active" id="nav_dashboard" onclick="showSection('dashboard',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" id="nav_orders" onclick="showSection('orders',this)">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       <span>Comenzi</span>
       <span class="nav-badge" id="newBadge" style="display:none">0</span>
     </div>
-    <div class="nav-item" onclick="showSection('productie',this)">
+    <div class="nav-item" id="nav_productie" onclick="showSection('productie',this)">
       <svg viewBox="0 0 24 24"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
       <span>Producție</span>
     </div>
@@ -494,33 +498,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     </div>
     <div id="msgBanner" style="display:none"></div>
 
-    <!-- ORDERS -->
-    <div id="sectionOrders">
+    <!-- DASHBOARD -->
+    <div id="sectionDashboard">
       <div class="kpi-grid" id="kpiGrid"></div>
 
-      <!-- STATS PRODUCȚIE ZILNICĂ -->
-      <div style="background:#111111;border-radius:10px;padding:10px 16px;margin-bottom:16px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-        <div style="flex-shrink:0;padding:4px 16px 4px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
-          <div style="font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Croite azi</div>
-          <div style="font-size:18px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="mgStatCroitAzi">—</div>
-          <div style="font-size:8px;color:rgba(255,255,255,.3)">perechi</div>
-        </div>
-        <div style="flex-shrink:0;padding:4px 16px 4px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
-          <div style="font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Croite săpt.</div>
-          <div style="font-size:18px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="mgStatCroitSapt">—</div>
-          <div style="font-size:8px;color:rgba(255,255,255,.3)">perechi</div>
-        </div>
-        <div style="flex-shrink:0;padding:4px 16px 4px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
-          <div style="font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Comenzi săpt.</div>
-          <div style="font-size:18px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="mgStatOrdSapt">—</div>
-          <div style="font-size:8px;color:rgba(255,255,255,.3)" id="mgStatOrdSaptVal">comenzi</div>
-        </div>
-        <div style="flex-shrink:0;padding:4px 0">
-          <div style="font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Comenzi lună</div>
-          <div style="font-size:18px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="mgStatOrdLuna">—</div>
-          <div style="font-size:8px;color:rgba(255,255,255,.3)" id="mgStatOrdLunaVal">comenzi</div>
-        </div>
-      </div>
       <div id="diffPanel" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:10px;margin-bottom:16px;overflow:hidden">
         <div style="padding:11px 16px;border-bottom:1px solid rgba(176,137,43,.2);display:flex;justify-content:space-between;align-items:center">
           <div style="font-size:13px;font-weight:700;color:#7A5A00">⚠ Diferențe necroite</div>
@@ -571,11 +552,12 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
             <div style="margin-bottom:12px">
               <div style="font-size:9px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px">
                 <svg style="width:11px;height:11px;stroke:#2F4A63;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-                Cusut
+                Cusut finalizat azi
               </div>
               <div id="rCusutAteliere" style="display:flex;flex-direction:column;gap:4px">
                 <div style="font-size:11px;color:#9E9890;font-style:italic">Se încarcă...</div>
               </div>
+              <div id="rCusutNotif" style="margin-top:6px;display:flex;flex-direction:column;gap:3px"></div>
             </div>
             <!-- TALPUIT -->
             <div>
@@ -606,8 +588,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         </div>
         <div id="diffList" style="max-height:160px;overflow-y:auto"></div>
       </div>
+    </div>
 
-      <!-- FILTRE MICI -->
+    <!-- ORDERS -->
+    <div id="sectionOrders" style="display:none">
       <div class="filters" style="margin-bottom:8px;flex-wrap:wrap;gap:4px">
         <button class="filter-btn active" onclick="setFilter('toate',this)">Toate</button>
         <button class="filter-btn" onclick="setFilter('nou',this)">Noi</button>
@@ -622,11 +606,89 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       </div>
     </div>
 
-    <!-- PRODUCȚIE -->
+    <!-- PRODUCȚIE DASHBOARD -->
     <div id="sectionProductie" style="display:none">
-      <div class="table-wrap">
-        <div class="table-header"><div class="table-title">Comenzi în producție</div><div class="table-count" id="lotsCount"></div></div>
-        <div id="lotsTable"></div>
+      <!-- SUB-TABS PRODUCȚIE -->
+      <div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="filter-btn active" id="ptab_croit" onclick="setProdTab('croit')">✂ Croit</button>
+        <button class="filter-btn" id="ptab_cusut" onclick="setProdTab('cusut')">🧵 Cusut</button>
+        <button class="filter-btn" id="ptab_talpuit" onclick="setProdTab('talpuit')">👟 Talpuit</button>
+        <button class="filter-btn" id="ptab_ambalat" onclick="setProdTab('ambalat')">📦 Ambalat</button>
+      </div>
+
+      <!-- CROIT -->
+      <div id="prod_croit">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+          <div style="background:#F5ECD7;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:9px;color:#8B6914;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">La croit</div>
+            <div style="font-size:24px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif" id="pc_active">—</div>
+            <div style="font-size:9px;color:#8B6914">comenzi</div>
+          </div>
+          <div style="background:#FFF9F0;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:9px;color:#8B6914;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Croit azi</div>
+            <div style="font-size:24px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif" id="pc_azi">—</div>
+            <div style="font-size:9px;color:#8B6914">perechi</div>
+          </div>
+          <div style="background:#F5EAE8;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:9px;color:#7A2418;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Restanțe</div>
+            <div style="font-size:24px;font-weight:700;color:#7A2418;font-family:'Playfair Display',serif" id="pc_restante">0</div>
+            <div style="font-size:9px;color:#7A2418">articole</div>
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:#5A3E1B;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Comenzi active la croit</div>
+        <div id="pc_list"></div>
+        <div id="pc_restante_list"></div>
+      </div>
+
+      <!-- CUSUT -->
+      <div id="prod_cusut" style="display:none">
+        <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Per atelier</div>
+        <div id="pcu_ateliere" style="margin-bottom:14px"></div>
+        <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Finalizat azi</div>
+        <div id="pcu_azi"></div>
+        <div style="font-size:10px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;margin-top:14px">În lucru</div>
+        <div id="pcu_list"></div>
+      </div>
+
+      <!-- TALPUIT -->
+      <div id="prod_talpuit" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          <div style="background:#D8EEE0;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">De recepționat</div>
+            <div style="font-size:24px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="pt_receptie">—</div>
+            <div style="font-size:9px;color:#365A43">articole cusut_gata</div>
+          </div>
+          <div style="background:#EAF0EC;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">În talpuit</div>
+            <div style="font-size:24px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="pt_active">—</div>
+            <div style="font-size:9px;color:#365A43">articole</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px">De recepționat din cusut</div>
+          <a href="/talpuit.html" style="font-size:11px;color:#1E4A2E;font-weight:700;text-decoration:none;padding:4px 10px;border:1px solid #1E4A2E;border-radius:5px">Deschide Talpuit →</a>
+        </div>
+        <div id="pt_receptie_list" style="margin-bottom:14px"></div>
+        <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">În lucru la talpuit</div>
+        <div id="pt_list"></div>
+      </div>
+
+      <!-- AMBALAT -->
+      <div id="prod_ambalat" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          <div style="background:#EAF0EC;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Gata de ambalat</div>
+            <div style="font-size:24px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="pa_gata">—</div>
+            <div style="font-size:9px;color:#365A43">comenzi</div>
+          </div>
+          <div style="background:#D8EEE0;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Ambalate azi</div>
+            <div style="font-size:24px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="pa_azi">—</div>
+            <div style="font-size:9px;color:#365A43">comenzi</div>
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Comenzi finalizate — gata de livrat</div>
+        <div id="pa_list"></div>
       </div>
     </div>
   </div>
@@ -673,6 +735,12 @@ async function doLogout(){await sb.auth.signOut();}
 async function loadAll(){
   showLov('Se încarcă datele...');
   await Promise.all([loadOrders(),loadLots(),loadProds(),loadClients(),loadAteliere(),loadWorkshopTokens(),loadMsgBadge(),loadMsgPanel(),loadDiffs(),loadProdStats(),loadDailyReports()]);
+  // Asigură că dashboard e vizibil la start
+  if(document.getElementById('sectionDashboard').style.display==='none'&&
+     document.getElementById('sectionOrders').style.display==='none'&&
+     document.getElementById('sectionProductie').style.display==='none'){
+    document.getElementById('sectionDashboard').style.display='block';
+  }
   hideLov();
 }
 async function loadMsgPanel(){
@@ -815,15 +883,24 @@ async function loadDailyReports(){
 
   // Cusut per atelier — order_lines cu production_status=cusut_gata updated azi/sapt
   const{data:cusutLines}=await sb.from('order_lines')
-    .select('workshop,total_pairs,updated_at')
+    .select(`workshop,total_pairs,updated_at,product_id,free_model,color,notes,
+      orders!inner(order_no,clients!orders_client_id_fkey(name,company_name)),
+      products(code)`)
     .eq('production_status','cusut_gata')
-    .gte('updated_at',saptStart);
+    .gte('updated_at',saptStart)
+    .order('updated_at',{ascending:false});
   const atelierStats={};
+  const cusutAziItems=[];
   (cusutLines||[]).forEach(l=>{
     const ws=l.workshop||'intern';
     if(!atelierStats[ws])atelierStats[ws]={azi:0,sapt:0};
     atelierStats[ws].sapt+=(l.total_pairs||0);
-    if(l.updated_at>=aziStart)atelierStats[ws].azi+=(l.total_pairs||0);
+    if(l.updated_at>=aziStart){
+      atelierStats[ws].azi+=(l.total_pairs||0);
+      const mod=l.products?.code?'Art. '+l.products.code:l.free_model||(l.notes?.match(/\[([^\]]+)\]/)?.[1]||l.color)||'—';
+      const cl=l.orders?.clients?.company_name||l.orders?.clients?.name||'—';
+      cusutAziItems.push({ws,mod,color:l.color,total:l.total_pairs,orderNo:l.orders?.order_no||'—',cl});
+    }
   });
   const atelEl=document.getElementById('rCusutAteliere');
   if(Object.keys(atelierStats).length){
@@ -834,6 +911,18 @@ async function loadDailyReports(){
       </div>`).join('');
   }else{
     atelEl.innerHTML='<div style="font-size:11px;color:#9E9890;font-style:italic">Nicio activitate</div>';
+  }
+  // Notificări cusut azi
+  const notifEl=document.getElementById('rCusutNotif');
+  if(cusutAziItems.length){
+    notifEl.innerHTML=cusutAziItems.map(n=>`
+      <div style="padding:5px 8px;background:#E8EFF6;border-left:3px solid #2F4A63;border-radius:0 6px 6px 0;font-size:11px;color:#111111">
+        <strong>${n.mod} · ${n.color}</strong> — ${n.total} per. 
+        <span style="color:#5A5248">${n.orderNo} · ${n.cl}</span>
+        <span style="font-size:9px;color:#2F4A63;font-weight:700;margin-left:4px;background:#DCE8F5;padding:1px 5px;border-radius:3px;text-transform:capitalize">${n.ws}</span>
+      </div>`).join('');
+  }else{
+    notifEl.innerHTML='';
   }
 
   // Talpuit — din audit sau production_status
@@ -1720,12 +1809,103 @@ function toggleSidebar(open){
 
 // SECTIONS
 function showSection(name,el){
-  document.getElementById('sectionOrders').style.display=name==='orders'?'block':'none';
-  document.getElementById('sectionProductie').style.display=name==='productie'?'block':'none';
+  ['sectionDashboard','sectionOrders','sectionProductie'].forEach(s=>{
+    const el2=document.getElementById(s);if(el2)el2.style.display='none';
+  });
+  const sec=document.getElementById('section'+name.charAt(0).toUpperCase()+name.slice(1));
+  if(sec)sec.style.display='block';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el)el.classList.add('active');
-  document.getElementById('pageTitle').textContent=name==='orders'?'Comenzi':'Producție';
+  const titles={dashboard:'Dashboard',orders:'Comenzi',productie:'Producție'};
+  document.getElementById('pageTitle').textContent=titles[name]||name;
   toggleSidebar(false);
+  if(name==='productie')loadProdDashboard();
+}
+
+function setProdTab(t){
+  ['croit','cusut','talpuit','ambalat'].forEach(x=>{
+    const el=document.getElementById('prod_'+x);if(el)el.style.display=x===t?'block':'none';
+    const btn=document.getElementById('ptab_'+x);if(btn)btn.classList.toggle('active',x===t);
+  });
+  loadProdTab(t);
+}
+
+async function loadProdDashboard(){setProdTab('croit');}
+async function loadProdTab(t){
+  if(t==='croit')await loadProdCroit();
+  else if(t==='cusut')await loadProdCusut();
+  else if(t==='talpuit')await loadProdTalpuit();
+  else if(t==='ambalat')await loadProdAmbalat();
+}
+
+async function loadProdCroit(){
+  const croitOrders=allOrders.filter(o=>['la_croit','in_productie'].includes(o.status));
+  document.getElementById('pc_active').textContent=croitOrders.length;
+  const now=new Date();
+  const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
+  const{data:auditData}=await sb.from('audit_log').select('new_data').eq('action','update').like('new_data->>action','Croit finalizat%').gte('created_at',aziStart);
+  let croitAzi=0;
+  (auditData||[]).forEach(h=>{const m=[...((h.new_data?.action||'').matchAll(/: (\d+) per\./g))];croitAzi+=m.reduce((s,x)=>s+parseInt(x[1]),0);});
+  document.getElementById('pc_azi').textContent=croitAzi;
+  const{data:restante}=await sb.from('order_lines').select('id,notes').like('notes','%[RESTANȚĂ:%');
+  document.getElementById('pc_restante').textContent=(restante||[]).length;
+  const el=document.getElementById('pc_list');
+  if(!croitOrders.length){el.innerHTML='<div style="font-size:12px;color:#9E9890;padding:10px 0;font-style:italic">Nicio comandă activă la croit</div>';document.getElementById('pc_restante_list').innerHTML='';return;}
+  const getModName=l=>l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
+  el.innerHTML=croitOrders.map(o=>{
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const lines=o.order_lines||[];
+    const workLines=lines.filter(l=>!l.from_stock);
+    const doneLines=workLines.filter(l=>['croit_gata','la_cusut','cusut_gata','la_talpuit','gata'].includes(l.production_status));
+    return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:10px 14px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:2px">${o.order_no||'—'}</div>
+          <div style="font-size:14px;font-weight:700;color:#111111">${cl}</div>
+          <div style="font-size:11px;color:#5A5248;margin-top:3px">${workLines.length} art. · ${o.total_pairs||0} per.</div></div>
+        <div style="text-align:right"><div style="font-size:16px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif">${doneLines.length}/${workLines.length}</div><div style="font-size:9px;color:#8B6914">croite</div></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
+        ${workLines.map(l=>{const mod=getModName(l);const isDone=['croit_gata','la_cusut','cusut_gata','la_talpuit','gata'].includes(l.production_status);const hasR=l.notes?.includes('[RESTANȚĂ:');
+          return `<span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:${isDone?'#EAF0EC':hasR?'#F5EAE8':'#F4F1EA'};color:${isDone?'#1E4A2E':hasR?'#7A2418':'#3A3530'};border:1px solid ${isDone?'rgba(54,90,67,.2)':hasR?'rgba(156,58,43,.2)':'#DDD7CE'}">${isDone?'✓ ':hasR?'⚠ ':''}${mod}</span>`;}).join('')}
+      </div></div>`;
+  }).join('');
+  document.getElementById('pc_restante_list').innerHTML=(restante?.length)?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;color:#7A2418;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">⚠ Restanțe necroite</div>${restante.map(l=>{const m=l.notes?.match(/\[RESTANȚĂ: (\d+) per\.\]/);return m?`<div style="background:#F5EAE8;border-left:3px solid #9C3A2B;border-radius:0 6px 6px 0;padding:6px 10px;margin-bottom:4px;font-size:11px;color:#7A2418"><strong>Restanță ${m[1]} per.</strong></div>`:'';}).join('')}</div>`:'';
+}
+
+async function loadProdCusut(){
+  const{data:cusutLines}=await sb.from('order_lines')
+    .select(`workshop,total_pairs,production_status,product_id,free_model,color,notes,updated_at,products(code),orders!inner(order_no,clients!orders_client_id_fkey(name,company_name))`)
+    .in('production_status',['la_cusut','cusut_gata']).order('updated_at',{ascending:false});
+  const byWs={};const now=new Date();const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
+  (cusutLines||[]).forEach(l=>{const ws=l.workshop||'intern';if(!byWs[ws])byWs[ws]={inLucru:[],finalizatAzi:[]};if(l.production_status==='la_cusut')byWs[ws].inLucru.push(l);else if(l.production_status==='cusut_gata'&&l.updated_at>=aziStart)byWs[ws].finalizatAzi.push(l);});
+  const getM=l=>l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
+  document.getElementById('pcu_ateliere').innerHTML=Object.entries(byWs).map(([ws,d])=>`<div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:10px 14px;margin-bottom:6px"><div style="font-size:12px;font-weight:700;color:#2F4A63;text-transform:capitalize;margin-bottom:6px">🧵 ${ws}</div><div style="display:flex;gap:12px"><div><span style="font-size:18px;font-weight:700;color:#2F4A63;font-family:'Playfair Display',serif">${d.inLucru.length}</span><span style="font-size:10px;color:#5A5248;margin-left:4px">în lucru</span></div><div><span style="font-size:18px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif">${d.finalizatAzi.length}</span><span style="font-size:10px;color:#5A5248;margin-left:4px">gata azi</span></div></div></div>`).join('')||'<div style="font-size:12px;color:#9E9890;font-style:italic">Nicio activitate cusut</div>';
+  const toateAzi=(cusutLines||[]).filter(l=>l.production_status==='cusut_gata'&&l.updated_at>=aziStart);
+  document.getElementById('pcu_azi').innerHTML=toateAzi.length?toateAzi.map(l=>`<div style="background:#E8EFF6;border-left:3px solid #2F4A63;border-radius:0 6px 6px 0;padding:6px 10px;margin-bottom:4px;font-size:11px;color:#111111"><strong>${getM(l)} · ${l.color||'—'}</strong> · ${l.total_pairs} per. <span style="color:#5A5248;font-size:10px;text-transform:capitalize">${l.orders?.order_no||'—'} · ${l.workshop||'intern'}</span></div>`).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic">Niciun articol finalizat azi</div>';
+  const inLucru=(cusutLines||[]).filter(l=>l.production_status==='la_cusut');
+  document.getElementById('pcu_list').innerHTML=inLucru.length?inLucru.map(l=>`<div style="background:#fff;border:1px solid #DDD7CE;border-radius:7px;padding:8px 12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'}</div><div style="font-size:10px;color:#5A5248">${l.orders?.order_no||'—'} · ${l.orders?.clients?.company_name||l.orders?.clients?.name||'—'}</div></div><span style="font-size:9px;font-weight:700;color:#2F4A63;background:#E8EFF6;padding:2px 7px;border-radius:4px;text-transform:capitalize">${l.workshop||'intern'}</span></div>`).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic">Niciun articol în cusut</div>';
+}
+
+async function loadProdTalpuit(){
+  const{data:lines}=await sb.from('order_lines')
+    .select(`id,total_pairs,production_status,product_id,free_model,color,notes,workshop,updated_at,products(code),orders!inner(order_no,clients!orders_client_id_fkey(name,company_name))`)
+    .in('production_status',['cusut_gata','la_talpuit']).order('updated_at',{ascending:false});
+  const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata');
+  const laTalpuit=(lines||[]).filter(l=>l.production_status==='la_talpuit');
+  document.getElementById('pt_receptie').textContent=receptie.length;
+  document.getElementById('pt_active').textContent=laTalpuit.length;
+  const getM=l=>l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
+  document.getElementById('pt_receptie_list').innerHTML=receptie.length?receptie.map(l=>`<div style="background:#E8EFF6;border-left:3px solid #2F4A63;border-radius:0 7px 7px 0;padding:8px 12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'} · ${l.total_pairs} per.</div><div style="font-size:10px;color:#5A5248">${l.orders?.order_no||'—'} · ${l.orders?.clients?.company_name||l.orders?.clients?.name||'—'} · <span style="text-transform:capitalize">${l.workshop||'intern'}</span></div></div><a href="/talpuit.html" style="font-size:10px;font-weight:700;color:#1E4A2E;text-decoration:none;padding:4px 8px;border:1px solid #1E4A2E;border-radius:5px">→ Talpuit</a></div>`).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic">Nimic de recepționat</div>';
+  document.getElementById('pt_list').innerHTML=laTalpuit.length?laTalpuit.map(l=>`<div style="background:#fff;border:1px solid #DDD7CE;border-radius:7px;padding:8px 12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'} · ${l.total_pairs} per.</div><div style="font-size:10px;color:#5A5248">${l.orders?.order_no||'—'} · ${l.orders?.clients?.company_name||l.orders?.clients?.name||'—'}</div></div><span style="font-size:9px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:2px 7px;border-radius:4px">La talpuit</span></div>`).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic">Niciun articol în talpuit</div>';
+}
+
+async function loadProdAmbalat(){
+  const finalizate=allOrders.filter(o=>o.status==='finalizat');
+  const now=new Date();const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
+  const ambalateAzi=allOrders.filter(o=>o.status==='livrat'&&o.updated_at>=aziStart);
+  document.getElementById('pa_gata').textContent=finalizate.length;
+  document.getElementById('pa_azi').textContent=ambalateAzi.length;
+  document.getElementById('pa_list').innerHTML=finalizate.length?finalizate.map(o=>{const cl=o.clients?.company_name||o.clients?.name||'—';const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:2px">${o.order_no||'—'}</div><div style="font-size:14px;font-weight:700;color:#111111">${cl}</div><div style="font-size:11px;color:#5A5248;margin-top:2px">${o.total_pairs||0} per. · ${dd}</div></div><span style="font-size:10px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:3px 10px;border-radius:6px">✓ Gata</span></div>`;}).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic;padding:10px 0">Nicio comandă gata de ambalat</div>';
 }
 
 // UTILS
