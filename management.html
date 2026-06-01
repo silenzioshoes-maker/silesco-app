@@ -1675,7 +1675,25 @@ async function saveOrder(){
   const notes=document.getElementById('omNotes').value.trim();
   const tp=omArts.reduce((s,a)=>s+a.total_pairs,0);
   const tv=omArts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
-  const lineRows=a=>({product_id:a.product_id||null,free_model:a.free_model||null,color:a.color||null,ponytage:a.ponytage,total_pairs:a.total_pairs,unit_price:a.unit_price||null});
+  // Încarcă asocierile model→materiale
+  const{data:asoc}=await sb.from('model_materiale').select('*');
+  const matByProduct={};
+  (asoc||[]).forEach(a=>matByProduct[a.product_id]=a);
+  const lineRows=a=>{
+    const mat=a.product_id?matByProduct[a.product_id]||{}:{};
+    return {
+      product_id:a.product_id||null,
+      free_model:a.free_model||null,
+      color:a.color||null,
+      ponytage:a.ponytage,
+      total_pairs:a.total_pairs,
+      unit_price:a.unit_price||null,
+      talpa_id:mat.talpa_id||null,
+      brant_id:mat.brant_id||null,
+      siret_id:mat.siret_id||null,
+      cutie_id:mat.cutie_id||null,
+    };
+  };
   showLov('Se salvează...');
   if(omEditId){
     await sb.from('orders').update({client_id:isStock?null:clientId,is_stock:isStock,delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv,updated_at:new Date().toISOString()}).eq('id',omEditId);
