@@ -271,7 +271,6 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         <div style="display:flex;gap:8px;margin-bottom:10px">
           <input id="tCod" type="text" placeholder="Cod (ex: 924, Balty...)" style="flex:1;padding:9px 12px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;outline:none"/>
           <input id="tNume" type="text" placeholder="Nume (opțional)" style="flex:1;padding:9px 12px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;outline:none"/>
-          <input id="tMinAlert" type="number" min="0" placeholder="Min alert" title="Alertă stoc minim" style="width:100px;padding:9px 12px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;outline:none"/>
         </div>
         <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Stoc inițial per mărime (opțional)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="tSzRow">
@@ -724,11 +723,20 @@ function renderMaterieGrid(elId,items,tip){
         </div>
       </div>
       ${pontajHTML}
-      <div style="display:flex;gap:6px;margin-top:10px;align-items:center">
-        <div style="flex:1;display:flex;align-items:center;gap:6px">
-          <span style="font-size:10px;color:#5A5248;font-weight:600;white-space:nowrap">Min alert:</span>
-          <input type="number" min="0" value="${item.min_alert||0}" onchange="updateMinAlert('${item.id}','${tip}',this.value)" style="width:60px;padding:4px 6px;border:1.5px solid #DDD7CE;border-radius:5px;font-size:12px;font-family:'Inter',sans-serif;outline:none;text-align:center"/>
+      ${entries.length?`
+      <div style="margin-top:8px">
+        <div style="font-size:9px;font-weight:700;color:#9E9890;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Alertă minimă per mărime</div>
+        <div style="display:flex;gap:0;border:1px solid #DDD7CE;border-radius:6px;overflow:hidden">
+          ${entries.map(([s])=>{const minSz=(item.min_alert_sz||{})[s]||0;return `
+            <div style="flex:1;text-align:center;border-right:1px solid #DDD7CE;min-width:32px">
+              <div style="font-size:10px;font-weight:700;color:#5A5248;background:#F4F1EA;padding:3px 2px;border-bottom:1px solid #DDD7CE">${s}</div>
+              <input type="number" min="0" value="${minSz}" 
+                onchange="updateMinAlertSz('${item.id}','${tip}','${s}',this.value,${JSON.stringify(item.min_alert_sz||{})})"
+                style="width:100%;padding:3px 2px;border:none;text-align:center;font-size:11px;font-weight:700;color:#9C3A2B;background:#FDF4F2;outline:none"/>
+            </div>`}).join('')}
         </div>
+      </div>`:''}
+      <div style="display:flex;gap:6px;margin-top:10px;align-items:center">
         <button onclick="editMaterie('${item.id}','${tip}')" style="flex:1;padding:7px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Editează</button>
         <button onclick="openBulkEntry('${item.id}','${tip}','${item.cod}')" style="flex:1;padding:7px;border-radius:6px;border:1px solid #2F4A63;background:#E8EFF6;color:#2F4A63;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Intrare</button>
         <button onclick="deleteMaterie('${item.id}','${tip}')" style="padding:7px 12px;border-radius:6px;border:1px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">×</button>
@@ -760,23 +768,27 @@ function renderSimpleGrid(elId,items,tip){
     </div>`).join('');
 }
 
-async function updateMinAlert(id,tip,val){
-  await sb.from(tip).update({min_alert:parseInt(val)||0}).eq('id',id);
-  showToast('Min alert salvat!');
+async function updateMinAlertSz(id,tip,sz,val,currentSz){
+  const newSz={...currentSz,[sz]:parseInt(val)||0};
+  await sb.from(tip).update({min_alert_sz:newSz}).eq('id',id);
+  // Update local array
+  const arr=tip==='talpi'?allMaterii.talpi:tip==='branturi'?allMaterii.branturi:[];
+  const item=arr.find(x=>x.id===id);
+  if(item)item.min_alert_sz=newSz;
+  showToast('Alert salvat!');
 }
 
 async function saveTalpaInline(){
   const cod=document.getElementById('tCod').value.trim();
   if(!cod){showToast('Completează codul!');return;}
   const name=document.getElementById('tNume').value.trim();
-  const minAlert=parseInt(document.getElementById('tMinAlert').value)||0;
   const stoc={};
   ['36','37','38','39','40','41','42','43','44','45','46'].forEach(s=>{
     const v=parseInt(document.getElementById('tsz_'+s)?.value)||0;
     if(v>0)stoc[s]=v;
   });
   showLov('Se salvează...');
-  const{error}=await sb.from('talpi').insert({cod,name:name||cod,stoc,notes:null,min_alert:minAlert});
+  const{error}=await sb.from('talpi').insert({cod,name:name||cod,stoc,notes:null});
   hideLov();
   if(error){showToast('Eroare: '+error.message+' (cod există deja?)');return;}
   // Reset form
