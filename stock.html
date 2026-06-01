@@ -265,9 +265,22 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     </div>
     <!-- TALPI -->
     <div id="tabTalpi" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:600;color:#5A5248">Stoc talpi per mărime</div>
-        <button onclick="openMaterieModal('talpi')" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă talpă</button>
+      <!-- FORMULAR INLINE ADĂUGARE -->
+      <div id="talpaForm" style="background:#fff;border:1.5px solid #B08D57;border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:#111111;margin-bottom:12px">Adaugă talpă nouă</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input id="tCod" type="text" placeholder="Cod (ex: 924, Balty...)" style="flex:1;padding:9px 12px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;outline:none"/>
+          <input id="tNume" type="text" placeholder="Nume (opțional)" style="flex:1;padding:9px 12px;border:1.5px solid #DDD7CE;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;outline:none"/>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Stoc inițial per mărime (opțional)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="tSzRow">
+          ${['36','37','38','39','40','41','42','43','44','45','46'].map(s=>`
+            <div style="text-align:center">
+              <div style="font-size:10px;color:#5A5248;font-weight:600;margin-bottom:3px">${s}</div>
+              <input type="number" min="0" value="0" id="tsz_${s}" style="width:44px;padding:5px 4px;border:1.5px solid #DDD7CE;border-radius:6px;text-align:center;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;outline:none"/>
+            </div>`).join('')}
+        </div>
+        <button onclick="saveTalpaInline()" style="padding:10px 24px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salvează talpă</button>
       </div>
       <div id="talpiGrid"></div>
     </div>
@@ -734,6 +747,29 @@ function renderSimpleGrid(elId,items,tip){
         </div>
       </div>
     </div>`).join('');
+}
+
+async function saveTalpaInline(){
+  const cod=document.getElementById('tCod').value.trim();
+  if(!cod){showToast('Completează codul!');return;}
+  const name=document.getElementById('tNume').value.trim();
+  const stoc={};
+  ['36','37','38','39','40','41','42','43','44','45','46'].forEach(s=>{
+    const v=parseInt(document.getElementById('tsz_'+s)?.value)||0;
+    if(v>0)stoc[s]=v;
+  });
+  showLov('Se salvează...');
+  const{error}=await sb.from('talpi').insert({cod,name:name||cod,stoc,notes:null});
+  hideLov();
+  if(error){showToast('Eroare: '+error.message+' (cod există deja?)');return;}
+  // Reset form
+  document.getElementById('tCod').value='';
+  document.getElementById('tNume').value='';
+  ['36','37','38','39','40','41','42','43','44','45','46'].forEach(s=>{
+    const el=document.getElementById('tsz_'+s);if(el)el.value='0';
+  });
+  showToast('Talpă adăugată!');
+  await loadMaterii();
 }
 
 async function loadCalapode(){
