@@ -221,10 +221,22 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   <div class="content">
     <div class="stock-tabs">
       <div class="stock-tab active" onclick="showTab('baxuri',this)">
-        📦 Baxuri gata (<span id="baxCount">0</span>)
+        📦 Baxuri (<span id="baxCount">0</span>)
       </div>
       <div class="stock-tab" onclick="showTab('fete',this)">
-        ✂️ FEȚE în casă (<span id="feteCount">0</span>)
+        ✂️ FEȚE (<span id="feteCount">0</span>)
+      </div>
+      <div class="stock-tab" onclick="showTab('talpi',this)">
+        👟 Talpi
+      </div>
+      <div class="stock-tab" onclick="showTab('branturi',this)">
+        🦶 Branturi
+      </div>
+      <div class="stock-tab" onclick="showTab('sireturi',this)">
+        🎀 Șireturi
+      </div>
+      <div class="stock-tab" onclick="showTab('cutii',this)">
+        📫 Cutii
       </div>
     </div>
 
@@ -245,10 +257,68 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       </div>
       <div class="stock-grid" id="feteGrid"></div>
     </div>
+    <!-- TALPI -->
+    <div id="tabTalpi" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#5A5248">Stoc talpi per mărime</div>
+        <button onclick="openMaterieModal('talpi')" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă talpă</button>
+      </div>
+      <div id="talpiGrid"></div>
+    </div>
+
+    <!-- BRANTURI -->
+    <div id="tabBranturi" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#5A5248">Stoc branturi per mărime</div>
+        <button onclick="openMaterieModal('branturi')" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă branț</button>
+      </div>
+      <div id="branturiGrid"></div>
+    </div>
+
+    <!-- SIRETURI -->
+    <div id="tabSireturi" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#5A5248">Stoc șireturi (perechi)</div>
+        <button onclick="openMaterieModal('sireturi')" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă șiret</button>
+      </div>
+      <div id="sireturiGrid"></div>
+    </div>
+
+    <!-- CUTII -->
+    <div id="tabCutii" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#5A5248">Stoc cutii (bucăți)</div>
+        <button onclick="openMaterieModal('cutii')" style="padding:10px 20px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă cutie</button>
+      </div>
+      <div id="cutiiGrid"></div>
+    </div>
   </div>
 </div>
 
-<script>
+<!-- MODAL MATERIE PRIMĂ -->
+<div class="modal-overlay" id="materieModal" style="z-index:300">
+  <div class="modal-box">
+    <div class="modal-title" id="materieModalTitle">Adaugă</div>
+    <div class="fld"><label>Cod *</label><input type="text" id="mCod" placeholder="ex: 924, B-01..." style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+    <div class="fld"><label>Nume / Descriere</label><input type="text" id="mNume" placeholder="ex: Talpă sport groasă..." style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+
+    <!-- Stoc per mărime (talpi, branturi) -->
+    <div id="mStocPerMarime" style="display:none">
+      <div style="font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Stoc per mărime</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px" id="mSzGrid"></div>
+      <button onclick="addMSize()" style="width:100%;margin-top:6px;padding:7px;border-radius:6px;border:1.5px dashed #C8C0B8;background:#fff;color:#5A5248;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă mărime</button>
+    </div>
+
+    <!-- Stoc global (sireturi, cutii) -->
+    <div id="mStocGlobal" style="display:none">
+      <div class="fld"><label>Stoc (bucăți/perechi)</label><input type="number" id="mStoc" placeholder="0" min="0" style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+    </div>
+
+    <div class="fld"><label>Observații</label><input type="text" id="mNotes" placeholder="opțional..." style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/></div>
+    <button onclick="saveMaterie()" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px">Salvează</button>
+    <button onclick="closeModal('materieModal')" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Anulează</button>
+  </div>
+</div>
 const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
 const{createClient}=supabase;
@@ -541,11 +611,166 @@ function filterBaxModels(q){
 }
 function selBaxModel(id,code){document.getElementById('baxProductId').value=id;document.getElementById('baxModel').value='Art. '+code;document.getElementById('baxModelDrop').style.display='none';}
 function previewPhoto(inputId,imgId){const url=document.getElementById(inputId).value.trim();const img=document.getElementById(imgId);if(url){img.src=url;img.style.display='block';}else{img.style.display='none';}}
+// ── MATERII PRIME ─────────────────────────────────────────────
+let curMaterie=null,mEditId=null;
+const MSZ=['36','37','38','39','40','41','42','43','44','45'];
+let mSzV={};MSZ.forEach(s=>mSzV[s]=0);
+let mSzList=[...MSZ.slice(3,9)]; // 39-44 default
+
+async function loadMaterii(){
+  const[{data:talpi},{data:branturi},{data:sireturi},{data:cutii}]=await Promise.all([
+    sb.from('talpi').select('*').order('cod'),
+    sb.from('branturi').select('*').order('cod'),
+    sb.from('sireturi').select('*').order('cod'),
+    sb.from('cutii').select('*').order('cod'),
+  ]);
+  renderMaterieGrid('talpiGrid',talpi||[],'talpi');
+  renderMaterieGrid('branturiGrid',branturi||[],'branturi');
+  renderSimpleGrid('sireturiGrid',sireturi||[],'sireturi');
+  renderSimpleGrid('cutiiGrid',cutii||[],'cutii');
+}
+
+function renderMaterieGrid(elId,items,tip){
+  const el=document.getElementById(elId);if(!el)return;
+  if(!items.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#9E9890;font-size:13px">Niciun articol. Adaugă primul.</div>';return;}
+  el.innerHTML=items.map(item=>{
+    const stoc=item.stoc||{};
+    const entries=Object.entries(stoc).filter(([,q])=>q>0);
+    const total=entries.reduce((s,[,q])=>s+q,0);
+    return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#111111">${item.cod}</div>
+          ${item.name||item.nume?`<div style="font-size:12px;color:#5A5248;margin-top:2px">${item.name||item.nume}</div>`:''}
+          ${item.notes?`<div style="font-size:11px;color:#9E9890;margin-top:2px;font-style:italic">${item.notes}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#1E4A2E">${total}</div>
+          <div style="font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px">total</div>
+        </div>
+      </div>
+      ${entries.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:10px">${entries.map(([s,q])=>`<span style="background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;font-family:monospace">${s}×${q}</span>`).join('')}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button onclick="editMaterie('${item.id}','${tip}')" style="flex:1;padding:7px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Editează</button>
+        <button onclick="deleteMaterie('${item.id}','${tip}')" style="padding:7px 12px;border-radius:6px;border:1px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSimpleGrid(elId,items,tip){
+  const el=document.getElementById(elId);if(!el)return;
+  if(!items.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#9E9890;font-size:13px">Niciun articol.</div>';return;}
+  el.innerHTML=items.map(item=>`
+    <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#111111">${item.cod}</div>
+        ${item.name||item.nume?`<div style="font-size:12px;color:#5A5248">${item.name||item.nume}</div>`:''}
+        ${item.notes?`<div style="font-size:11px;color:#9E9890;font-style:italic">${item.notes}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="text-align:right">
+          <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#1E4A2E">${item.stoc||0}</div>
+          <div style="font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px">buc/per.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="editMaterie('${item.id}','${tip}')" style="padding:5px 10px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Edit</button>
+          <button onclick="deleteMaterie('${item.id}','${tip}')" style="padding:5px 10px;border-radius:5px;border:1px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">×</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openMaterieModal(tip){
+  curMaterie=tip;mEditId=null;
+  const perMarime=['talpi','branturi'].includes(tip);
+  document.getElementById('materieModalTitle').textContent={talpi:'Adaugă talpă',branturi:'Adaugă branț',sireturi:'Adaugă șiret',cutii:'Adaugă cutie'}[tip];
+  document.getElementById('mCod').value='';
+  document.getElementById('mNume').value='';
+  document.getElementById('mNotes').value='';
+  document.getElementById('mStocPerMarime').style.display=perMarime?'block':'none';
+  document.getElementById('mStocGlobal').style.display=perMarime?'none':'block';
+  document.getElementById('mStoc').value='0';
+  mSzList=['39','40','41','42','43','44'];MSZ.forEach(s=>mSzV[s]=0);
+  renderMSzGrid();
+  document.getElementById('materieModal').classList.add('show');
+}
+
+async function editMaterie(id,tip){
+  curMaterie=tip;mEditId=id;
+  const{data}=await sb.from(tip).select('*').eq('id',id).single();
+  if(!data)return;
+  const perMarime=['talpi','branturi'].includes(tip);
+  document.getElementById('materieModalTitle').textContent='Editează';
+  document.getElementById('mCod').value=data.cod||'';
+  document.getElementById('mNume').value=data.name||data.nume||'';
+  document.getElementById('mNotes').value=data.notes||'';
+  document.getElementById('mStocPerMarime').style.display=perMarime?'block':'none';
+  document.getElementById('mStocGlobal').style.display=perMarime?'none':'block';
+  if(perMarime){
+    const stoc=data.stoc||{};
+    mSzList=Object.keys(stoc).length?Object.keys(stoc).sort((a,b)=>parseInt(a)-parseInt(b)):['39','40','41','42','43','44'];
+    MSZ.forEach(s=>mSzV[s]=0);
+    Object.entries(stoc).forEach(([s,q])=>mSzV[s]=q);
+    renderMSzGrid();
+  }else{
+    document.getElementById('mStoc').value=data.stoc||0;
+  }
+  document.getElementById('materieModal').classList.add('show');
+}
+
+function renderMSzGrid(){
+  document.getElementById('mSzGrid').innerHTML=mSzList.map(s=>`
+    <div style="background:#F4F1EA;border:1.5px solid #DDD7CE;border-radius:7px;padding:7px 5px;text-align:center;min-width:52px">
+      <div style="font-size:10px;color:#5A5248;font-weight:600;margin-bottom:3px">Nr.${s}</div>
+      <div style="display:flex;align-items:center;gap:2px;justify-content:center">
+        <button onclick="adjMSz('${s}',-1)" style="width:20px;height:20px;border-radius:4px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+        <span id="msv_${s}" style="font-size:14px;font-weight:700;color:#111111;min-width:18px;text-align:center;font-family:'Playfair Display',serif">${mSzV[s]||0}</span>
+        <button onclick="adjMSz('${s}',1)" style="width:20px;height:20px;border-radius:4px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+      </div>
+    </div>`).join('');
+}
+function adjMSz(s,d){mSzV[s]=Math.max(0,(mSzV[s]||0)+d);const e=document.getElementById('msv_'+s);if(e)e.textContent=mSzV[s];}
+function addMSize(){
+  const n=prompt('Introdu mărimea:');if(!n)return;
+  const c=n.trim();if(!c||mSzList.includes(c)){showToast('Mărime invalidă sau există!');return;}
+  mSzList.push(c);mSzList.sort((a,b)=>parseInt(a)-parseInt(b));mSzV[c]=0;renderMSzGrid();
+}
+
+async function saveMaterie(){
+  const cod=document.getElementById('mCod').value.trim();
+  if(!cod){showToast('Completează codul!');return;}
+  const perMarime=['talpi','branturi'].includes(curMaterie);
+  const stoc=perMarime?Object.fromEntries(mSzList.filter(s=>mSzV[s]>0).map(s=>[s,mSzV[s]])):parseInt(document.getElementById('mStoc').value)||0;
+  const payload={cod,notes:document.getElementById('mNotes').value.trim()||null,stoc};
+  const numeVal=document.getElementById('mNume').value.trim();
+  if(curMaterie==='talpi')payload.name=numeVal;
+  else payload.nume=numeVal;
+  showLov('Se salvează...');
+  if(mEditId){
+    await sb.from(curMaterie).update(payload).eq('id',mEditId);
+  }else{
+    await sb.from(curMaterie).insert(payload);
+  }
+  hideLov();closeModal('materieModal');showToast('Salvat!');await loadMaterii();
+}
+
+async function deleteMaterie(id,tip){
+  if(!confirm('Ștergi acest articol din stoc?'))return;
+  showLov('Se șterge...');
+  await sb.from(tip).delete().eq('id',id);
+  hideLov();showToast('Șters!');await loadMaterii();
+}
+
 function showTab(tab,el){
-  document.getElementById('tabBaxuri').style.display=tab==='baxuri'?'block':'none';
-  document.getElementById('tabFete').style.display=tab==='fete'?'block':'none';
+  ['tabBaxuri','tabFete','tabTalpi','tabBranturi','tabSireturi','tabCutii'].forEach(t=>{
+    const e=document.getElementById(t);if(e)e.style.display='none';
+  });
+  const t=document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  if(t)t.style.display='block';
   document.querySelectorAll('.stock-tab').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
+  if(['talpi','branturi','sireturi','cutii'].includes(tab))loadMaterii();
 }
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
