@@ -792,13 +792,19 @@ function renderOrders(orders){
   }else{ntf.classList.remove('show');}
 
   const SC={
-    nou:              {l:'Comandă nouă',  c:'#23394F',b:'#E8EFF6'},
-    aprobat:          {l:'Aprobat',       c:'#8B6914',b:'#F6F0E5'},
-    modificat_pending:{l:'Aprobare modificări',c:'#7A5A00',b:'#FFF3CD'},
-    in_productie:     {l:'În producție',  c:'#8B6914',b:'#FAF3E0'},
-    finalizat:        {l:'Gata livrare',  c:'#1E4A2E',b:'#D8EEE0'},
-    livrat:           {l:'Livrat',        c:'#3A3530',b:'#EDEAE4'},
-    anulat:           {l:'Anulat',        c:'#7A2418',b:'#F5EAE8'},
+    nou:              {l:'Comandă nouă',       c:'#23394F',b:'#E8EFF6'},
+    aprobat:          {l:'Aprobat',             c:'#8B6914',b:'#F6F0E5'},
+    modificat_pending:{l:'Aprobare modificări', c:'#7A5A00',b:'#FFF3CD'},
+    la_croit:         {l:'La croit',            c:'#5A3E1B',b:'#F5ECD7'},
+    in_productie:     {l:'În producție',        c:'#8B6914',b:'#FAF3E0'},
+    fete_gata_cusut:  {l:'Fețe gata — la cusut',c:'#2F4A63',b:'#E8EFF6'},
+    la_cusut_extern:  {l:'La cusut extern',     c:'#2F4A63',b:'#E8EFF6'},
+    receptie_fete:    {l:'Recepție fețe',       c:'#365A43',b:'#EAF0EC'},
+    la_talpuit:       {l:'La talpuit',          c:'#1E4A2E',b:'#D8EEE0'},
+    la_impachetat:    {l:'La împachetat',       c:'#3A3530',b:'#EDEAE4'},
+    finalizat:        {l:'Gata livrare',        c:'#1E4A2E',b:'#D8EEE0'},
+    livrat:           {l:'Livrat',              c:'#3A3530',b:'#EDEAE4'},
+    anulat:           {l:'Anulat',              c:'#7A2418',b:'#F5EAE8'},
   };
   const canEdit=s=>['nou','aprobat'].includes(s);
 
