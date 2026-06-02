@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SILESCO · Împachetat</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#111111}
+.hdr{background:#111111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px}
+.hdr-title{font-family:'Playfair Display',serif;font-size:20px;color:#fff;font-weight:700}
+.hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#B08D57;font-weight:600}
+.logout-btn{background:none;border:none;cursor:pointer;padding:6px}
+.logout-btn svg{width:16px;height:16px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.tabs{background:#fff;border-bottom:1px solid #DDD7CE;display:flex;position:sticky;top:57px;z-index:40}
+.tab{flex:1;padding:11px;text-align:center;font-size:12px;font-weight:700;color:#5A5248;cursor:pointer;border-bottom:2px solid transparent}
+.tab.active{color:#111111;border-bottom-color:#111111}
+.stats-bar{background:#111111;padding:8px 14px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.stat-item{flex-shrink:0;padding:5px 16px 5px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px}
+.stat-item:last-child{border-right:none;margin-right:0;padding-right:0}
+.stat-label{font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
+.stat-val{font-size:16px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif}
+.stat-sub{font-size:8px;color:rgba(255,255,255,.3)}
+.wrap{padding:12px 14px 80px}
+.cmd-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:10px;overflow:hidden}
+.cmd-header{padding:13px 15px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.cmd-header:active{background:#F4F1EA}
+.cmd-no{font-size:10px;font-family:'Courier New',monospace;color:#5A5248;margin-bottom:2px}
+.cmd-client{font-family:'Playfair Display',serif;font-size:16px;color:#111111;margin-bottom:4px}
+.cmd-meta{font-size:11px;color:#5A5248}
+.cmd-progress{text-align:right;flex-shrink:0}
+.cmd-prog-num{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
+.cmd-prog-label{font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px}
+.cmd-arrow{width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex-shrink:0;margin-top:4px}
+.cmd-body{display:none;border-top:1px solid #EDE8DF}
+.art-row{padding:12px 15px;border-bottom:1px solid #EDE8DF}
+.art-row:last-child{border-bottom:none}
+.art-name{font-size:13px;font-weight:700;color:#111111}
+.art-color{font-size:12px;color:#5A5248;margin-top:1px}
+.art-pairs{font-size:11px;color:#5A5248;margin-top:2px}
+.pontaj{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}
+.pchip{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:3px 7px;font-size:12px;font-weight:700;font-family:'Playfair Display',serif}
+.btn-gata{padding:10px 18px;border-radius:8px;border:none;background:#1E4A2E;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-gata svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-etichete{padding:8px 14px;border-radius:7px;border:1px solid #DDD7CE;background:#fff;color:#111111;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-etichete svg{width:13px;height:13px;stroke:#111111;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-problema{padding:8px 14px;border-radius:7px;border:1px solid #9C3A2B;background:#FDF4F2;color:#9C3A2B;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.istoricBadge{display:inline-flex;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700}
+.empty{text-align:center;padding:40px 20px;color:#9E9890}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:flex-end;justify-content:center}
+.modal-bg.show{display:flex}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:4px}
+.modal-sub{font-size:12px;color:#5A5248;margin-bottom:18px}
+.modal-fld{margin-bottom:14px}
+.modal-fld label{display:block;font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.modal-fld textarea{width:100%;padding:11px 13px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;height:90px}
+.modal-fld textarea:focus{border-color:#9C3A2B}
+.btn-modal-red{width:100%;padding:14px;border-radius:10px;border:none;background:#9C3A2B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px}
+.btn-modal-cancel{width:100%;padding:12px;border-radius:10px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px}
+/* PRINT */
+@media print{
+  .hdr,.tabs,.stats-bar,.no-print{display:none!important}
+  body{background:#fff}
+  .print-page{page-break-after:always}
+}
+.lov-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.lov-overlay.show{display:flex}
+.lov-box{background:#fff;border-radius:12px;padding:20px 28px;font-size:14px;font-weight:600;color:#111111}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-brand">SILESCO · ÎMPACHETAT</div>
+    <div class="hdr-title">Ambalare</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="hdr-badge" id="hdrBadge">—</div>
+    <button class="logout-btn" onclick="sb.auth.signOut().then(()=>window.location.href='/silesco-app/index.html')">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab_ambalat" onclick="setTab('ambalat')">De ambalat</div>
+  <div class="tab" id="tab_gata" onclick="setTab('gata')">Gata livrare</div>
+  <div class="tab" id="tab_istoric" onclick="setTab('istoric')">Istoric</div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-label">De ambalat</div><div class="stat-val" id="stAmbalat">—</div><div class="stat-sub">comenzi</div></div>
+  <div class="stat-item"><div class="stat-label">Gata livrare</div><div class="stat-val" id="stGata">—</div><div class="stat-sub">comenzi</div></div>
+  <div class="stat-item"><div class="stat-label">Perechi azi</div><div class="stat-val" id="stPerechi">—</div><div class="stat-sub">ambalate</div></div>
+</div>
+
+<div class="wrap">
+  <!-- DE AMBALAT -->
+  <div id="viewAmbalat">
+    <div id="ambList"></div>
+    <div class="empty" id="ambEmpty" style="display:none">
+      <div style="font-size:32px;margin-bottom:10px">📦</div>
+      <div style="font-size:13px;font-weight:600">Nicio comandă de ambalat</div>
+    </div>
+  </div>
+
+  <!-- GATA LIVRARE -->
+  <div id="viewGata" style="display:none">
+    <div id="gataList"></div>
+    <div class="empty" id="gataEmpty" style="display:none">
+      <div style="font-size:32px;margin-bottom:10px">✅</div>
+      <div style="font-size:13px;font-weight:600">Nicio comandă gata</div>
+    </div>
+  </div>
+
+  <!-- ISTORIC -->
+  <div id="viewIstoric" style="display:none">
+    <div id="istoricList"></div>
+    <div class="empty" id="istoricEmpty" style="display:none">
+      <div style="font-size:13px;font-weight:600">Niciun istoric</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PROBLEMĂ -->
+<div class="modal-bg" id="modalProblema">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">Raportează problemă</div>
+    <div class="modal-sub" id="modalProblemaSub">—</div>
+    <div class="modal-fld">
+      <label>Descriere problemă *</label>
+      <textarea id="problemaText" placeholder="ex: lipsesc 3 perechi mărimea 42, cutii deteriorate, culoare greșită..."></textarea>
+    </div>
+    <button class="btn-modal-red" onclick="saveProblema()">Trimite problemă</button>
+    <button class="btn-modal-cancel" onclick="closeModals()">Anulează</button>
+  </div>
+</div>
+
+<div class="lov-overlay" id="lov"><div class="lov-box" id="lovText">Se încarcă...</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+const{createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+let CU=null;
+let problemaOrderId=null, problemaOrderNo='';
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/silesco-app/index.html';return;}
+  CU=session.user;
+  const{data:p}=await sb.from('user_profiles').select('role').eq('id',CU.id).single();
+  if(!['management','impachetat'].includes(p?.role)){window.location.href='/silesco-app/index.html';return;}
+  sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT')window.location.href='/silesco-app/index.html';});
+  await loadAll();
+});
+
+// ── TABS ──────────────────────────────────────────────────
+function setTab(t){
+  ['ambalat','gata','istoric'].forEach(x=>{
+    document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1)).style.display='none';
+    document.getElementById('tab_'+x).classList.remove('active');
+  });
+  document.getElementById('view'+t.charAt(0).toUpperCase()+t.slice(1)).style.display='block';
+  document.getElementById('tab_'+t).classList.add('active');
+}
+
+// ── LOAD ──────────────────────────────────────────────────
+async function loadAll(){
+  showLov('Se încarcă...');
+  const[{data:ambalat},{data:gata},{data:livrat}]=await Promise.all([
+    sb.from('orders').select(`id,order_no,status,delivery_date,total_pairs,created_at,
+      clients!orders_client_id_fkey(name,company_name),
+      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
+      .eq('status','la_impachetat').order('delivery_date',{ascending:true}),
+    sb.from('orders').select(`id,order_no,status,delivery_date,total_pairs,created_at,
+      clients!orders_client_id_fkey(name,company_name),
+      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
+      .eq('status','gata_livrare').order('delivery_date',{ascending:true}),
+    sb.from('orders').select(`id,order_no,status,delivery_date,total_pairs,created_at,
+      clients!orders_client_id_fkey(name,company_name)`)
+      .eq('status','livrat').order('delivery_date',{ascending:false}).limit(30),
+  ]);
+
+  const azi=new Date().toISOString().split('T')[0];
+  const{data:perechiiAzi}=await sb.from('orders')
+    .select('total_pairs,updated_at')
+    .eq('status','gata_livrare')
+    .gte('updated_at',azi+'T00:00:00');
+
+  document.getElementById('hdrBadge').textContent=(ambalat||[]).length+' comenzi';
+  document.getElementById('stAmbalat').textContent=(ambalat||[]).length;
+  document.getElementById('stGata').textContent=(gata||[]).length;
+  document.getElementById('stPerechi').textContent=(perechiiAzi||[]).reduce((s,o)=>s+(o.total_pairs||0),0);
+
+  renderAmbalat(ambalat||[]);
+  renderGata(gata||[]);
+  renderIstoric(livrat||[]);
+  hideLov();
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function getModName(l){
+  return l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+}
+function renderPontaj(p){
+  if(!p)return '';
+  return Object.entries(p).filter(([,q])=>q>0)
+    .map(([s,q])=>`<span class="pchip">${s}×${q}</span>`).join('');
+}
+function togCmd(bodyId,arrowId){
+  const b=document.getElementById(bodyId),a=document.getElementById(arrowId);
+  const open=b.style.display==='block';
+  b.style.display=open?'none':'block';
+  if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+}
+function daysLeft(dateStr){
+  if(!dateStr)return null;
+  return Math.ceil((new Date(dateStr)-new Date())/86400000);
+}
+
+// ── RENDER DE AMBALAT ─────────────────────────────────────
+function renderAmbalat(orders){
+  const el=document.getElementById('ambList');
+  const empty=document.getElementById('ambEmpty');
+  if(!orders.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  el.innerHTML=orders.map((o,i)=>{
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    const dl=daysLeft(o.delivery_date);
+    const dlColor=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=2?'#8B6914':'#1E4A2E';
+    const dlText=dl===null?'':dl<0?`⚠ ${Math.abs(dl)}z întârziere`:`${dl}z rămase`;
+    const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
+    const allGata=lines.every(l=>l.production_status==='gata');
+
+    return `<div class="cmd-card" style="${dl!==null&&dl<0?'border-color:#9C3A2B;':''}">
+      <div class="cmd-header" onclick="togCmd('amb_${i}','ambarr_${i}')">
+        <div style="flex:1;min-width:0">
+          <div class="cmd-no">${o.order_no||'—'}</div>
+          <div class="cmd-client">${cl}</div>
+          <div class="cmd-meta" style="display:flex;gap:10px;flex-wrap:wrap">
+            <span>Livrare: ${dd}</span>
+            ${dlText?`<span style="font-weight:700;color:${dlColor}">${dlText}</span>`:''}
+          </div>
+        </div>
+        <div class="cmd-progress">
+          <div class="cmd-prog-num" style="color:#B08D57">${o.total_pairs||0}</div>
+          <div class="cmd-prog-label">perechi</div>
+        </div>
+        <svg class="cmd-arrow" id="ambarr_${i}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <div class="cmd-body" id="amb_${i}">
+        <!-- Articole -->
+        ${lines.map(l=>{
+          const isDone=l.production_status==='gata';
+          return `<div class="art-row">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div style="flex:1">
+                <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
+                <div class="art-pairs">${l.total_pairs} perechi</div>
+                <div class="pontaj">${renderPontaj(l.ponytage)}</div>
+              </div>
+              <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;
+                background:${isDone?'#EAF0EC':'#FDF4F2'};
+                color:${isDone?'#1E4A2E':'#9C3A2B'};
+                flex-shrink:0">
+                ${isDone?'✓ Gata':'⏳ În lucru'}
+              </span>
+            </div>
+          </div>`;
+        }).join('')}
+
+        <!-- Acțiuni -->
+        <div style="padding:12px 15px;background:#F8F5F0;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${allGata
+            ?`<button class="btn-gata" onclick="marcheazaGata('${o.id}','${o.order_no||''}')">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Gata de livrare
+              </button>`
+            :`<div style="font-size:12px;color:#8B6914;font-weight:600">⏳ Articole încă în producție</div>`
+          }
+          <button class="btn-etichete" onclick="genEtichete('${o.id}','${o.order_no||''}')">
+            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Etichete
+          </button>
+          <button class="btn-problema" onclick="openProblema('${o.id}','${o.order_no||''}')">
+            ⚠ Problemă
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER GATA LIVRARE ───────────────────────────────────
+function renderGata(orders){
+  const el=document.getElementById('gataList');
+  const empty=document.getElementById('gataEmpty');
+  if(!orders.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  el.innerHTML=orders.map((o,i)=>{
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
+
+    return `<div class="cmd-card" style="border-left:4px solid #1E4A2E;border-radius:0 10px 10px 0">
+      <div class="cmd-header" onclick="togCmd('gat_${i}','gatarr_${i}')">
+        <div style="flex:1;min-width:0">
+          <div class="cmd-no">${o.order_no||'—'}</div>
+          <div class="cmd-client">${cl}</div>
+          <div class="cmd-meta">Livrare: ${dd} · ${o.total_pairs||0} perechi</div>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:3px 9px;border-radius:4px;flex-shrink:0">✓ Gata</span>
+        <svg class="cmd-arrow" id="gatarr_${i}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="cmd-body" id="gat_${i}">
+        ${lines.map(l=>`<div class="art-row">
+          <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
+          <div class="art-pairs">${l.total_pairs} perechi</div>
+          <div class="pontaj">${renderPontaj(l.ponytage)}</div>
+        </div>`).join('')}
+        <div style="padding:12px 15px;background:#F8F5F0;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-etichete" onclick="genEtichete('${o.id}','${o.order_no||''}')">
+            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Retipărește etichete
+          </button>
+          <button onclick="marcheazaLivrat('${o.id}','${o.order_no||''}')"
+            style="padding:8px 14px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+            🚚 Marcat livrat
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER ISTORIC ────────────────────────────────────────
+function renderIstoric(orders){
+  const el=document.getElementById('istoricList');
+  const empty=document.getElementById('istoricEmpty');
+  if(!orders.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  el.innerHTML=orders.map(o=>{
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    return `<div class="cmd-card">
+      <div style="padding:12px 15px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="cmd-no">${o.order_no||'—'}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:15px;color:#111111">${cl}</div>
+          <div style="font-size:11px;color:#5A5248;margin-top:2px">${o.total_pairs||0} perechi · Livrat: ${dd}</div>
+        </div>
+        <span class="istoricBadge" style="background:#EAF0EC;color:#1E4A2E">✓ Livrat</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ACȚIUNI ───────────────────────────────────────────────
+async function marcheazaGata(orderId, orderNo){
+  showLov('Se finalizează...');
+  const{error}=await sb.from('orders').update({
+    status:'gata_livrare',
+    updated_at:new Date().toISOString()
+  }).eq('id',orderId);
+  hideLov();
+  if(error){showToast('Eroare!');return;}
+  showToast(`✓ ${orderNo} — gata de livrare!`);
+  await loadAll();
+  setTab('gata');
+}
+
+async function marcheazaLivrat(orderId, orderNo){
+  if(!confirm(`Marchezi comanda ${orderNo} ca livrată?`))return;
+  showLov('Se salvează...');
+  await sb.from('orders').update({
+    status:'livrat',
+    updated_at:new Date().toISOString()
+  }).eq('id',orderId);
+  hideLov();
+  showToast(`✓ ${orderNo} — livrat!`);
+  await loadAll();
+}
+
+// ── PROBLEMĂ ──────────────────────────────────────────────
+function openProblema(orderId, orderNo){
+  problemaOrderId=orderId;
+  problemaOrderNo=orderNo;
+  document.getElementById('modalProblemaSub').textContent=`Comanda ${orderNo}`;
+  document.getElementById('problemaText').value='';
+  document.getElementById('modalProblema').classList.add('show');
+}
+
+async function saveProblema(){
+  const text=document.getElementById('problemaText').value.trim();
+  if(!text){showToast('Descrie problema!');return;}
+  showLov('Se trimite...');
+  // Salvează ca mesaj intern
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,
+    to_department:'management',
+    order_id:problemaOrderId,
+    message:`⚠ PROBLEMĂ AMBALARE [${problemaOrderNo}]: ${text}`,
+    priority:'urgent'
+  }).catch(()=>{});
+  // Adaugă notă pe comandă
+  await sb.from('orders').update({
+    notes:sb.rpc?undefined:undefined,
+    updated_at:new Date().toISOString()
+  }).eq('id',problemaOrderId).catch(()=>{});
+  hideLov();closeModals();
+  showToast('Problemă trimisă la management!');
+}
+
+function closeModals(){
+  document.getElementById('modalProblema').classList.remove('show');
+}
+document.getElementById('modalProblema').addEventListener('click',function(e){
+  if(e.target===this)closeModals();
+});
+
+// ── ETICHETE ──────────────────────────────────────────────
+async function genEtichete(orderId, orderNo){
+  showLov('Se generează etichete...');
+  const{data:o}=await sb.from('orders')
+    .select('*,clients!orders_client_id_fkey(name,company_name),order_lines(*,products(code,name))')
+    .eq('id',orderId).single();
+  hideLov();
+  if(!o){showToast('Eroare la încărcare!');return;}
+
+  const client=o.clients?.company_name||o.clients?.name||'—';
+  const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
+
+  // Construiește etichete per pereche (model + culoare + mărime)
+  const etichete=[];
+  lines.forEach(l=>{
+    const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+    const col=l.color||'—';
+    if(l.ponytage){
+      Object.entries(l.ponytage).filter(([,q])=>q>0).forEach(([sz,qty])=>{
+        for(let i=0;i<qty;i++){
+          etichete.push({mod,col,sz,client});
+        }
+      });
+    }
+  });
+
+  // Generează HTML pentru print — 24 etichete per coală A4 (3×8)
+  const PER_COALA=24;
+  const coli=Math.ceil(etichete.length/PER_COALA);
+  let html=`<html><head><meta charset="UTF-8">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;background:#fff}
+    .coala{width:210mm;height:297mm;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(8,1fr);page-break-after:always}
+    .et{border:0.5px solid #ccc;padding:6px 8px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+    .et-client{font-size:8px;color:#888;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .et-mod{font-size:11px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .et-col{font-size:10px;color:#444;margin-top:1px}
+    .et-sz{font-size:28px;font-weight:900;color:#111;line-height:1;margin-top:4px;font-family:'Arial Black',Arial,sans-serif}
+    @media print{.coala{page-break-after:always}.no-print{display:none}}
+  </style></head><body>
+  <div class="no-print" style="padding:16px;background:#f5f5f5;display:flex;gap:10px;align-items:center">
+    <strong>${etichete.length} etichete · ${coli} ${coli===1?'coală':'coli'} A4</strong>
+    <button onclick="window.print()" style="padding:8px 18px;border-radius:6px;border:none;background:#1E4A2E;color:#fff;font-size:13px;font-weight:700;cursor:pointer">🖨 Printează</button>
+    <button onclick="window.close()" style="padding:8px 14px;border-radius:6px;border:1px solid #ccc;background:#fff;font-size:13px;cursor:pointer">Închide</button>
+  </div>`;
+
+  for(let c=0;c<coli;c++){
+    html+=`<div class="coala">`;
+    const slice=etichete.slice(c*PER_COALA,(c+1)*PER_COALA);
+    // Completează cu celule goale
+    while(slice.length<PER_COALA)slice.push(null);
+    slice.forEach(e=>{
+      if(!e){html+=`<div class="et"></div>`;return;}
+      html+=`<div class="et">
+        <div class="et-client">${e.client}</div>
+        <div class="et-mod">${e.mod}</div>
+        <div class="et-col">${e.col}</div>
+        <div class="et-sz">${e.sz}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`</body></html>`;
+
+  const w=window.open('','_blank','width=900,height=800');
+  w.document.write(html);
+  w.document.close();
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
+function hideLov(){document.getElementById('lov').classList.remove('show');}
+function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+</script>
+</body>
+</html>
