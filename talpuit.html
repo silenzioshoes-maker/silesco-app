@@ -200,7 +200,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
 async function loadMateriale(){
   const[{data:t},{data:b}]=await Promise.all([
     sb.from('talpi').select('id,cod,name,stoc,min_alert,min_alert_sz').order('cod'),
-    sb.from('branturi').select('id,cod,nume,stoc,min_alert,min_alert_sz').order('cod'),
+    sb.from('branturi').select('id,cod,nume,stoc,min_alert_sz').order('cod'),
   ]);
   allTalpi=t||[];allBranturi=b||[];
 }
