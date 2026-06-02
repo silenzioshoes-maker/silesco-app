@@ -12,12 +12,14 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .hdr{background:#111111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
 .hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px}
 .hdr-title{font-family:'Playfair Display',serif;font-size:20px;color:#fff;font-weight:700}
+.hdr-right{display:flex;align-items:center;gap:8px}
 .hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#B08D57;font-weight:600}
 .logout-btn{background:none;border:none;cursor:pointer;padding:6px}
 .logout-btn svg{width:16px;height:16px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .tabs{background:#fff;border-bottom:1px solid #DDD7CE;display:flex;position:sticky;top:57px;z-index:40}
-.tab{flex:1;padding:11px;text-align:center;font-size:12px;font-weight:700;color:#5A5248;cursor:pointer;border-bottom:2px solid transparent}
+.tab{flex:1;padding:11px 6px;text-align:center;font-size:11px;font-weight:700;color:#5A5248;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
 .tab.active{color:#111111;border-bottom-color:#111111}
+.tab .tab-badge{display:inline-block;background:#9C3A2B;color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;margin-left:4px}
 .stats-bar{background:#111111;padding:8px 14px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
 .stat-item{flex-shrink:0;padding:5px 16px 5px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px}
 .stat-item:last-child{border-right:none;margin-right:0;padding-right:0}
@@ -25,49 +27,62 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .stat-val{font-size:16px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif}
 .stat-sub{font-size:8px;color:rgba(255,255,255,.3)}
 .wrap{padding:12px 14px 80px}
+/* CARDS */
 .cmd-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:10px;overflow:hidden}
+.cmd-card.urgent{border-color:#9C3A2B;border-left:4px solid #9C3A2B;border-radius:0 10px 10px 0}
 .cmd-header{padding:13px 15px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
 .cmd-header:active{background:#F4F1EA}
 .cmd-no{font-size:10px;font-family:'Courier New',monospace;color:#5A5248;margin-bottom:2px}
 .cmd-client{font-family:'Playfair Display',serif;font-size:16px;color:#111111;margin-bottom:4px}
-.cmd-meta{font-size:11px;color:#5A5248}
+.cmd-meta{font-size:11px;color:#5A5248;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.urgent-tag{background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.5px}
 .cmd-progress{text-align:right;flex-shrink:0}
 .cmd-prog-num{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
 .cmd-prog-label{font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px}
 .cmd-arrow{width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex-shrink:0;margin-top:4px}
 .cmd-body{display:none;border-top:1px solid #EDE8DF}
-.art-row{padding:12px 15px;border-bottom:1px solid #EDE8DF}
+.art-row{padding:11px 15px;border-bottom:1px solid #EDE8DF}
 .art-row:last-child{border-bottom:none}
 .art-name{font-size:13px;font-weight:700;color:#111111}
-.art-color{font-size:12px;color:#5A5248;margin-top:1px}
 .art-pairs{font-size:11px;color:#5A5248;margin-top:2px}
-.pontaj{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}
+.pontaj{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px}
 .pchip{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:3px 7px;font-size:12px;font-weight:700;font-family:'Playfair Display',serif}
-.btn-gata{padding:10px 18px;border-radius:8px;border:none;background:#1E4A2E;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap}
-.btn-gata svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.btn-etichete{padding:8px 14px;border-radius:7px;border:1px solid #DDD7CE;background:#fff;color:#111111;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap}
-.btn-etichete svg{width:13px;height:13px;stroke:#111111;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.btn-problema{padding:8px 14px;border-radius:7px;border:1px solid #9C3A2B;background:#FDF4F2;color:#9C3A2B;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
-.istoricBadge{display:inline-flex;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700}
-.empty{text-align:center;padding:40px 20px;color:#9E9890}
+/* BUTOANE */
+.btn-gata{padding:10px 16px;border-radius:8px;border:none;background:#1E4A2E;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px}
+.btn-gata svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-etichete{padding:9px 14px;border-radius:8px;border:1px solid #2F4A63;background:#E8EFF6;color:#2F4A63;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
+.btn-etichete svg{width:13px;height:13px;stroke:#2F4A63;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-reparatie{padding:9px 14px;border-radius:8px;border:1px solid #8B6914;background:#FFF8E8;color:#8B6914;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-mesaj{padding:9px 14px;border-radius:8px;border:1px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.actions-bar{padding:12px 15px;background:#F8F5F0;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #EDE8DF}
+/* MESAGERIE */
+.msg-card{background:#F4F1EA;border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.msg-card.sent{background:#E8EFF6}
+.msg-card.urgent-msg{background:#FDF4F2;border-left:3px solid #9C3A2B}
+.msg-from{font-size:10px;font-weight:700;color:#5A5248;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.msg-text{font-size:13px;color:#111111;line-height:1.5}
+.msg-time{font-size:10px;color:#9E9890;margin-top:3px}
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:flex-end;justify-content:center}
 .modal-bg.show{display:flex}
-.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
-.modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:4px}
-.modal-sub{font-size:12px;color:#5A5248;margin-bottom:18px}
-.modal-fld{margin-bottom:14px}
-.modal-fld label{display:block;font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
-.modal-fld textarea{width:100%;padding:11px 13px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;resize:none;height:90px}
-.modal-fld textarea:focus{border-color:#9C3A2B}
-.btn-modal-red{width:100%;padding:14px;border-radius:10px;border:none;background:#9C3A2B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px}
-.btn-modal-cancel{width:100%;padding:12px;border-radius:10px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px}
-/* PRINT */
-@media print{
-  .hdr,.tabs,.stats-bar,.no-print{display:none!important}
-  body{background:#fff}
-  .print-page{page-break-after:always}
-}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:22px 18px 40px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111111;margin-bottom:3px}
+.modal-sub{font-size:12px;color:#5A5248;margin-bottom:16px}
+.fld{margin-bottom:13px}
+.fld label{display:block;font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff}
+.fld textarea{resize:none;height:80px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#111111}
+.sz-reparatie{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
+.sz-r{text-align:center}
+.sz-r span{display:block;font-size:11px;font-weight:700;color:#5A5248;margin-bottom:4px}
+.sz-r input{width:100%;padding:7px 4px;border:1.5px solid #DDD7CE;border-radius:7px;text-align:center;font-size:15px;font-weight:700;font-family:'Playfair Display',serif;color:#111111;outline:none}
+.sz-r input:focus{border-color:#8B6914}
+.btn-primary-modal{width:100%;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:6px}
+.btn-cancel-modal{width:100%;padding:11px;border-radius:10px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px}
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:#9E9890}
+/* LOV + TOAST */
 .lov-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
 .lov-overlay.show{display:flex}
 .lov-box{background:#fff;border-radius:12px;padding:20px 28px;font-size:14px;font-weight:600;color:#111111}
@@ -82,7 +97,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="hdr-brand">SILESCO · ÎMPACHETAT</div>
     <div class="hdr-title">Ambalare</div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px">
+  <div class="hdr-right">
     <div class="hdr-badge" id="hdrBadge">—</div>
     <button class="logout-btn" onclick="sb.auth.signOut().then(()=>window.location.href='/silesco-app/index.html')">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -91,13 +106,15 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 </div>
 
 <div class="tabs">
-  <div class="tab active" id="tab_ambalat" onclick="setTab('ambalat')">De ambalat</div>
+  <div class="tab active" id="tab_ambalat" onclick="setTab('ambalat')">De ambalat<span class="tab-badge" id="tbAmbalat" style="display:none">0</span></div>
   <div class="tab" id="tab_gata" onclick="setTab('gata')">Gata livrare</div>
+  <div class="tab" id="tab_mesaje" onclick="setTab('mesaje')">Mesaje<span class="tab-badge" id="tbMsg" style="display:none">0</span></div>
   <div class="tab" id="tab_istoric" onclick="setTab('istoric')">Istoric</div>
 </div>
 
 <div class="stats-bar">
   <div class="stat-item"><div class="stat-label">De ambalat</div><div class="stat-val" id="stAmbalat">—</div><div class="stat-sub">comenzi</div></div>
+  <div class="stat-item"><div class="stat-label">Urgente</div><div class="stat-val" id="stUrgent" style="color:#9C3A2B">—</div><div class="stat-sub">comenzi</div></div>
   <div class="stat-item"><div class="stat-label">Gata livrare</div><div class="stat-val" id="stGata">—</div><div class="stat-sub">comenzi</div></div>
   <div class="stat-item"><div class="stat-label">Perechi azi</div><div class="stat-val" id="stPerechi">—</div><div class="stat-sub">ambalate</div></div>
 </div>
@@ -121,6 +138,19 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     </div>
   </div>
 
+  <!-- MESAJE -->
+  <div id="viewMesaje" style="display:none">
+    <div style="margin-bottom:12px">
+      <button onclick="openMesajModal()" style="width:100%;padding:12px;border-radius:10px;border:1.5px solid #111111;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+        ✏ Mesaj nou către management
+      </button>
+    </div>
+    <div id="msgList"></div>
+    <div class="empty" id="msgEmpty" style="display:none">
+      <div style="font-size:13px;font-weight:600">Niciun mesaj</div>
+    </div>
+  </div>
+
   <!-- ISTORIC -->
   <div id="viewIstoric" style="display:none">
     <div id="istoricList"></div>
@@ -130,17 +160,81 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   </div>
 </div>
 
-<!-- MODAL PROBLEMĂ -->
-<div class="modal-bg" id="modalProblema">
+<!-- MODAL REPARAȚIE -->
+<div class="modal-bg" id="modalRep" onclick="if(event.target===this)closeModal('modalRep')">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-title">Raportează problemă</div>
-    <div class="modal-sub" id="modalProblemaSub">—</div>
-    <div class="modal-fld">
-      <label>Descriere problemă *</label>
-      <textarea id="problemaText" placeholder="ex: lipsesc 3 perechi mărimea 42, cutii deteriorate, culoare greșită..."></textarea>
+    <div class="modal-title">Trimite la reparat</div>
+    <div class="modal-sub" id="repSub">—</div>
+    <div class="fld">
+      <label>Articol</label>
+      <select id="repLineId" onchange="updateRepSizes()"></select>
     </div>
-    <button class="btn-modal-red" onclick="saveProblema()">Trimite problemă</button>
-    <button class="btn-modal-cancel" onclick="closeModals()">Anulează</button>
+    <div class="fld">
+      <label>Tip defect</label>
+      <select id="repTipDefect">
+        <option value="cusătură desfăcută">Cusătură desfăcută</option>
+        <option value="piele deteriorată">Piele deteriorată</option>
+        <option value="culoare greșită">Culoare greșită</option>
+        <option value="mărime greșită">Mărime greșită</option>
+        <option value="talpă dezlipită">Talpă dezlipită</option>
+        <option value="branț defect">Branț defect</option>
+        <option value="altul">Altul</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Cantități defecte per mărime</label>
+      <div class="sz-reparatie" id="repSzGrid"></div>
+    </div>
+    <div class="fld">
+      <label>Descriere problemă</label>
+      <textarea id="repDesc" placeholder="Detalii despre defect, ce trebuie reparat..."></textarea>
+    </div>
+    <button class="btn-primary-modal" style="background:#8B6914;color:#fff" onclick="saveReparatie()">Trimite la croit</button>
+    <button class="btn-cancel-modal" onclick="closeModal('modalRep')">Anulează</button>
+  </div>
+</div>
+
+<!-- MODAL ETICHETE -->
+<div class="modal-bg" id="modalEtichete" onclick="if(event.target===this)closeModal('modalEtichete')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">Solicită etichete</div>
+    <div class="modal-sub" id="etSub">—</div>
+    <div style="padding:12px 14px;background:#E8EFF6;border-radius:8px;margin-bottom:14px;font-size:13px;color:#2F4A63;line-height:1.6">
+      Managementul va primi notificare și va printa etichetele pentru această comandă.
+    </div>
+    <div class="fld">
+      <label>Observații (opțional)</label>
+      <textarea id="etObs" placeholder="ex: urgent, tipărește 2 exemplare..."></textarea>
+    </div>
+    <button class="btn-primary-modal" style="background:#2F4A63;color:#fff" onclick="saveEtichete()">Trimite solicitarea</button>
+    <button class="btn-cancel-modal" onclick="closeModal('modalEtichete')">Anulează</button>
+  </div>
+</div>
+
+<!-- MODAL MESAJ -->
+<div class="modal-bg" id="modalMesaj" onclick="if(event.target===this)closeModal('modalMesaj')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">Mesaj nou</div>
+    <div class="modal-sub">Trimite mesaj către management</div>
+    <div class="fld">
+      <label>Comandă asociată (opțional)</label>
+      <select id="mesajOrderId">
+        <option value="">— Fără comandă specifică —</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Prioritate</label>
+      <select id="mesajPriority">
+        <option value="normal">Normal</option>
+        <option value="urgent">Urgent</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Mesaj *</label>
+      <textarea id="mesajText" placeholder="Scrie mesajul..."></textarea>
+    </div>
+    <button class="btn-primary-modal" style="background:#111111;color:#fff" onclick="saveMesaj()">Trimite mesajul</button>
+    <button class="btn-cancel-modal" onclick="closeModal('modalMesaj')">Anulează</button>
   </div>
 </div>
 
@@ -153,7 +247,9 @@ const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 let CU=null;
-let problemaOrderId=null, problemaOrderNo='';
+let ambOrders=[], gataOrders=[];
+let repOrderId='', repOrderNo='', repLines=[];
+let etOrderId='', etOrderNo='';
 
 window.addEventListener('DOMContentLoaded',async()=>{
   const{data:{session}}=await sb.auth.getSession();
@@ -167,56 +263,79 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
 // ── TABS ──────────────────────────────────────────────────
 function setTab(t){
-  ['ambalat','gata','istoric'].forEach(x=>{
+  ['ambalat','gata','mesaje','istoric'].forEach(x=>{
     document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1)).style.display='none';
     document.getElementById('tab_'+x).classList.remove('active');
   });
   document.getElementById('view'+t.charAt(0).toUpperCase()+t.slice(1)).style.display='block';
   document.getElementById('tab_'+t).classList.add('active');
+  if(t==='mesaje')loadMesaje();
 }
 
 // ── LOAD ──────────────────────────────────────────────────
 async function loadAll(){
   showLov('Se încarcă...');
-  const[{data:ambalat},{data:gata},{data:livrat}]=await Promise.all([
-    sb.from('orders').select(`id,order_no,status,delivery_date,total_pairs,created_at,
+  const[{data:amb},{data:gata},{data:livrat}]=await Promise.all([
+    sb.from('orders').select(`id,order_no,status,priority,delivery_date,total_pairs,notes,created_at,
       clients!orders_client_id_fkey(name,company_name),
-      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
-      .eq('status','la_impachetat').order('delivery_date',{ascending:true}),
-    sb.from('orders').select(`id,order_no,status,delivery_date,total_pairs,created_at,
+      order_lines(id,color,ponytage,total_pairs,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
+      .eq('status','la_impachetat')
+      .order('priority',{ascending:false})
+      .order('delivery_date',{ascending:true}),
+    sb.from('orders').select(`id,order_no,status,priority,delivery_date,total_pairs,created_at,
       clients!orders_client_id_fkey(name,company_name),
-      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
-      .eq('status','gata_livrare').order('delivery_date',{ascending:true}),
-    sb.from('orders').select(`id,order_no,status,delivery_date,total_pairs,created_at,
+      order_lines(id,color,ponytage,total_pairs,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
+      .eq('status','gata_livrare')
+      .order('delivery_date',{ascending:true}),
+    sb.from('orders').select(`id,order_no,status,delivery_date,total_pairs,
       clients!orders_client_id_fkey(name,company_name)`)
-      .eq('status','livrat').order('delivery_date',{ascending:false}).limit(30),
+      .eq('status','livrat').order('updated_at',{ascending:false}).limit(30),
   ]);
+
+  ambOrders=amb||[];gataOrders=gata||[];
 
   const azi=new Date().toISOString().split('T')[0];
   const{data:perechiiAzi}=await sb.from('orders')
-    .select('total_pairs,updated_at')
-    .eq('status','gata_livrare')
-    .gte('updated_at',azi+'T00:00:00');
+    .select('total_pairs').eq('status','gata_livrare').gte('updated_at',azi+'T00:00:00');
 
-  document.getElementById('hdrBadge').textContent=(ambalat||[]).length+' comenzi';
-  document.getElementById('stAmbalat').textContent=(ambalat||[]).length;
-  document.getElementById('stGata').textContent=(gata||[]).length;
+  const urgente=(ambOrders).filter(o=>o.priority==='urgent').length;
+  document.getElementById('hdrBadge').textContent=ambOrders.length+' comenzi';
+  document.getElementById('stAmbalat').textContent=ambOrders.length;
+  document.getElementById('stUrgent').textContent=urgente;
+  document.getElementById('stGata').textContent=gataOrders.length;
   document.getElementById('stPerechi').textContent=(perechiiAzi||[]).reduce((s,o)=>s+(o.total_pairs||0),0);
 
-  renderAmbalat(ambalat||[]);
-  renderGata(gata||[]);
+  // Badge tabs
+  const tbAmb=document.getElementById('tbAmbalat');
+  tbAmb.textContent=ambOrders.length;tbAmb.style.display=ambOrders.length?'inline-block':'none';
+
+  // Populează selectul de comenzi în modal mesaj
+  const sel=document.getElementById('mesajOrderId');
+  sel.innerHTML='<option value="">— Fără comandă specifică —</option>';
+  [...ambOrders,...gataOrders].forEach(o=>{
+    const cl=o.clients?.company_name||o.clients?.name||'';
+    sel.innerHTML+=`<option value="${o.id}">${o.order_no||'—'} · ${cl}</option>`;
+  });
+
+  renderAmbalat(ambOrders);
+  renderGata(gataOrders);
   renderIstoric(livrat||[]);
+
+  // Mesaje necitite
+  const{data:unread}=await sb.from('internal_messages')
+    .select('id').eq('to_department','impachetat').eq('is_read',false);
+  const cnt=(unread||[]).length;
+  const tbMsg=document.getElementById('tbMsg');
+  tbMsg.textContent=cnt;tbMsg.style.display=cnt?'inline-block':'none';
+
   hideLov();
 }
 
 // ── HELPERS ───────────────────────────────────────────────
-function getModName(l){
-  return l.products?.code?'Art. '+l.products.code:l.free_model||'—';
-}
+function getModName(l){return l.products?.code?'Art. '+l.products.code:l.free_model||'—';}
 function renderPontaj(p){
   if(!p)return '';
-  return Object.entries(p).filter(([,q])=>q>0)
-    .map(([s,q])=>`<span class="pchip">${s}×${q}</span>`).join('');
+  return Object.entries(p).filter(([,q])=>q>0).map(([s,q])=>`<span class="pchip">${s}×${q}</span>`).join('');
 }
 function togCmd(bodyId,arrowId){
   const b=document.getElementById(bodyId),a=document.getElementById(arrowId);
@@ -224,10 +343,7 @@ function togCmd(bodyId,arrowId){
   b.style.display=open?'none':'block';
   if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
 }
-function daysLeft(dateStr){
-  if(!dateStr)return null;
-  return Math.ceil((new Date(dateStr)-new Date())/86400000);
-}
+function daysLeft(d){return d?Math.ceil((new Date(d)-new Date())/86400000):null;}
 
 // ── RENDER DE AMBALAT ─────────────────────────────────────
 function renderAmbalat(orders){
@@ -235,35 +351,36 @@ function renderAmbalat(orders){
   const empty=document.getElementById('ambEmpty');
   if(!orders.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-
   el.innerHTML=orders.map((o,i)=>{
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
     const dl=daysLeft(o.delivery_date);
     const dlColor=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=2?'#8B6914':'#1E4A2E';
     const dlText=dl===null?'':dl<0?`⚠ ${Math.abs(dl)}z întârziere`:`${dl}z rămase`;
+    const isUrgent=o.priority==='urgent';
     const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
     const allGata=lines.every(l=>l.production_status==='gata');
+    const nrGata=lines.filter(l=>l.production_status==='gata').length;
 
-    return `<div class="cmd-card" style="${dl!==null&&dl<0?'border-color:#9C3A2B;':''}">
+    return `<div class="cmd-card${isUrgent?' urgent':''}">
       <div class="cmd-header" onclick="togCmd('amb_${i}','ambarr_${i}')">
         <div style="flex:1;min-width:0">
           <div class="cmd-no">${o.order_no||'—'}</div>
           <div class="cmd-client">${cl}</div>
-          <div class="cmd-meta" style="display:flex;gap:10px;flex-wrap:wrap">
+          <div class="cmd-meta">
+            ${isUrgent?'<span class="urgent-tag">URGENT</span>':''}
             <span>Livrare: ${dd}</span>
             ${dlText?`<span style="font-weight:700;color:${dlColor}">${dlText}</span>`:''}
+            <span style="color:${allGata?'#1E4A2E':'#8B6914'}">${nrGata}/${lines.length} art. gata</span>
           </div>
         </div>
         <div class="cmd-progress">
-          <div class="cmd-prog-num" style="color:#B08D57">${o.total_pairs||0}</div>
+          <div class="cmd-prog-num" style="color:${isUrgent?'#9C3A2B':'#B08D57'}">${o.total_pairs||0}</div>
           <div class="cmd-prog-label">perechi</div>
         </div>
         <svg class="cmd-arrow" id="ambarr_${i}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-
       <div class="cmd-body" id="amb_${i}">
-        <!-- Articole -->
         ${lines.map(l=>{
           const isDone=l.production_status==='gata';
           return `<div class="art-row">
@@ -273,31 +390,29 @@ function renderAmbalat(orders){
                 <div class="art-pairs">${l.total_pairs} perechi</div>
                 <div class="pontaj">${renderPontaj(l.ponytage)}</div>
               </div>
-              <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;
-                background:${isDone?'#EAF0EC':'#FDF4F2'};
-                color:${isDone?'#1E4A2E':'#9C3A2B'};
-                flex-shrink:0">
+              <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;flex-shrink:0;
+                background:${isDone?'#EAF0EC':'#FDF4F2'};color:${isDone?'#1E4A2E':'#9C3A2B'}">
                 ${isDone?'✓ Gata':'⏳ În lucru'}
               </span>
             </div>
           </div>`;
         }).join('')}
-
-        <!-- Acțiuni -->
-        <div style="padding:12px 15px;background:#F8F5F0;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div class="actions-bar">
           ${allGata
             ?`<button class="btn-gata" onclick="marcheazaGata('${o.id}','${o.order_no||''}')">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                Gata de livrare
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Gata de livrare
               </button>`
-            :`<div style="font-size:12px;color:#8B6914;font-weight:600">⏳ Articole încă în producție</div>`
+            :`<div style="font-size:12px;color:#8B6914;font-weight:600;padding:2px 0">⏳ Articole în producție</div>`
           }
-          <button class="btn-etichete" onclick="genEtichete('${o.id}','${o.order_no||''}')">
+          <button class="btn-etichete" onclick="openEtichete('${o.id}','${o.order_no||''}')">
             <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
             Etichete
           </button>
-          <button class="btn-problema" onclick="openProblema('${o.id}','${o.order_no||''}')">
-            ⚠ Problemă
+          <button class="btn-reparatie" onclick="openReparatie('${o.id}','${o.order_no||''}',${JSON.stringify(lines).replace(/'/g,"&#39;")})">
+            🔧 Reparație
+          </button>
+          <button class="btn-mesaj" onclick="openMesajModal('${o.id}','${o.order_no||''}')">
+            💬 Mesaj
           </button>
         </div>
       </div>
@@ -311,18 +426,16 @@ function renderGata(orders){
   const empty=document.getElementById('gataEmpty');
   if(!orders.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-
   el.innerHTML=orders.map((o,i)=>{
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
     const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
-
     return `<div class="cmd-card" style="border-left:4px solid #1E4A2E;border-radius:0 10px 10px 0">
       <div class="cmd-header" onclick="togCmd('gat_${i}','gatarr_${i}')">
         <div style="flex:1;min-width:0">
           <div class="cmd-no">${o.order_no||'—'}</div>
           <div class="cmd-client">${cl}</div>
-          <div class="cmd-meta">Livrare: ${dd} · ${o.total_pairs||0} perechi</div>
+          <div class="cmd-meta"><span>Livrare: ${dd}</span><span>${o.total_pairs||0} perechi</span></div>
         </div>
         <span style="font-size:11px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:3px 9px;border-radius:4px;flex-shrink:0">✓ Gata</span>
         <svg class="cmd-arrow" id="gatarr_${i}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
@@ -333,17 +446,53 @@ function renderGata(orders){
           <div class="art-pairs">${l.total_pairs} perechi</div>
           <div class="pontaj">${renderPontaj(l.ponytage)}</div>
         </div>`).join('')}
-        <div style="padding:12px 15px;background:#F8F5F0;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-etichete" onclick="genEtichete('${o.id}','${o.order_no||''}')">
+        <div class="actions-bar">
+          <button class="btn-etichete" onclick="openEtichete('${o.id}','${o.order_no||''}')">
             <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
             Retipărește etichete
           </button>
           <button onclick="marcheazaLivrat('${o.id}','${o.order_no||''}')"
-            style="padding:8px 14px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
-            🚚 Marcat livrat
+            style="padding:9px 14px;border-radius:8px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+            🚚 Livrat
           </button>
+          <button class="btn-mesaj" onclick="openMesajModal('${o.id}','${o.order_no||''}')">💬 Mesaj</button>
         </div>
       </div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER MESAJE ─────────────────────────────────────────
+async function loadMesaje(){
+  showLov('Se încarcă mesajele...');
+  const{data:msgs}=await sb.from('internal_messages')
+    .select('id,message,priority,is_read,created_at,from_user_id,order_id,reply,replied_at,orders(order_no),user_profiles!internal_messages_from_user_id_fkey(full_name,role)')
+    .or('to_department.eq.impachetat,from_user_id.eq.'+CU.id)
+    .order('created_at',{ascending:false}).limit(50);
+
+  // Marchează ca citite
+  await sb.from('internal_messages').update({is_read:true})
+    .eq('to_department','impachetat').eq('is_read',false);
+  document.getElementById('tbMsg').style.display='none';
+
+  hideLov();
+  const el=document.getElementById('msgList');
+  const empty=document.getElementById('msgEmpty');
+  if(!msgs?.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  el.innerHTML=msgs.map(m=>{
+    const fromMe=m.from_user_id===CU.id;
+    const fromName=m.user_profiles?.full_name||'—';
+    const role=m.user_profiles?.role||'';
+    const isUrgent=m.priority==='urgent';
+    const time=new Date(m.created_at).toLocaleString('ro-RO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const orderTag=m.orders?.order_no?`<span style="font-size:10px;background:#F4F1EA;padding:2px 6px;border-radius:4px;margin-left:4px">${m.orders.order_no}</span>`:'';
+    return `<div class="msg-card${fromMe?' sent':''}${isUrgent?' urgent-msg':''}">
+      <div class="msg-from">${fromMe?'Tu':fromName} ${role&&!fromMe?'('+role+')':''} ${orderTag}</div>
+      <div class="msg-text">${m.message}</div>
+      ${m.reply?`<div style="margin-top:8px;padding:8px;background:#EAF0EC;border-radius:6px;font-size:12px;color:#1E4A2E"><strong>Răspuns:</strong> ${m.reply}</div>`:''}
+      <div class="msg-time">${time}${isUrgent?' · <strong style="color:#9C3A2B">URGENT</strong>':''}</div>
     </div>`;
   }).join('');
 }
@@ -354,7 +503,6 @@ function renderIstoric(orders){
   const empty=document.getElementById('istoricEmpty');
   if(!orders.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-
   el.innerHTML=orders.map(o=>{
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
@@ -363,148 +511,165 @@ function renderIstoric(orders){
         <div>
           <div class="cmd-no">${o.order_no||'—'}</div>
           <div style="font-family:'Playfair Display',serif;font-size:15px;color:#111111">${cl}</div>
-          <div style="font-size:11px;color:#5A5248;margin-top:2px">${o.total_pairs||0} perechi · Livrat: ${dd}</div>
+          <div style="font-size:11px;color:#5A5248;margin-top:2px">${o.total_pairs||0} perechi · ${dd}</div>
         </div>
-        <span class="istoricBadge" style="background:#EAF0EC;color:#1E4A2E">✓ Livrat</span>
+        <span style="font-size:11px;font-weight:700;background:#EAF0EC;color:#1E4A2E;padding:3px 9px;border-radius:4px">✓ Livrat</span>
       </div>
     </div>`;
   }).join('');
 }
 
 // ── ACȚIUNI ───────────────────────────────────────────────
-async function marcheazaGata(orderId, orderNo){
+async function marcheazaGata(orderId,orderNo){
   showLov('Se finalizează...');
-  const{error}=await sb.from('orders').update({
-    status:'gata_livrare',
-    updated_at:new Date().toISOString()
-  }).eq('id',orderId);
-  hideLov();
-  if(error){showToast('Eroare!');return;}
-  showToast(`✓ ${orderNo} — gata de livrare!`);
-  await loadAll();
-  setTab('gata');
+  await sb.from('orders').update({status:'gata_livrare',updated_at:new Date().toISOString()}).eq('id',orderId);
+  // Notificare agent
+  const{data:o}=await sb.from('orders').select('agent_id').eq('id',orderId).single();
+  if(o?.agent_id){
+    await sb.from('internal_messages').insert({
+      from_user_id:CU.id,to_department:'agent',order_id:orderId,
+      message:`✅ Comanda ${orderNo} este gata de livrare!`,priority:'normal',is_read:false
+    }).catch(()=>{});
+  }
+  hideLov();showToast(`✓ ${orderNo} — gata de livrare!`);
+  await loadAll();setTab('gata');
 }
 
-async function marcheazaLivrat(orderId, orderNo){
+async function marcheazaLivrat(orderId,orderNo){
   if(!confirm(`Marchezi comanda ${orderNo} ca livrată?`))return;
   showLov('Se salvează...');
-  await sb.from('orders').update({
-    status:'livrat',
-    updated_at:new Date().toISOString()
-  }).eq('id',orderId);
-  hideLov();
-  showToast(`✓ ${orderNo} — livrat!`);
+  await sb.from('orders').update({status:'livrat',updated_at:new Date().toISOString()}).eq('id',orderId);
+  hideLov();showToast(`✓ ${orderNo} — livrat!`);
   await loadAll();
 }
 
-// ── PROBLEMĂ ──────────────────────────────────────────────
-function openProblema(orderId, orderNo){
-  problemaOrderId=orderId;
-  problemaOrderNo=orderNo;
-  document.getElementById('modalProblemaSub').textContent=`Comanda ${orderNo}`;
-  document.getElementById('problemaText').value='';
-  document.getElementById('modalProblema').classList.add('show');
-}
-
-async function saveProblema(){
-  const text=document.getElementById('problemaText').value.trim();
-  if(!text){showToast('Descrie problema!');return;}
-  showLov('Se trimite...');
-  // Salvează ca mesaj intern
-  await sb.from('internal_messages').insert({
-    from_user_id:CU.id,
-    to_department:'management',
-    order_id:problemaOrderId,
-    message:`⚠ PROBLEMĂ AMBALARE [${problemaOrderNo}]: ${text}`,
-    priority:'urgent'
-  }).catch(()=>{});
-  // Adaugă notă pe comandă
-  await sb.from('orders').update({
-    notes:sb.rpc?undefined:undefined,
-    updated_at:new Date().toISOString()
-  }).eq('id',problemaOrderId).catch(()=>{});
-  hideLov();closeModals();
-  showToast('Problemă trimisă la management!');
-}
-
-function closeModals(){
-  document.getElementById('modalProblema').classList.remove('show');
-}
-document.getElementById('modalProblema').addEventListener('click',function(e){
-  if(e.target===this)closeModals();
-});
-
 // ── ETICHETE ──────────────────────────────────────────────
-async function genEtichete(orderId, orderNo){
-  showLov('Se generează etichete...');
-  const{data:o}=await sb.from('orders')
-    .select('*,clients!orders_client_id_fkey(name,company_name),order_lines(*,products(code,name))')
-    .eq('id',orderId).single();
-  hideLov();
-  if(!o){showToast('Eroare la încărcare!');return;}
+function openEtichete(orderId,orderNo){
+  etOrderId=orderId;etOrderNo=orderNo;
+  document.getElementById('etSub').textContent=`Comanda ${orderNo}`;
+  document.getElementById('etObs').value='';
+  document.getElementById('modalEtichete').classList.add('show');
+}
 
-  const client=o.clients?.company_name||o.clients?.name||'—';
-  const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
+async function saveEtichete(){
+  const obs=document.getElementById('etObs').value.trim();
+  showLov('Se trimite solicitarea...');
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:'management',order_id:etOrderId,
+    message:`🖨 SOLICITARE ETICHETE — Comanda ${etOrderNo}${obs?' · '+obs:''}`,
+    priority:'urgent',is_read:false
+  });
+  hideLov();closeModal('modalEtichete');
+  showToast('Solicitare trimisă la management!');
+}
 
-  // Construiește etichete per pereche (model + culoare + mărime)
-  const etichete=[];
-  lines.forEach(l=>{
-    const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
-    const col=l.color||'—';
-    if(l.ponytage){
-      Object.entries(l.ponytage).filter(([,q])=>q>0).forEach(([sz,qty])=>{
-        for(let i=0;i<qty;i++){
-          etichete.push({mod,col,sz,client});
-        }
-      });
-    }
+// ── REPARAȚIE ─────────────────────────────────────────────
+function openReparatie(orderId,orderNo,lines){
+  repOrderId=orderId;repOrderNo=orderNo;
+  repLines=lines.filter(l=>!l.from_stock);
+  document.getElementById('repSub').textContent=`Comanda ${orderNo}`;
+  const sel=document.getElementById('repLineId');
+  sel.innerHTML=repLines.map(l=>`<option value="${l.id}" data-ponytage='${JSON.stringify(l.ponytage||{})}'>${getModName(l)} · ${l.color||'—'} (${l.total_pairs} per.)</option>`).join('');
+  updateRepSizes();
+  document.getElementById('repDesc').value='';
+  document.getElementById('modalRep').classList.add('show');
+}
+
+function updateRepSizes(){
+  const sel=document.getElementById('repLineId');
+  const opt=sel.options[sel.selectedIndex];
+  let pontaj={};
+  try{pontaj=JSON.parse(opt?.dataset?.ponytage||'{}')}catch(e){}
+  const entries=Object.entries(pontaj).filter(([,q])=>q>0);
+  document.getElementById('repSzGrid').innerHTML=entries.map(([s])=>`
+    <div class="sz-r">
+      <span>${s}</span>
+      <input type="number" min="0" value="0" id="repSz_${s}" placeholder="0"/>
+    </div>`).join('');
+}
+
+async function saveReparatie(){
+  const lineId=document.getElementById('repLineId').value;
+  const tipDefect=document.getElementById('repTipDefect').value;
+  const desc=document.getElementById('repDesc').value.trim();
+  const line=repLines.find(l=>l.id===lineId);
+  if(!line){showToast('Selectează articolul!');return;}
+
+  // Colectează mărimi defecte
+  const szDefecte={};let total=0;
+  document.querySelectorAll('[id^="repSz_"]').forEach(inp=>{
+    const sz=inp.id.replace('repSz_','');
+    const q=parseInt(inp.value)||0;
+    if(q>0){szDefecte[sz]=q;total+=q;}
+  });
+  if(!total){showToast('Introdu cantitățile defecte!');return;}
+  if(!desc){showToast('Descrie problema!');return;}
+
+  showLov('Se trimite la croit...');
+
+  const mod=getModName(line);
+  const pontajText=Object.entries(szDefecte).map(([s,q])=>`${s}×${q}`).join(' ');
+  const notaRep=`[REPARAȚIE] ${mod} · ${line.color||'—'} · Defect: ${tipDefect} · Mărimi: ${pontajText} · ${desc}`;
+
+  // Creează order_line nou cu status la_croit pentru reparație
+  await sb.from('order_lines').insert({
+    order_id:repOrderId,
+    product_id:line.product_id||null,
+    free_model:line.free_model||null,
+    color:line.color,
+    ponytage:szDefecte,
+    total_pairs:total,
+    production_status:'la_croit',
+    notes:notaRep,
+    workshop:null
   });
 
-  // Generează HTML pentru print — 24 etichete per coală A4 (3×8)
-  const PER_COALA=24;
-  const coli=Math.ceil(etichete.length/PER_COALA);
-  let html=`<html><head><meta charset="UTF-8">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;background:#fff}
-    .coala{width:210mm;height:297mm;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(8,1fr);page-break-after:always}
-    .et{border:0.5px solid #ccc;padding:6px 8px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
-    .et-client{font-size:8px;color:#888;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .et-mod{font-size:11px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .et-col{font-size:10px;color:#444;margin-top:1px}
-    .et-sz{font-size:28px;font-weight:900;color:#111;line-height:1;margin-top:4px;font-family:'Arial Black',Arial,sans-serif}
-    @media print{.coala{page-break-after:always}.no-print{display:none}}
-  </style></head><body>
-  <div class="no-print" style="padding:16px;background:#f5f5f5;display:flex;gap:10px;align-items:center">
-    <strong>${etichete.length} etichete · ${coli} ${coli===1?'coală':'coli'} A4</strong>
-    <button onclick="window.print()" style="padding:8px 18px;border-radius:6px;border:none;background:#1E4A2E;color:#fff;font-size:13px;font-weight:700;cursor:pointer">🖨 Printează</button>
-    <button onclick="window.close()" style="padding:8px 14px;border-radius:6px;border:1px solid #ccc;background:#fff;font-size:13px;cursor:pointer">Închide</button>
-  </div>`;
+  // Mesaj la croit și management
+  await sb.from('internal_messages').insert([
+    {from_user_id:CU.id,to_department:'croit',order_id:repOrderId,
+     message:`🔧 REPARAȚIE [${repOrderNo}]: ${mod} · ${line.color||'—'} · ${tipDefect} · ${pontajText} · ${desc}`,
+     priority:'urgent',is_read:false},
+    {from_user_id:CU.id,to_department:'management',order_id:repOrderId,
+     message:`🔧 REPARAȚIE trimisă la croit [${repOrderNo}]: ${mod} · ${line.color||'—'} · ${tipDefect} · ${pontajText} · ${desc}`,
+     priority:'urgent',is_read:false}
+  ]);
 
-  for(let c=0;c<coli;c++){
-    html+=`<div class="coala">`;
-    const slice=etichete.slice(c*PER_COALA,(c+1)*PER_COALA);
-    // Completează cu celule goale
-    while(slice.length<PER_COALA)slice.push(null);
-    slice.forEach(e=>{
-      if(!e){html+=`<div class="et"></div>`;return;}
-      html+=`<div class="et">
-        <div class="et-client">${e.client}</div>
-        <div class="et-mod">${e.mod}</div>
-        <div class="et-col">${e.col}</div>
-        <div class="et-sz">${e.sz}</div>
-      </div>`;
-    });
-    html+=`</div>`;
+  hideLov();closeModal('modalRep');
+  showToast(`Reparație trimisă la croit — ${total} per.`);
+}
+
+// ── MESAJ ─────────────────────────────────────────────────
+function openMesajModal(orderId='',orderNo=''){
+  if(orderId){
+    const sel=document.getElementById('mesajOrderId');
+    for(let i=0;i<sel.options.length;i++){
+      if(sel.options[i].value===orderId){sel.selectedIndex=i;break;}
+    }
   }
-  html+=`</body></html>`;
+  document.getElementById('mesajText').value='';
+  document.getElementById('mesajPriority').value='normal';
+  document.getElementById('modalMesaj').classList.add('show');
+  setTab('mesaje');
+}
 
-  const w=window.open('','_blank','width=900,height=800');
-  w.document.write(html);
-  w.document.close();
+async function saveMesaj(){
+  const text=document.getElementById('mesajText').value.trim();
+  const priority=document.getElementById('mesajPriority').value;
+  const orderId=document.getElementById('mesajOrderId').value||null;
+  if(!text){showToast('Scrie mesajul!');return;}
+  showLov('Se trimite...');
+  await sb.from('internal_messages').insert({
+    from_user_id:CU.id,to_department:'management',
+    order_id:orderId||null,
+    message:text,priority,is_read:false
+  });
+  hideLov();closeModal('modalMesaj');
+  showToast('Mesaj trimis!');
+  await loadMesaje();
 }
 
 // ── UTILS ─────────────────────────────────────────────────
+function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
