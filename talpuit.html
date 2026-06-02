@@ -157,6 +157,8 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <select id="modalSelect"></select>
     </div>
 
+    <div id="modalExtraFields"></div>
+
     <div class="modal-fld">
       <label>Cantități primite per mărime</label>
       <div class="sz-grid" id="modalSzGrid">
@@ -353,7 +355,7 @@ function renderLansat(lines){
 }
 
 function renderStoc(){
-  // FIX: talpi folosesc 'name', branturi folosesc 'nume'
+  // talpi: nameKey='name', branturi: nameKey='cod' (numele e stocat in cod)
   const renderMat=(items,nameKey,tip)=>{
     if(!items.length)return `<div style="font-size:12px;color:#9E9890;padding:10px 0;text-align:center">Niciun articol înregistrat</div>`;
     return items.map(t=>{
@@ -362,11 +364,11 @@ function renderStoc(){
       const total=entries.reduce((s,[,q])=>s+(q||0),0);
       const minSz=t.min_alert_sz||{};
       const hasAlert=entries.some(([s,q])=>minSz[s]&&(q||0)<=minSz[s]);
+      const displayName = tip==='branturi' ? (t.cod||'—') : (t.name ? t.cod+' — '+t.name : t.cod);
       return `<div class="stoc-card" style="${hasAlert?'border-color:#9C3A2B;':''}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <div>
-            <span style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700">${t.cod}</span>
-            <span style="font-size:12px;color:#5A5248;margin-left:6px">${t[nameKey]||''}</span>
+            <span style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700">${displayName}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             ${hasAlert?'<span style="font-size:10px;font-weight:700;color:#9C3A2B">⚠ Stoc scăzut</span>':''}
@@ -392,7 +394,7 @@ function renderStoc(){
   };
   // FIX: branturi folosesc 'nume' ca nameKey
   document.getElementById('stocTalpiGrid').innerHTML=renderMat(allTalpi,'name','talpi');
-  document.getElementById('stocBranturiGrid').innerHTML=renderMat(allBranturi,'nume','branturi');
+  document.getElementById('stocBranturiGrid').innerHTML=renderMat(allBranturi,'cod','branturi');
 }
 
 const stocEdits={};
@@ -422,17 +424,21 @@ function openModal(tip){
   modalTip=tip;
   const isTalpi=tip==='talpi';
   document.getElementById('modalTitle').textContent=isTalpi?'Adaugă tălpi în stoc':'Adaugă brânturi în stoc';
-  document.getElementById('modalSub').textContent='Selectează tipul și introdu cantitățile primite';
+  document.getElementById('modalSub').textContent='Articol existent = adaugă cantități · Articol nou = creează în sistem';
   document.getElementById('modalSelectLabel').textContent=isTalpi?'Tip talpă':'Tip branț';
 
-  // Populează selectul
+  // Populează selectul — branturi folosesc 'cod' ca nume (campul 'nume' e gol)
   const arr=isTalpi?allTalpi:allBranturi;
-  const nameKey=isTalpi?'name':'nume';
   const sel=document.getElementById('modalSelect');
+  // Opțiune articol nou + articole existente
+  const optNou=`<option value="__nou__">+ Articol nou...</option>`;
   if(!arr.length){
-    sel.innerHTML='<option value="">Niciun articol înregistrat în sistem</option>';
+    sel.innerHTML=optNou;
   }else{
-    sel.innerHTML=arr.map(t=>`<option value="${t.id}">${t.cod}${t[nameKey]?' — '+t[nameKey]:''}</option>`).join('');
+    sel.innerHTML=optNou+arr.map(t=>{
+      const label=isTalpi?(t.name?t.cod+' — '+t.name:t.cod):t.cod;
+      return `<option value="${t.id}">${label}</option>`;
+    }).join('');
   }
   sel.onchange=()=>updateModalSzGrid();
 
@@ -447,10 +453,22 @@ function updateModalSzGrid(){
   const id=sel.value;
   const arr=modalTip==='talpi'?allTalpi:allBranturi;
   const item=arr.find(t=>t.id===id);
+  const isNou=id==='__nou__';
+
+  // Câmp cod pentru articol nou
+  const extra=document.getElementById('modalExtraFields');
+  if(extra){
+    extra.innerHTML=isNou?`
+      <div class="modal-fld" style="margin-bottom:14px">
+        <label>Cod articol nou *</label>
+        <input type="text" id="modalCodNou" placeholder="ex: 924, Colombo, Master..."
+          style="width:100%;padding:11px 13px;border:1.5px solid #DDD7CE;border-radius:8px;font-size:15px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
+      </div>`:'';
+  }
 
   // Mărimi existente în stoc sau toate mărimile standard
   let marimi=MARIMI;
-  if(item?.stoc&&Object.keys(item.stoc).length){
+  if(!isNou&&item?.stoc&&Object.keys(item.stoc).length){
     marimi=Object.keys(item.stoc).sort((a,b)=>parseInt(a)-parseInt(b));
   }
 
@@ -466,43 +484,52 @@ async function saveModal(){
   const id=sel.value;
   if(!id){showToast('Selectează tipul!');return;}
 
-  const arr=modalTip==='talpi'?allTalpi:allBranturi;
-  const item=arr.find(t=>t.id===id);
-  if(!item)return;
-
   // Citește cantitățile introduse
-  const stocCurent={...item.stoc||{}};
+  const stocNou={};
   let totalAdaugat=0;
-  document.querySelectorAll('#modalSzGrid input').forEach(inp=>{
+  document.querySelectorAll('#modalSzGrid input[id^="mSz_"]').forEach(inp=>{
     const sz=inp.id.replace('mSz_','');
     const qty=parseInt(inp.value)||0;
-    if(qty>0){
-      stocCurent[sz]=(parseInt(stocCurent[sz])||0)+qty;
-      totalAdaugat+=qty;
-    }
+    if(qty>0){stocNou[sz]=qty;totalAdaugat+=qty;}
   });
-
   if(!totalAdaugat){showToast('Introdu cel puțin o cantitate!');return;}
 
   const btn=document.getElementById('modalSaveBtn');
   btn.disabled=true;
   showLov('Se salvează stocul...');
 
-  const{error}=await sb.from(modalTip).update({stoc:stocCurent}).eq('id',id);
-  hideLov();
-
-  if(error){
-    showToast('Eroare la salvare!');
-    btn.disabled=false;
-    return;
+  if(id==='__nou__'){
+    // Articol nou — citește codul
+    const codInp=document.getElementById('modalCodNou');
+    const cod=(codInp?.value||'').trim();
+    if(!cod){hideLov();showToast('Introdu codul articolului!');btn.disabled=false;return;}
+    const payload=modalTip==='talpi'
+      ?{cod,name:cod,stoc:stocNou}
+      :{cod,nume:null,stoc:stocNou};
+    const{data:nou,error}=await sb.from(modalTip).insert(payload).select().single();
+    hideLov();
+    if(error){showToast('Eroare la creare!');btn.disabled=false;return;}
+    if(modalTip==='talpi')allTalpi.push(nou);else allBranturi.push(nou);
+    btn.disabled=false;closeModal();
+    showToast(`✓ ${cod} creat cu ${totalAdaugat} perechi!`);
+    renderStoc();
+  }else{
+    // Articol existent — adaugă la stocul curent
+    const arr=modalTip==='talpi'?allTalpi:allBranturi;
+    const item=arr.find(t=>t.id===id);
+    if(!item){hideLov();btn.disabled=false;return;}
+    const stocCurent={...item.stoc||{}};
+    Object.entries(stocNou).forEach(([sz,q])=>{
+      stocCurent[sz]=(parseInt(stocCurent[sz])||0)+q;
+    });
+    const{error}=await sb.from(modalTip).update({stoc:stocCurent}).eq('id',id);
+    hideLov();
+    if(error){showToast('Eroare la salvare!');btn.disabled=false;return;}
+    item.stoc=stocCurent;
+    btn.disabled=false;closeModal();
+    showToast(`✓ +${totalAdaugat} perechi adăugate!`);
+    renderStoc();
   }
-
-  // Actualizează local
-  item.stoc=stocCurent;
-  btn.disabled=false;
-  closeModal();
-  showToast(`✓ +${totalAdaugat} perechi adăugate în stoc!`);
-  renderStoc();
 }
 
 function closeModal(){
