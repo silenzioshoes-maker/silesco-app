@@ -460,6 +460,11 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       <span>Talpuit</span>
     </div>
+    <div class="nav-item" onclick="window.location.href='/silesco-app/impachetat.html'" style="position:relative">
+      <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span>Împachetat</span>
+      <span class="nav-badge" id="impBadge" style="display:none">!</span>
+    </div>
     <div class="nav-item" onclick="window.location.href='/silesco-app/messages.html'">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Mesaje</span>
@@ -696,7 +701,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         </div>
       </div>
       <div id="prod_ambalat">
-        <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Comenzi finalizate — gata de livrat</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:10px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1px">Comenzi la ambalat — ordinea de prioritizare</div>
+          <button onclick="loadAmbalatList()" style="font-size:10px;color:#1E4A2E;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">↻ Reîncarcă</button>
+        </div>
         <div id="pa_list"></div>
       </div>
     </div>
@@ -969,6 +977,12 @@ async function loadProdAlerts(){
   const finalizate=allOrders.filter(o=>o.status==='finalizat').length;
   if(finalizate>0){
     alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${finalizate} comenzi</strong> gata — de ambalat și livrat`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('finalizat',document.querySelector('.filter-btn'));`});
+    // Verifică solicitări etichete de la împachetat
+    const{data:etiMsg}=await sb.from('internal_messages').select('id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
+    if(etiMsg?.length>0){
+      alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de la împachetat`,onclick:`window.location.href='/silesco-app/impachetat.html'`});
+      document.getElementById('impBadge').textContent=etiMsg.length;document.getElementById('impBadge').style.display='inline-block';
+    }
   }
   const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
   if(intarz>0){
@@ -2189,7 +2203,7 @@ async function loadProdAmbalat(){
   const ambalateAzi=allOrders.filter(o=>o.status==='livrat'&&o.updated_at>=aziStart);
   document.getElementById('pa_gata').textContent=finalizate.length;
   document.getElementById('pa_azi').textContent=ambalateAzi.length;
-  document.getElementById('pa_list').innerHTML=finalizate.length?finalizate.map(o=>{const cl=o.clients?.company_name||o.clients?.name||'—';const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:2px">${o.order_no||'—'}</div><div style="font-size:14px;font-weight:700;color:#111111">${cl}</div><div style="font-size:11px;color:#5A5248;margin-top:2px">${o.total_pairs||0} per. · ${dd}</div></div><span style="font-size:10px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:3px 10px;border-radius:6px">✓ Gata</span></div>`;}).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic;padding:10px 0">Nicio comandă gata de ambalat</div>';
+  await loadAmbalatList();
 }
 
 // UTILS
@@ -2197,6 +2211,78 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+
+// ── AMBALAT PRIORITIZARE ──────────────────────────────────
+let ambOrders=[];
+async function loadAmbalatList(){
+  const{data}=await sb.from('orders')
+    .select('id,order_no,status,priority,delivery_date,total_pairs,clients!orders_client_id_fkey(name,company_name)')
+    .eq('status','la_impachetat')
+    .order('priority',{ascending:false})
+    .order('delivery_date',{ascending:true});
+  ambOrders=data||[];
+  renderAmbalatList();
+}
+
+function renderAmbalatList(){
+  const el=document.getElementById('pa_list');
+  if(!ambOrders.length){
+    el.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic;padding:10px 0">Nicio comandă la ambalat</div>';
+    return;
+  }
+  el.innerHTML=ambOrders.map((o,i)=>{
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    const isUrgent=o.priority==='urgent';
+    return `<div id="pamb_${o.id}" style="background:#fff;border:1px solid ${isUrgent?'#9C3A2B':'#DDD7CE'};border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;${isUrgent?'border-left:3px solid #9C3A2B;border-radius:0 8px 8px 0;':''}">
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <span style="font-size:12px;font-weight:700;color:#C8C0B8;min-width:18px;text-align:center">${i+1}</span>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <button onclick="moveAmbalat('${o.id}',-1)" ${i===0?'disabled':''} style="background:none;border:1px solid #DDD7CE;border-radius:4px;width:22px;height:18px;cursor:pointer;font-size:11px;line-height:1;${i===0?'opacity:.3;':''}">▲</button>
+          <button onclick="moveAmbalat('${o.id}',1)" ${i===ambOrders.length-1?'disabled':''} style="background:none;border:1px solid #DDD7CE;border-radius:4px;width:22px;height:18px;cursor:pointer;font-size:11px;line-height:1;${i===ambOrders.length-1?'opacity:.3;':''}">▼</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;font-family:monospace;color:#5A5248">${o.order_no||'—'}</div>
+        <div style="font-size:13px;font-weight:700;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cl}</div>
+        <div style="font-size:11px;color:#5A5248">${o.total_pairs||0} per. · ${dd}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        ${isUrgent
+          ?`<button onclick="setAmbPriority('${o.id}','normal')" style="padding:3px 8px;border-radius:5px;border:1px solid #9C3A2B;background:#FDF4F2;color:#9C3A2B;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">✕ Urgent</button>`
+          :`<button onclick="setAmbPriority('${o.id}','urgent')" style="padding:3px 8px;border-radius:5px;border:none;background:#9C3A2B;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">⚡ Urgent</button>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function moveAmbalat(id,dir){
+  const idx=ambOrders.findIndex(o=>o.id===id);
+  if(idx===-1)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=ambOrders.length)return;
+  const tmp=ambOrders[idx];ambOrders[idx]=ambOrders[newIdx];ambOrders[newIdx]=tmp;
+  renderAmbalatList();
+  // Salvează ordinea — setăm priority numeric în notes_sort sau folosim un câmp dedicat
+  // Simplu: marcăm primul ca urgent dacă nu e deja
+}
+
+async function setAmbPriority(id,priority){
+  await sb.from('orders').update({priority}).eq('id',id);
+  const o=ambOrders.find(x=>x.id===id);
+  if(o){o.priority=priority;}
+  // Dacă urgent, mută sus
+  if(priority==='urgent'){
+    const idx=ambOrders.findIndex(x=>x.id===id);
+    if(idx>0){
+      const item=ambOrders.splice(idx,1)[0];
+      ambOrders.unshift(item);
+    }
+  }
+  renderAmbalatList();
+  showToast(priority==='urgent'?'⚡ Marcat urgent!':'Prioritate normală');
+}
 </script>
 </body>
 </html>
