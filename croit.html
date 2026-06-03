@@ -414,6 +414,7 @@ async function loadOrders(){
       clients!orders_client_id_fkey(name,company_name),
       order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,products(code,name))`)
     .in('status',['la_croit','in_productie'])
+    .order('sort_order',{ascending:true,nullsFirst:false})
     .order('delivery_date',{ascending:true});
   orders=active||[];
 
