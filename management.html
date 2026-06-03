@@ -1824,7 +1824,6 @@ async function saveOrder(){
     await sb.from('order_lines').insert(omArts.map(a=>({order_id:omEditId,...lineRows(a)})));
     await sb.from('audit_log').insert({table_name:'orders',record_id:omEditId,action:'update',new_data:{action:'Editat de management',operator:CP?.full_name||'Management'},done_by:CU.id});
   }else{
-    if(!isStock&&!clientId){hideLov();showToast('Selectează sau salvează clientul mai întâi!');return;}
     const{data:ord,error:ordErr}=await sb.from('orders').insert({client_id:isStock?null:clientId,is_stock:isStock,agent_id:CU.id,status:'nou',delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv}).select().single();
     if(ordErr||!ord){hideLov();showToast('Eroare la salvare: '+(ordErr?.message||'necunoscut'));return;}
     await sb.from('order_lines').insert(omArts.map(a=>({order_id:ord.id,...lineRows(a)})));
