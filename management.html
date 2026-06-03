@@ -1048,6 +1048,7 @@ async function loadOrders(){
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       user_profiles!orders_agent_id_fkey(full_name),
       order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,talpa_id,brant_id,siret_id,cutie_id,products(id,code,name,default_sole_id))`)
+    .order('sort_order',{ascending:true,nullsFirst:false})
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
   allOrders=data||[];
@@ -2240,7 +2241,8 @@ async function loadProdCroit(){
   const{data:croitData}=await sb.from('orders')
     .select('id,order_no,status,priority,delivery_date,total_pairs,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,production_status,workshop,notes,total_pairs,ponytage,sort_order,products(code))')
     .in('status',['aprobat','la_croit','in_productie','fete_gata_cusut'])
-    .order('id');
+    .order('sort_order',{ascending:true})
+    .order('delivery_date',{ascending:true});
   const croitOrders=croitData||[];
   console.log('[CROIT] comenzi găsite:',croitOrders.length,croitOrders.map(o=>o.order_no+'='+o.status));
   document.getElementById('pc_active').textContent=croitOrders.filter(o=>['la_croit','in_productie'].includes(o.status)).length;
@@ -2259,7 +2261,7 @@ async function loadProdCroit(){
   const deCroit=croitOrders.filter(o=>['la_croit','in_productie'].includes(o.status));
   const croitGata=croitOrders.filter(o=>o.status==='fete_gata_cusut');
 
-  _prodIds.croit=deCroit.map(o=>(o.order_lines||[])[0]?.id).filter(Boolean);
+  _prodIds.croit=deCroit.map(o=>o.id);
 
   var html='';
   if(deCroit.length){
@@ -2319,7 +2321,7 @@ async function loadProdCusut(){
   const inLucruOrders=Object.entries(byOrder).filter(([,d])=>d.inLucru.length>0);
   const gataOrders=Object.entries(byOrder).filter(([,d])=>d.inLucru.length===0&&d.gata.length>0);
 
-  _prodIds.cusut_inlucru=inLucruOrders.map(function(e){var d=e[1];return (d.inLucru[0]||d.gata[0])?.id;}).filter(Boolean);
+  _prodIds.cusut_inlucru=inLucruOrders.map(function(e){return e[0];});
   _prodIds.cusut_gata=gataOrders.map(([oid])=>oid);
 
   var html='';
@@ -2445,14 +2447,21 @@ async function moveProd(section,idx,dir){
   if(section==='talpuit')_talpuitIds=newIds;
   if(section==='receptie')_receptieIds=newIds;
   showLov('Se salvează ordinea...');
+  // Salvează sort_order pe ORDERS (croit/cusut) sau pe order_lines (talpuit/receptie)
+  var useOrders=['croit','cusut_inlucru','ambalat'];
   var updates=newIds.map(function(id,i){
     if(!id)return Promise.resolve();
-    return sb.from('order_lines').update({sort_order:i}).eq('id',id);
+    if(useOrders.indexOf(section)>=0){
+      return sb.from('orders').update({sort_order:i}).eq('id',id);
+    }else{
+      return sb.from('order_lines').update({sort_order:i}).eq('id',id);
+    }
   });
   await Promise.all(updates);
   hideLov();
   if(section==='croit')await loadProdCroit();
   else if(section==='cusut_inlucru')await loadProdCusut();
+  else if(section==='ambalat'){await loadAmbalatList();}
   else await loadProdTalpuit();
 }
 async function moveTalpuit(idx,dir){await moveProd('talpuit',idx,dir);}
