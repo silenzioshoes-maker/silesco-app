@@ -2237,9 +2237,10 @@ async function loadProdDashboard(){
 async function loadProdCroit(){
   const{data:croitData}=await sb.from('orders')
     .select('id,order_no,status,priority,delivery_date,total_pairs,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,production_status,workshop,notes,total_pairs,ponytage,sort_order,products(code))')
-    .in('status',['la_croit','in_productie','fete_gata_cusut'])
+    .in('status',['aprobat','la_croit','in_productie','fete_gata_cusut'])
     .order('id');
   const croitOrders=croitData||[];
+  console.log('[CROIT] comenzi găsite:',croitOrders.length,croitOrders.map(o=>o.order_no+'='+o.status));
   document.getElementById('pc_active').textContent=croitOrders.filter(o=>['la_croit','in_productie'].includes(o.status)).length;
   const now=new Date();
   const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
@@ -2297,6 +2298,7 @@ async function loadProdCusut(){
     .order('sort_order',{ascending:true});
 
   const getO=oid=>allOrders.find(o=>o.id===oid);
+  console.log('[CUSUT] linii găsite:',rawLines?.length,'allOrders:',allOrders.length);
 
   // Grupează pe comandă
   const byOrder={};
