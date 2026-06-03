@@ -557,54 +557,53 @@ async function markReceptionat(lineId){
 
 async function markTalpuit(lineId,orderId,talpaId,brantId,ponytage){
   showLov('Se finalizează...');
-  await sb.from('order_lines').update({production_status:'gata'}).eq('id',lineId);
+  try{
+    // 1. Marchează articolul ca gata
+    const{error:lineErr}=await sb.from('order_lines').update({production_status:'gata'}).eq('id',lineId);
+    if(lineErr){hideLov();showToast('Eroare: '+lineErr.message);return;}
 
-  // Scade stoc talpi
-  if(talpaId){
-    const talpa=allTalpi.find(t=>t.id===talpaId);
-    if(talpa&&talpa.stoc){
-      const stocNou={...talpa.stoc};
-      Object.keys(ponytage||{}).forEach(sz=>{
-        const inp=document.getElementById(`pt_${lineId}_${sz}`);
-        const consum=inp?parseInt(inp.value)||0:(ponytage[sz]||0);
-        if(stocNou[sz]!==undefined)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-consum);
-      });
-      await sb.from('talpi').update({stoc:stocNou}).eq('id',talpaId);
-      talpa.stoc=stocNou;
-      // Check alert
-      const minSz=talpa.min_alert_sz||{};
-      const hasAlert=Object.entries(stocNou).some(([s,q])=>minSz[s]&&q<=minSz[s]);
-      if(hasAlert)await sb.from('stock_alerts').insert({tip:'talpa',item_id:talpaId,cod:talpa.cod,stoc_total:Object.values(stocNou).reduce((s,q)=>s+(q||0),0)}).catch(()=>{});
+    // 2. Scade stoc talpi
+    if(talpaId){
+      const talpa=allTalpi.find(t=>t.id===talpaId);
+      if(talpa&&talpa.stoc){
+        const stocNou={...talpa.stoc};
+        Object.keys(ponytage||{}).forEach(sz=>{
+          const inp=document.getElementById('pt_'+lineId+'_'+sz);
+          const consum=inp?parseInt(inp.value)||0:(ponytage[sz]||0);
+          if(stocNou[sz]!==undefined)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-consum);
+        });
+        await sb.from('talpi').update({stoc:stocNou}).eq('id',talpaId);
+        talpa.stoc=stocNou;
+      }
     }
-  }
 
-  // Scade stoc branturi
-  if(brantId){
-    const brant=allBranturi.find(t=>t.id===brantId);
-    if(brant&&brant.stoc){
-      const stocNou={...brant.stoc};
-      Object.keys(ponytage||{}).forEach(sz=>{
-        const inp=document.getElementById(`pt_${lineId}_${sz}`);
-        const consum=inp?parseInt(inp.value)||0:(ponytage[sz]||0);
-        if(stocNou[sz]!==undefined)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-consum);
-      });
-      await sb.from('branturi').update({stoc:stocNou}).eq('id',brantId);
-      brant.stoc=stocNou;
-      const minSz=brant.min_alert_sz||{};
-      const hasAlert=Object.entries(stocNou).some(([s,q])=>minSz[s]&&q<=minSz[s]);
-      if(hasAlert)await sb.from('stock_alerts').insert({tip:'brant',item_id:brantId,cod:brant.cod,stoc_total:Object.values(stocNou).reduce((s,q)=>s+(q||0),0)}).catch(()=>{});
+    // 3. Scade stoc branturi
+    if(brantId){
+      const brant=allBranturi.find(t=>t.id===brantId);
+      if(brant&&brant.stoc){
+        const stocNou={...brant.stoc};
+        Object.keys(ponytage||{}).forEach(sz=>{
+          const inp=document.getElementById('pt_'+lineId+'_'+sz);
+          const consum=inp?parseInt(inp.value)||0:(ponytage[sz]||0);
+          if(stocNou[sz]!==undefined)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-consum);
+        });
+        await sb.from('branturi').update({stoc:stocNou}).eq('id',brantId);
+        brant.stoc=stocNou;
+      }
     }
-  }
 
-  // Verifică dacă toate articolele comenzii sunt gata
-  const{data:remaining}=await sb.from('order_lines')
-    .select('id,production_status').eq('order_id',orderId).neq('from_stock',true);
-  const allGata=(remaining||[]).every(l=>l.production_status==='gata'||l.id===lineId);
-  if(allGata){
-    await sb.from('orders').update({status:'la_impachetat'}).eq('id',orderId);
-    showToast('✓ Gata — la ambalat!');
-  }else{
-    showToast('Talpuit ✓');
+    // 4. Verifică dacă toate articolele comenzii sunt gata
+    const{data:remaining}=await sb.from('order_lines')
+      .select('id,production_status').eq('order_id',orderId).neq('from_stock',true);
+    const allGata=(remaining||[]).every(l=>l.production_status==='gata'||l.id===lineId);
+    if(allGata){
+      await sb.from('orders').update({status:'la_impachetat'}).eq('id',orderId);
+      showToast('✓ Gata — comandă la ambalat!');
+    }else{
+      showToast('✓ Talpuit!');
+    }
+  }catch(e){
+    showToast('Eroare: '+e.message);
   }
   hideLov();
   await loadMateriale();
