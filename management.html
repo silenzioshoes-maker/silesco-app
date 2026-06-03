@@ -2375,16 +2375,16 @@ function togProdCard(bodyId,arrowId){
 var _talpuitIds=[], _receptieIds=[], _croitLineIds=[];
 function setTalpuitIds(ids){_talpuitIds=ids;}
 
-async function moveProd(section, idx, dir){
-  var ids, reloadFn;
-  if(section==='talpuit'){ids=_talpuitIds; reloadFn=loadProdTalpuit;}
-  else if(section==='receptie'){ids=_receptieIds; reloadFn=loadProdTalpuit;}
-  else if(section==='croit'){ids=_croitLineIds; reloadFn=loadProdCroit;}
+async function moveProd(section,idx,dir){
+  var ids,reloadFn;
+  if(section==='talpuit'){ids=_talpuitIds;reloadFn=loadProdTalpuit;}
+  else if(section==='receptie'){ids=_receptieIds;reloadFn=loadProdTalpuit;}
+  else if(section==='croit'){ids=_croitLineIds;reloadFn=loadProdCroit;}
   else return;
   var newIdx=idx+dir;
   if(!ids||newIdx<0||newIdx>=ids.length)return;
-  var newIds=[].concat(ids);
-  var tmp=newIds[idx]; newIds[idx]=newIds[newIdx]; newIds[newIdx]=tmp;
+  var newIds=ids.slice();
+  var tmp=newIds[idx];newIds[idx]=newIds[newIdx];newIds[newIdx]=tmp;
   if(section==='talpuit')_talpuitIds=newIds;
   else if(section==='receptie')_receptieIds=newIds;
   else if(section==='croit')_croitLineIds=newIds;
@@ -2393,23 +2393,8 @@ async function moveProd(section, idx, dir){
   hideLov();
   if(reloadFn)await reloadFn();
 }
-
 async function moveTalpuit(idx,dir){await moveProd('talpuit',idx,dir);}
 
-async function moveTalpuit_old(idx,dir){
-  const ids=_talpuitIds;
-  const newIdx=idx+dir;
-  if(newIdx<0||newIdx>=ids.length)return;
-  const newIds=[...ids];
-  [newIds[idx],newIds[newIdx]]=[newIds[newIdx],newIds[idx]];
-  _talpuitIds=newIds;
-  showLov('Se salvează ordinea...');
-  await Promise.all(newIds.map((id,i)=>sb.from('order_lines').update({sort_order:i}).eq('id',id)));
-  hideLov();
-  await loadProdTalpuit();
-}
-
-// end moveTalpuit_old
 
 
 async function loadProdAmbalat(){
