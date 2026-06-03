@@ -95,13 +95,15 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 
 <div class="tabs">
   <div class="tab active" id="tab_receptie" onclick="setTab('receptie')">Recepție cusut</div>
+  <div class="tab" id="tab_delansat" onclick="setTab('delansat')">De lansat<span id="deLansatBadge" style="display:none;background:#8B6914;color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;margin-left:4px">0</span></div>
   <div class="tab" id="tab_lansat" onclick="setTab('lansat')">Lansat</div>
   <div class="tab" id="tab_stoc" onclick="setTab('stoc')">Stoc materiale</div>
 </div>
 
 <div class="stats-bar">
-  <div class="stat-item"><div class="stat-label">Recepție</div><div class="stat-val" id="stReceptie">—</div><div class="stat-sub">articole</div></div>
-  <div class="stat-item"><div class="stat-label">Lansat</div><div class="stat-val" id="stLansat">—</div><div class="stat-sub">articole</div></div>
+  <div class="stat-item"><div class="stat-label">Recepție</div><div class="stat-val" id="stReceptie">—</div><div class="stat-sub">de confirmat</div></div>
+  <div class="stat-item"><div class="stat-label">De lansat</div><div class="stat-val" id="stDeLansat" style="color:#B08D57">—</div><div class="stat-sub">recepționate</div></div>
+  <div class="stat-item"><div class="stat-label">Lansat</div><div class="stat-val" id="stLansat">—</div><div class="stat-sub">la talpuit</div></div>
   <div class="stat-item"><div class="stat-label">Finalizate</div><div class="stat-val" id="stGata">—</div><div class="stat-sub">perechi</div></div>
 </div>
 
@@ -111,6 +113,22 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div id="receptieList"></div>
     <div class="empty" id="receptieEmpty" style="display:none">
       <div style="font-size:13px;font-weight:600">Nicio recepție în așteptare</div>
+    </div>
+  </div>
+
+  <!-- DE LANSAT -->
+  <div id="viewDelansat" style="display:none">
+    <div style="padding:10px 14px 0;font-size:12px;color:#8B6914;font-weight:600;background:#FFF8E8;border-bottom:1px solid #EDE8DF;padding-bottom:10px;margin-bottom:12px">
+      Articole recepționate — gata de lansat la talpuit. Selectează și apasă Lansează.
+    </div>
+    <div id="deLansatList"></div>
+    <div class="empty" id="deLansatEmpty" style="display:none">
+      <div style="font-size:13px;font-weight:600">Niciun articol de lansat</div>
+    </div>
+    <div id="lansareFooter" style="display:none;position:sticky;bottom:0;background:#fff;border-top:1px solid #DDD7CE;padding:12px 14px;margin:0 -14px">
+      <button onclick="lansareSelectate()" style="width:100%;padding:13px;border-radius:10px;border:none;background:#1E4A2E;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+        🟢 Lansează selectatele la talpuit (<span id="nrSelectate">0</span>)
+      </button>
     </div>
   </div>
 
@@ -206,11 +224,15 @@ async function loadMateriale(){
 }
 
 function setTab(t){
-  ['receptie','lansat','stoc'].forEach(x=>{
-    document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1)).style.display='none';
-    document.getElementById('tab_'+x).classList.remove('active');
+  ['receptie','delansat','lansat','stoc'].forEach(x=>{
+    const vId='view'+x.charAt(0).toUpperCase()+x.slice(1);
+    const vEl=document.getElementById(vId);
+    if(vEl)vEl.style.display='none';
+    const tEl=document.getElementById('tab_'+x);
+    if(tEl)tEl.classList.remove('active');
   });
-  document.getElementById('view'+t.charAt(0).toUpperCase()+t.slice(1)).style.display='block';
+  const vEl=document.getElementById('view'+t.charAt(0).toUpperCase()+t.slice(1));
+  if(vEl)vEl.style.display='block';
   document.getElementById('tab_'+t).classList.add('active');
   if(t==='stoc')renderStoc();
 }
@@ -239,7 +261,7 @@ async function loadAll(){
   showLov('Se încarcă...');
   const{data:lines}=await sb.from('order_lines')
     .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,sort_order,talpa_id,brant_id,products(code,name)')
-    .in('production_status',['cusut_gata','la_talpuit','gata'])
+    .in('production_status',['cusut_gata','receptie_fete','la_talpuit','gata'])
     .order('sort_order',{ascending:true});
 
   const orderIds=[...new Set((lines||[]).map(l=>l.order_id).filter(Boolean))];
@@ -253,15 +275,22 @@ async function loadAll(){
   (lines||[]).forEach(l=>l.orders=ordersMap[l.order_id]||null);
 
   const cusutGata=(lines||[]).filter(l=>l.production_status==='cusut_gata');
+  const receptiiFete=(lines||[]).filter(l=>l.production_status==='receptie_fete');
   const lansat=(lines||[]).filter(l=>l.production_status==='la_talpuit');
   const gata=(lines||[]).filter(l=>l.production_status==='gata');
 
   document.getElementById('hdrBadge').textContent=lansat.length+' lansate';
   document.getElementById('stReceptie').textContent=cusutGata.length;
+  document.getElementById('stDeLansat').textContent=receptiiFete.length;
   document.getElementById('stLansat').textContent=lansat.length;
   document.getElementById('stGata').textContent=gata.reduce((s,l)=>s+(l.total_pairs||0),0);
 
+  // Badge tab De lansat
+  const badge=document.getElementById('deLansatBadge');
+  if(badge){badge.textContent=receptiiFete.length;badge.style.display=receptiiFete.length?'inline-block':'none';}
+
   renderReceptie(cusutGata);
+  renderDeLansat(receptiiFete);
   renderLansat(lansat);
   hideLov();
 }
@@ -298,6 +327,73 @@ function renderReceptie(lines){
       </div>
     </div>`;
   }).join('');
+}
+
+let selectatePtLansat=new Set();
+
+function renderDeLansat(lines){
+  const el=document.getElementById('deLansatList');
+  const empty=document.getElementById('deLansatEmpty');
+  const footer=document.getElementById('lansareFooter');
+  if(!lines.length){el.innerHTML='';empty.style.display='block';footer.style.display='none';selectatePtLansat.clear();return;}
+  empty.style.display='none';
+  footer.style.display='block';
+  el.innerHTML=lines.map(l=>{
+    const o=l.orders;
+    const cl=o?.clients?.company_name||o?.clients?.name||'—';
+    const dd=o?.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+    const dl=o?.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
+    const dlColor=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=2?'#8B6914':'#5A5248';
+    const isSelected=selectatePtLansat.has(l.id);
+    return `<div id="dlcard_${l.id}" onclick="toggleSelectLansat('${l.id}')"
+      style="background:${isSelected?'#EAF0EC':'#fff'};border:${isSelected?'2px solid #1E4A2E':'1px solid #DDD7CE'};border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${isSelected?'#1E4A2E':'#DDD7CE'};background:${isSelected?'#1E4A2E':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+          ${isSelected?'<svg width="12" height="12" viewBox="0 0 24 24" style="stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>':''}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:2px">${o?.order_no||'—'}</div>
+          <div style="font-size:13px;font-weight:700;color:#111111">${getModName(l)} · ${l.color||'—'}</div>
+          <div style="font-size:11px;color:#5A5248;margin-top:2px">${cl} · ${l.total_pairs} per.</div>
+          <div style="font-size:11px;color:${dlColor};font-weight:600;margin-top:2px">Livrare: ${dd}${dl!==null?' · '+(dl<0?'⚠ '+Math.abs(dl)+'z întârziere':dl+'z rămase'):''}</div>
+          <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:5px">${renderPontaj(l.ponytage)}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateNrSelectate();
+}
+
+function toggleSelectLansat(id){
+  if(selectatePtLansat.has(id))selectatePtLansat.delete(id);
+  else selectatePtLansat.add(id);
+  // Re-render card vizual
+  const card=document.getElementById('dlcard_'+id);
+  if(card){
+    const sel=selectatePtLansat.has(id);
+    card.style.background=sel?'#EAF0EC':'#fff';
+    card.style.border=sel?'2px solid #1E4A2E':'1px solid #DDD7CE';
+    card.querySelector('div>div').style.borderColor=sel?'#1E4A2E':'#DDD7CE';
+    card.querySelector('div>div').style.background=sel?'#1E4A2E':'#fff';
+    card.querySelector('div>div').innerHTML=sel?'<svg width="12" height="12" viewBox="0 0 24 24" style="stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>':'';
+  }
+  updateNrSelectate();
+}
+
+function updateNrSelectate(){
+  const nr=selectatePtLansat.size;
+  const el=document.getElementById('nrSelectate');
+  if(el)el.textContent=nr;
+}
+
+async function lansareSelectate(){
+  if(!selectatePtLansat.size){showToast('Selectează articolele de lansat!');return;}
+  showLov('Se lansează...');
+  const ids=[...selectatePtLansat];
+  await Promise.all(ids.map(id=>sb.from('order_lines').update({production_status:'la_talpuit'}).eq('id',id)));
+  selectatePtLansat.clear();
+  hideLov();showToast('✓ '+ids.length+' articole lansate la talpuit!');
+  await loadAll();setTab('lansat');
 }
 
 function renderLansat(lines){
@@ -550,9 +646,9 @@ function togCmd(bodyId,arrowId){
 
 async function markReceptionat(lineId){
   showLov('Se recepționează...');
-  await sb.from('order_lines').update({production_status:'la_talpuit'}).eq('id',lineId);
-  hideLov();showToast('Recepționat — lansat la talpuit!');
-  await loadAll();setTab('lansat');
+  await sb.from('order_lines').update({production_status:'receptie_fete'}).eq('id',lineId);
+  hideLov();showToast('✓ Recepționat — în coada de lansare!');
+  await loadAll();setTab('delansat');
 }
 
 async function markTalpuit(lineId,orderId,talpaId,brantId,ponytage){
