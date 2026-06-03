@@ -2259,14 +2259,14 @@ async function loadProdCroit(){
   const deCroit=croitOrders.filter(o=>['la_croit','in_productie'].includes(o.status));
   const croitGata=croitOrders.filter(o=>o.status==='fete_gata_cusut');
 
-  _prodIds.croit=deCroit.map(o=>o.id);
+  _prodIds.croit=deCroit.map(o=>(o.order_lines||[])[0]?.id).filter(Boolean);
 
   var html='';
   if(deCroit.length){
     html+=subHeader('✂ De croit ('+deCroit.length+')','#5A3E1B','#FDF6E8');
     html+=deCroit.map((o,i)=>{
       const cl=o.clients?.company_name||o.clients?.name||'—';
-      const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
+      const wl=(o.order_lines||[]).filter(l=>!l.from_stock).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
       const done=wl.filter(l=>['croit_gata','la_cusut','cusut_gata','la_talpuit','gata'].includes(l.production_status));
       return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'croit',
         orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,isUrgent:o.priority==='urgent',
@@ -2279,7 +2279,7 @@ async function loadProdCroit(){
     html+=subHeader('✓ Fețe gata ('+croitGata.length+') — la cusut','#2F4A63','#EAF0F8');
     html+=croitGata.map((o,i)=>{
       const cl=o.clients?.company_name||o.clients?.name||'—';
-      const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
+      const wl=(o.order_lines||[]).filter(l=>!l.from_stock).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
       return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'none',
         orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,isUrgent:o.priority==='urgent',
         lines:wl.map(makeLineObj),
@@ -2300,7 +2300,6 @@ async function loadProdCusut(){
     .order('sort_order',{ascending:true});
 
   const getO=oid=>allOrders.find(o=>o.id===oid);
-  console.log('[CUSUT] linii găsite:',rawLines?.length,'allOrders:',allOrders.length);
 
   // Grupează pe comandă
   const byOrder={};
@@ -2320,7 +2319,7 @@ async function loadProdCusut(){
   const inLucruOrders=Object.entries(byOrder).filter(([,d])=>d.inLucru.length>0);
   const gataOrders=Object.entries(byOrder).filter(([,d])=>d.inLucru.length===0&&d.gata.length>0);
 
-  _prodIds.cusut_inlucru=inLucruOrders.map(([oid])=>oid);
+  _prodIds.cusut_inlucru=inLucruOrders.map(function(e){var d=e[1];return (d.inLucru[0]||d.gata[0])?.id;}).filter(Boolean);
   _prodIds.cusut_gata=gataOrders.map(([oid])=>oid);
 
   var html='';
@@ -2439,14 +2438,18 @@ async function moveTalpuit_old(idx,dir){
 async function moveProd(section,idx,dir){
   var ids=_prodIds[section]||[];
   var newIdx=idx+dir;
-  if(!ids.length||newIdx<0||newIdx>=ids.length)return;
+  if(!ids.length||newIdx<0||newIdx>=ids.length){showToast('Nu se poate muta!');return;}
   var newIds=ids.slice();
   var tmp=newIds[idx];newIds[idx]=newIds[newIdx];newIds[newIdx]=tmp;
   _prodIds[section]=newIds;
   if(section==='talpuit')_talpuitIds=newIds;
   if(section==='receptie')_receptieIds=newIds;
   showLov('Se salvează ordinea...');
-  await Promise.all(newIds.map(function(id,i){return sb.from('order_lines').update({sort_order:i}).eq('id',id);}));
+  var updates=newIds.map(function(id,i){
+    if(!id)return Promise.resolve();
+    return sb.from('order_lines').update({sort_order:i}).eq('id',id);
+  });
+  await Promise.all(updates);
   hideLov();
   if(section==='croit')await loadProdCroit();
   else if(section==='cusut_inlucru')await loadProdCusut();
@@ -2517,12 +2520,13 @@ function renderAmbalatList(){
 function moveAmbalat(id,dir){
   const idx=ambOrders.findIndex(o=>o.id===id);
   if(idx===-1)return;
+  moveAmbalatIdx(idx,dir);
+}
+function moveAmbalatIdx(idx,dir){
   const newIdx=idx+dir;
   if(newIdx<0||newIdx>=ambOrders.length)return;
   const tmp=ambOrders[idx];ambOrders[idx]=ambOrders[newIdx];ambOrders[newIdx]=tmp;
   renderAmbalatList();
-  // Salvează ordinea — setăm priority numeric în notes_sort sau folosim un câmp dedicat
-  // Simplu: marcăm primul ca urgent dacă nu e deja
 }
 
 async function setAmbPriority(id,priority){
