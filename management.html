@@ -2194,22 +2194,50 @@ async function loadProdCroit(){
   if(!croitOrders.length){
     el.innerHTML='<div style="font-size:12px;color:#9E9890;padding:10px 0;font-style:italic">Nicio comandă activă la croit</div>';
   }else{
-    el.innerHTML=croitOrders.map(o=>{
+    el.innerHTML=croitOrders.map((o,oi)=>{
       const cl=o.clients?.company_name||o.clients?.name||'—';
       const workLines=(o.order_lines||[]).filter(l=>!l.from_stock);
       const doneLines=workLines.filter(l=>['croit_gata','la_cusut','cusut_gata','la_talpuit','gata'].includes(l.production_status));
-      return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:10px 14px;margin-bottom:6px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div><div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:2px">${o.order_no||'—'}</div>
+      const psLabels={in_lucru:'În lucru',la_croit:'La croit',croit_gata:'Croit ✓',la_cusut:'La cusut',cusut_gata:'Cusut ✓',la_talpuit:'La talpuit',gata:'✓ Gata'};
+      const psColors={in_lucru:'#5A5248',la_croit:'#5A3E1B',croit_gata:'#2F4A63',la_cusut:'#2F4A63',cusut_gata:'#365A43',la_talpuit:'#1E4A2E',gata:'#1E4A2E'};
+      const psBgs={in_lucru:'#F4F1EA',la_croit:'#F5ECD7',croit_gata:'#E8EFF6',la_cusut:'#DCE8F5',cusut_gata:'#EAF0EC',la_talpuit:'#D8EEE0',gata:'#C8E6C9'};
+      return `<div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;margin-bottom:6px;overflow:hidden">
+        <div onclick="togProdCard('pc_body_${oi}','pc_arr_${oi}')" style="padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:2px">${o.order_no||'—'}</div>
             <div style="font-size:14px;font-weight:700;color:#111111">${cl}</div>
-            <div style="font-size:11px;color:#5A5248;margin-top:3px">${workLines.length} art.</div></div>
-          <div style="text-align:right"><div style="font-size:16px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif">${doneLines.length}/${workLines.length}</div>
-            <div style="font-size:9px;color:#8B6914">croite</div></div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+              ${workLines.map(l=>{const mod=getM(l);const isDone=['croit_gata','la_cusut','cusut_gata','la_talpuit','gata'].includes(l.production_status);const hasR=l.notes?.includes('[RESTANȚĂ:');
+                return `<span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:${isDone?'#EAF0EC':hasR?'#F5EAE8':'#F4F1EA'};color:${isDone?'#1E4A2E':hasR?'#7A2418':'#3A3530'};border:1px solid ${isDone?'rgba(54,90,67,.2)':hasR?'rgba(156,58,43,.2)':'#DDD7CE'}">${isDone?'✓ ':hasR?'⚠ ':''}${mod}</span>`;}).join('')}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <div style="text-align:right">
+              <div style="font-size:16px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif">${doneLines.length}/${workLines.length}</div>
+              <div style="font-size:9px;color:#8B6914">croite</div>
+            </div>
+            <svg id="pc_arr_${oi}" style="width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
-          ${workLines.map(l=>{const mod=getM(l);const isDone=['croit_gata','la_cusut','cusut_gata','la_talpuit','gata'].includes(l.production_status);const hasR=l.notes?.includes('[RESTANȚĂ:');const ws=l.workshop?` <span style="font-size:9px;color:#2F4A63">${l.workshop}</span>`:'';
-            return `<span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:${isDone?'#EAF0EC':hasR?'#F5EAE8':'#F4F1EA'};color:${isDone?'#1E4A2E':hasR?'#7A2418':'#3A3530'};border:1px solid ${isDone?'rgba(54,90,67,.2)':hasR?'rgba(156,58,43,.2)':'#DDD7CE'}">${isDone?'✓ ':hasR?'⚠ ':''}${mod}${ws}</span>`;}).join('')}
-        </div></div>`;
+        <div id="pc_body_${oi}" style="display:none;border-top:1px solid #EDE8DF">
+          ${workLines.map(l=>{
+            const mod=getM(l);
+            const ps=l.production_status||'';
+            const lbl=psLabels[ps]||ps;
+            const clr=psColors[ps]||'#5A5248';
+            const bg=psBgs[ps]||'#F4F1EA';
+            const pontaj=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0).map(([s,q])=>s+'×'+q).join(' '):'';
+            return `<div style="padding:8px 14px;border-bottom:1px solid #F4F1EA;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:700;color:#111111">${mod} · ${l.color||'—'} · ${l.total_pairs} per.</div>
+                ${l.workshop?`<div style="font-size:10px;color:#5A5248;margin-top:1px">Atelier: ${l.workshop}</div>`:''}
+                ${pontaj?`<div style="font-size:10px;color:#5A5248;font-family:monospace;margin-top:3px">${pontaj}</div>`:''}
+              </div>
+              <span style="font-size:10px;font-weight:700;color:${clr};background:${bg};padding:2px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">${lbl}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
     }).join('');
   }
   document.getElementById('pc_restante_list').innerHTML=restanteReal.length?`
@@ -2228,13 +2256,19 @@ async function loadProdCroit(){
 }
 
 async function loadProdCusut(){
+  // Include și receptie_fete/la_talpuit ca să vedem ce s-a cusut azi
   const{data:cusutLines}=await sb.from('order_lines')
     .select('workshop,total_pairs,production_status,product_id,free_model,color,notes,order_id,products(code)')
-    .in('production_status',['la_cusut','cusut_gata']);
+    .in('production_status',['la_cusut','cusut_gata','receptie_fete','la_talpuit']);
   const getOrder=oid=>allOrders.find(o=>o.id===oid);
   const getM=l=>l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
   const byWs={};
-  (cusutLines||[]).forEach(l=>{const ws=l.workshop||'intern';if(!byWs[ws])byWs[ws]={inLucru:[],gata:[]};if(l.production_status==='la_cusut')byWs[ws].inLucru.push(l);else byWs[ws].gata.push(l);});
+  (cusutLines||[]).forEach(l=>{
+    const ws=l.workshop||'intern';
+    if(!byWs[ws])byWs[ws]={inLucru:[],gata:[]};
+    if(l.production_status==='la_cusut')byWs[ws].inLucru.push(l);
+    else byWs[ws].gata.push(l); // cusut_gata + receptie_fete + la_talpuit = cusut finalizat
+  });
   const atelEl=document.getElementById('pcu_ateliere');
   if(!Object.keys(byWs).length){atelEl.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic">Nicio activitate cusut</div>';document.getElementById('pcu_azi').innerHTML='';document.getElementById('pcu_list').innerHTML='';return;}
   atelEl.innerHTML=Object.entries(byWs).map(([ws,d])=>`
@@ -2293,6 +2327,7 @@ async function loadProdTalpuit(){
 
   // La talpuit — cu butoane ↑↓ prioritizare
   const allIds=laTalpuit.map(x=>x.id);
+  setTalpuitIds(allIds);
   document.getElementById('pt_list').innerHTML=laTalpuit.length?laTalpuit.map((l,i)=>{
     const o=getO(l.order_id);
     const cl=o?.clients?.company_name||o?.clients?.name||'—';
@@ -2304,8 +2339,8 @@ async function loadProdTalpuit(){
     const pontaj=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0).map(([s,q])=>s+'×'+q).join(' '):'';
     return `<div style="background:#fff;border:1px solid ${isUrgent?'#9C3A2B':'#DDD7CE'};border-left:3px solid ${isUrgent?'#9C3A2B':'#1E4A2E'};border-radius:0 7px 7px 0;padding:9px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px">
       <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
-        <button onclick="moveTalpuit('${l.id}',${i},-1,${JSON.stringify(allIds)})" ${isFirst?'disabled':''} style="width:22px;height:22px;border:1px solid #DDD7CE;border-radius:4px;background:#F4F1EA;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;${isFirst?'opacity:.3':''}">↑</button>
-        <button onclick="moveTalpuit('${l.id}',${i},1,${JSON.stringify(allIds)})" ${isLast?'disabled':''} style="width:22px;height:22px;border:1px solid #DDD7CE;border-radius:4px;background:#F4F1EA;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;${isLast?'opacity:.3':''}">↓</button>
+        <button onclick="moveTalpuit(${i},-1)" ${isFirst?'disabled':''} style="width:22px;height:22px;border:1px solid #DDD7CE;border-radius:4px;background:#F4F1EA;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;${isFirst?'opacity:.3':''}">↑</button>
+        <button onclick="moveTalpuit(${i},1)" ${isLast?'disabled':''} style="width:22px;height:22px;border:1px solid #DDD7CE;border-radius:4px;background:#F4F1EA;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;${isLast?'opacity:.3':''}">↓</button>
       </div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:2px">
@@ -2322,13 +2357,25 @@ async function loadProdTalpuit(){
     </div>`;}).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic;padding:6px 0">Niciun articol lansat</div>';
 }
 
-async function moveTalpuit(lineId,idx,dir,ids){
+function togProdCard(bodyId,arrowId){
+  const b=document.getElementById(bodyId),a=document.getElementById(arrowId);
+  if(!b)return;
+  const open=b.style.display==='block';
+  b.style.display=open?'none':'block';
+  if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+}
+
+// IDs stocate separat, nu în onclick
+let _talpuitIds=[];
+function setTalpuitIds(ids){_talpuitIds=ids;}
+
+async function moveTalpuit(idx,dir){
+  const ids=_talpuitIds;
   const newIdx=idx+dir;
   if(newIdx<0||newIdx>=ids.length)return;
-  // Schimbă pozițiile
   const newIds=[...ids];
   [newIds[idx],newIds[newIdx]]=[newIds[newIdx],newIds[idx]];
-  // Salvează sort_order
+  _talpuitIds=newIds;
   showLov('Se salvează ordinea...');
   await Promise.all(newIds.map((id,i)=>sb.from('order_lines').update({sort_order:i}).eq('id',id)));
   hideLov();
