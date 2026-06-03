@@ -580,24 +580,57 @@ function renderFinalizate(){
   const empty=document.getElementById('finEmpty');
   if(!finOrders.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  el.innerHTML=finOrders.map(o=>{
+  el.innerHTML=finOrders.map((o,i)=>{
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const lines=o.order_lines||[];
     const dt=o.updated_at?new Date(o.updated_at).toLocaleDateString('ro-RO'):'—';
-    return `<div class="fin-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
+    const totalPer=lines.reduce((s,l)=>s+(l.total_pairs||0),0);
+    return `<div class="fin-card" style="padding:0;overflow:hidden">
+      <!-- HEADER clickabil -->
+      <div onclick="togFin('finb_${i}','finarr_${i}')"
+        style="padding:13px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="flex:1;min-width:0">
           <div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:3px">${o.order_no||'—'}</div>
-          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#111111;margin-bottom:6px">${cl}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px">
-            ${lines.map(l=>`<span class="art-chip" style="background:#EAF0EC;border-color:rgba(54,90,67,.2);color:#1E4A2E">✓ ${getModName(l)} · ${l.color||'—'}</span>`).join('')}
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#111111;margin-bottom:5px">${cl}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">
+            ${lines.slice(0,3).map(l=>`<span class="art-chip" style="background:#EAF0EC;border-color:rgba(54,90,67,.2);color:#1E4A2E">✓ ${getModName(l)} · ${l.color||'—'}</span>`).join('')}
+            ${lines.length>3?`<span class="art-chip" style="color:#5A5248">+${lines.length-3}</span>`:''}
           </div>
+          <div style="font-size:11px;color:#1E4A2E;font-weight:600">✓ Fețe gata — ${totalPer} per. · ${dt}</div>
         </div>
-        <div style="font-size:10px;color:#9E9890;white-space:nowrap;margin-left:8px">${dt}</div>
+        <svg id="finarr_${i}" style="width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:4px;transition:transform .2s" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div style="margin-top:8px;font-size:11px;color:#1E4A2E;font-weight:600">✓ Fețe gata — la cusut</div>
+      <!-- DETALII expandabile -->
+      <div id="finb_${i}" style="display:none;border-top:1px solid #EDE8DF">
+        ${lines.map(l=>{
+          const pontaj=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0).map(([s,q])=>`<span style="background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;font-family:'Playfair Display',serif">${s}×${q}</span>`).join(' '):'—';
+          const ps=l.production_status||'';
+          const psLabel={la_croit:'La croit',croit_gata:'Croit ✓',la_cusut:'La cusut',cusut_gata:'Cusut ✓',la_talpuit:'La talpuit',gata:'✓ Gata'}[ps]||ps;
+          const psColor={la_croit:'#5A3E1B',croit_gata:'#2F4A63',la_cusut:'#2F4A63',cusut_gata:'#1E4A2E',la_talpuit:'#1E4A2E',gata:'#1E4A2E'}[ps]||'#5A5248';
+          const psBg={la_croit:'#F5ECD7',croit_gata:'#E8EFF6',la_cusut:'#DCE8F5',cusut_gata:'#EAF0EC',la_talpuit:'#D8EEE0',gata:'#C8E6C9'}[ps]||'#F4F1EA';
+          const notesClean=l.notes?l.notes.replace(/\[[^\]]+\]\s*/g,'').trim():'';
+          return `<div style="padding:11px 15px;border-bottom:1px solid #F4F1EA">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:#111111">${getModName(l)} · ${l.color||'—'}</div>
+                <div style="font-size:11px;color:#5A5248;margin-top:2px">${l.total_pairs} perechi${l.workshop?' · '+l.workshop:''}</div>
+                <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:5px">${pontaj}</div>
+                ${notesClean?`<div style="font-size:11px;color:#8B6914;margin-top:4px;font-style:italic">${notesClean}</div>`:''}
+              </div>
+              <span style="font-size:10px;font-weight:700;color:${psColor};background:${psBg};padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">${psLabel}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
     </div>`;
   }).join('');
+}
+
+function togFin(bodyId,arrowId){
+  const b=document.getElementById(bodyId),a=document.getElementById(arrowId);
+  const open=b.style.display==='block';
+  b.style.display=open?'none':'block';
+  if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
 }
 
 // ── TOGGLE EXPAND ─────────────────────────────────────────────
