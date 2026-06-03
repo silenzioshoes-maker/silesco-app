@@ -332,7 +332,14 @@ function renderLansat(lines){
                 ${talpa?`<div style="font-size:10px;color:#5A5248;margin-top:2px">Talpă: <strong>${talpa.cod}</strong>${brant?' · Branț: <strong>'+brant.cod+'</strong>':''}</div>`:''}
                 <div class="pontaj">${renderPontaj(l.ponytage)}</div>
               </div>
-              <button class="btn-talpuit" onclick="markTalpuit('${l.id}','${l.order_id}','${l.talpa_id||''}','${l.brant_id||''}',${JSON.stringify(l.ponytage||{})})">
+              <button class="btn-talpuit" 
+                id="btnt_${l.id}"
+                data-lid="${l.id}"
+                data-oid="${l.order_id}"
+                data-tid="${l.talpa_id||''}"
+                data-bid="${l.brant_id||''}"
+                data-pt='${JSON.stringify(l.ponytage||{}).replace(/'/g,"&#39;")}'
+                onclick="markTalpuitFromBtn(this)">
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 Talpuit ✓
               </button>
@@ -553,6 +560,16 @@ async function markReceptionat(lineId){
   await sb.from('order_lines').update({production_status:'la_talpuit'}).eq('id',lineId);
   hideLov();showToast('Recepționat — lansat la talpuit!');
   await loadAll();
+}
+
+function markTalpuitFromBtn(btn){
+  const lid=btn.dataset.lid;
+  const oid=btn.dataset.oid;
+  const tid=btn.dataset.tid;
+  const bid=btn.dataset.bid;
+  let pt={};
+  try{pt=JSON.parse(btn.dataset.pt||'{}');}catch(e){}
+  markTalpuit(lid,oid,tid,bid,pt);
 }
 
 async function markTalpuit(lineId,orderId,talpaId,brantId,ponytage){
