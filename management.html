@@ -1415,17 +1415,40 @@ function openApprove(id,e){e.stopPropagation();approveOrderId=id;const o=allOrde
   document.getElementById('approvePreview').innerHTML=(o.order_lines||[]).map((l,i)=>{
     const mod=l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
     return `<div style="background:#F4F1EA;border:1px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px">
-      <div style="font-size:13px;font-weight:700;color:#111111;margin-bottom:6px">${mod} · ${l.color||'—'} · ${l.total_pairs} per.</div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;font-weight:600;color:#5A3E1B">
-          <input type="radio" name="flux_${l.id}" value="intern" checked onchange="toggleAtelierSel('${l.id}',false)"/> ✂ Croit intern
+      <div style="font-size:13px;font-weight:700;color:#111111;margin-bottom:8px">${mod} · ${l.color||'—'} · ${l.total_pairs} per.</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid #DDD7CE;background:#fff" id="fluxlbl_intern_intern_${l.id}">
+          <input type="radio" name="flux_${l.id}" value="intern_intern" checked
+            onchange="setFlux('${l.id}','intern_intern')"/>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#5A3E1B">✂ Croit intern + 🧵 Cusut intern</div>
+            <div style="font-size:10px;color:#9E9890">Totul în fabrică</div>
+          </div>
         </label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;font-weight:600;color:#2F4A63">
-          <input type="radio" name="flux_${l.id}" value="extern" onchange="toggleAtelierSel('${l.id}',true)"/> 🧵 Atelier extern (croit+cusut)
+
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid #DDD7CE;background:#fff" id="fluxlbl_intern_extern_${l.id}">
+          <input type="radio" name="flux_${l.id}" value="intern_extern"
+            onchange="setFlux('${l.id}','intern_extern')"/>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#2F4A63">✂ Croit intern + 🏭 Cusut extern</div>
+            <div style="font-size:10px;color:#9E9890">Croim noi, cusut la atelier extern</div>
+          </div>
         </label>
+
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid #DDD7CE;background:#fff" id="fluxlbl_extern_extern_${l.id}">
+          <input type="radio" name="flux_${l.id}" value="extern_extern"
+            onchange="setFlux('${l.id}','extern_extern')"/>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#365A43">🏭 Croit extern + 🏭 Cusut extern</div>
+            <div style="font-size:10px;color:#9E9890">Totul la atelier extern — văd și croit și cusut</div>
+          </div>
+        </label>
+
       </div>
-      <div id="atelSel_${l.id}" style="display:none;margin-top:8px">
-        <select id="atelNume_${l.id}" style="width:100%;padding:7px 10px;border:1.5px solid #2F4A63;border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;background:#fff;outline:none">
+      <div id="atelSel_${l.id}" style="display:none;margin-top:10px">
+        <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Selectează atelierul</div>
+        <select id="atelNume_${l.id}" style="width:100%;padding:8px 10px;border:1.5px solid #2F4A63;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;background:#fff;outline:none">
           <option value="">— Selectează atelierul —</option>
           ${atelOpts}
         </select>
@@ -1434,8 +1457,19 @@ function openApprove(id,e){e.stopPropagation();approveOrderId=id;const o=allOrde
   }).join('');
   approveLines=o.order_lines||[];document.getElementById('approveModal').classList.add('show');}
 
-function toggleAtelierSel(lineId,show){
-  document.getElementById('atelSel_'+lineId).style.display=show?'block':'none';
+function setFlux(lineId,flux){
+  // Arată dropdown atelier pentru orice opțiune cu extern
+  const needsAtelier=flux==='intern_extern'||flux==='extern_extern';
+  document.getElementById('atelSel_'+lineId).style.display=needsAtelier?'block':'none';
+  // Highlight border pe opțiunea selectată
+  ['intern_intern','intern_extern','extern_extern'].forEach(f=>{
+    const lbl=document.getElementById('fluxlbl_'+f+'_'+lineId);
+    if(lbl){
+      const sel=f===flux;
+      lbl.style.borderColor=sel?(f==='intern_intern'?'#8B6914':f==='intern_extern'?'#2F4A63':'#365A43'):'#DDD7CE';
+      lbl.style.background=sel?(f==='intern_intern'?'#FFF8E8':f==='intern_extern'?'#E8EFF6':'#EAF0EC'):'#fff';
+    }
+  });
 }
 async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...');
   await sb.from('orders').update({status:'aprobat',updated_at:new Date().toISOString()}).eq('id',approveOrderId);
@@ -1443,22 +1477,38 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
   const externLines=[];
   for(const l of approveLines){
     const radio=document.querySelector(`input[name="flux_${l.id}"]:checked`);
-    const isExtern=radio?.value==='extern';
-    const atelNume=isExtern?(document.getElementById('atelNume_'+l.id)?.value||''):null;
-    if(isExtern){
-      // Marchează direct ca la_cusut_extern — sare peste croit intern
-      await sb.from('order_lines').update({
-        production_status:'la_cusut_extern',
-        workshop:atelNume||null
-      }).eq('id',l.id);
-      externLines.push({...l,workshop:atelNume});
-    }else{
+    const flux=radio?.value||'intern_intern';
+    const atelNume=(flux==='intern_extern'||flux==='extern_extern')
+      ?(document.getElementById('atelNume_'+l.id)?.value||''):null;
+
+    if(flux==='intern_intern'){
+      // Croit intern + Cusut intern — flux normal
       lots.push({
         order_id:approveOrderId,order_line_id:l.id,product_id:l.product_id,
         stage:'nou',qty_planned:l.total_pairs,
         talpa_std_id:l.products?.default_sole_id||null,
         talpa_used_id:l.products?.default_sole_id||null
       });
+
+    }else if(flux==='intern_extern'){
+      // Croit intern + Cusut extern — intră la croit intern, workshop setat pt cusut
+      lots.push({
+        order_id:approveOrderId,order_line_id:l.id,product_id:l.product_id,
+        stage:'nou',qty_planned:l.total_pairs,
+        talpa_std_id:l.products?.default_sole_id||null,
+        talpa_used_id:l.products?.default_sole_id||null
+      });
+      // Setează workshop pe order_line pt cusut extern ulterior
+      await sb.from('order_lines').update({workshop:atelNume||null}).eq('id',l.id);
+
+    }else if(flux==='extern_extern'){
+      // Croit extern + Cusut extern — sare complet peste croit intern
+      // Status la_croit ca atelierul să vadă că trebuie și croit
+      await sb.from('order_lines').update({
+        production_status:'la_croit',
+        workshop:atelNume||null
+      }).eq('id',l.id);
+      externLines.push({...l,workshop:atelNume,flux:'extern_extern'});
     }
   }
   if(lots.length)await sb.from('production_lots').insert(lots);
@@ -1468,13 +1518,14 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
       const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
       await sb.from('internal_messages').insert({
         from_user_id:CU.id,to_department:'management',order_id:approveOrderId,
-        message:`🧵 ATELIER EXTERN [${l.workshop}]: ${mod} · ${l.color||'—'} · ${l.total_pairs} per. — trimis direct la cusut extern`,
+        message:`🏭 ATELIER EXTERN [${l.workshop}]: ${mod} · ${l.color||'—'} · ${l.total_pairs} per. — CROIT + CUSUT la atelier extern`,
         priority:'normal',is_read:false
       }).catch(()=>{});
     }
   }
   hideLov();closeModal('approveModal');
-  showToast('Comandă aprobată'+(externLines.length?' — '+externLines.length+' art. la atelier extern':'')+'!');
+  const nExtern=externLines.length;
+  showToast('Comandă aprobată'+(nExtern?' — '+nExtern+' art. la atelier extern':'')+'!');
   await loadAll();}
 
 // LANSARE CROIT
