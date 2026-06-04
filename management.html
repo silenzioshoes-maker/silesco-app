@@ -2243,7 +2243,7 @@ async function loadProdCusut(){
 
 async function loadProdTalpuit(){
   const{data:lines}=await sb.from('order_lines')
-    .select('id,total_pairs,production_status,product_id,free_model,color,notes,workshop,order_id,sort_order,products(code)')
+    .select('id,total_pairs,production_status,product_id,free_model,color,notes,workshop,order_id,sort_order,ponytage,products(code,name)')
     .in('production_status',['cusut_gata','la_talpuit'])
     .order('sort_order',{ascending:true});
   const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata');
@@ -2254,64 +2254,38 @@ async function loadProdTalpuit(){
   _receptieIds=_prodIds.receptie;
   document.getElementById('pt_receptie').textContent=receptie.length;
   document.getElementById('pt_active').textContent=laTalpuit.length;
-  const getM=l=>l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
   const getO=oid=>allOrders.find(o=>o.id===oid);
-
-  // Recepție cusut — fără prioritizare
-  document.getElementById('pt_receptie_list').innerHTML=receptie.length?receptie.map(l=>{
-    const o=getO(l.order_id);
-    const cl=o?.clients?.company_name||o?.clients?.name||'—';
-    const dd=o?.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
-    const dl=o?.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
-    const dlColor=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=2?'#8B6914':'#5A5248';
-    const isUrgent=o?.priority==='urgent';
-    const pontaj=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0).map(([s,q])=>s+'×'+q).join(' '):'';
-    return `<div style="background:#E8EFF6;border-left:3px solid ${isUrgent?'#9C3A2B':'#2F4A63'};border-radius:0 7px 7px 0;padding:9px 12px;margin-bottom:5px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:2px">
-            ${isUrgent?'<span style="background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px">URGENT</span>':''}
-            <span style="font-size:10px;font-family:monospace;color:#5A5248">${o?.order_no||'—'}</span>
-            <span style="font-size:10px;color:${dlColor};font-weight:600">${dl!==null?(dl<0?'⚠ '+Math.abs(dl)+'z întârziere':dl+'z'):''}</span>
-          </div>
-          <div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'} · ${l.total_pairs} per.</div>
-          <div style="font-size:10px;color:#5A5248;margin-top:1px">${cl} · ${l.workshop||'intern'} · Livrare: ${dd}</div>
-          ${pontaj?`<div style="font-size:10px;color:#2F4A63;font-family:monospace;margin-top:2px">${pontaj}</div>`:''}
-        </div>
-        <a href="/silesco-app/talpuit.html" style="font-size:10px;font-weight:700;color:#1E4A2E;text-decoration:none;padding:5px 10px;border:1px solid #1E4A2E;border-radius:5px;flex-shrink:0;white-space:nowrap">→ Talpuit</a>
-      </div>
-    </div>`;}).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic;padding:6px 0">Nimic de recepționat</div>';
-
-  // La talpuit — cu butoane ↑↓ prioritizare
-  const allIds=laTalpuit.map(x=>x.id);
-  setTalpuitIds(allIds);
-  document.getElementById('pt_list').innerHTML=laTalpuit.length?laTalpuit.map((l,i)=>{
-    const o=getO(l.order_id);
-    const cl=o?.clients?.company_name||o?.clients?.name||'—';
-    const dd=o?.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
-    const dl=o?.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
-    const dlColor=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=2?'#8B6914':'#5A5248';
-    const isUrgent=o?.priority==='urgent';
-    const isFirst=i===0;const isLast=i===laTalpuit.length-1;
-    const pontaj=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0).map(([s,q])=>s+'×'+q).join(' '):'';
-    return `<div style="background:#fff;border:1px solid ${isUrgent?'#9C3A2B':'#DDD7CE'};border-left:3px solid ${isUrgent?'#9C3A2B':'#1E4A2E'};border-radius:0 7px 7px 0;padding:9px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px">
-      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
-        <button onclick="moveTalpuit(${i},-1)" ${isFirst?'disabled':''} style="width:22px;height:22px;border:1px solid #DDD7CE;border-radius:4px;background:#F4F1EA;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;${isFirst?'opacity:.3':''}">↑</button>
-        <button onclick="moveTalpuit(${i},1)" ${isLast?'disabled':''} style="width:22px;height:22px;border:1px solid #DDD7CE;border-radius:4px;background:#F4F1EA;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;${isLast?'opacity:.3':''}">↓</button>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:2px">
-          <span style="font-size:10px;font-weight:700;color:#B08D57">#${i+1}</span>
-          ${isUrgent?'<span style="background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px">URGENT</span>':''}
-          <span style="font-size:10px;font-family:monospace;color:#5A5248">${o?.order_no||'—'}</span>
-          <span style="font-size:10px;color:${dlColor};font-weight:600">${dl!==null?(dl<0?'⚠ '+Math.abs(dl)+'z':dl+'z'):''}</span>
-        </div>
-        <div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'} · ${l.total_pairs} per.</div>
-        <div style="font-size:10px;color:#5A5248;margin-top:1px">${cl} · Livrare: ${dd}</div>
-        ${pontaj?`<div style="font-size:10px;color:#1E4A2E;font-family:monospace;margin-top:2px">${pontaj}</div>`:''}
-      </div>
-      <span style="font-size:9px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:2px 7px;border-radius:4px;flex-shrink:0">Lansat</span>
-    </div>`;}).join(''):'<div style="font-size:12px;color:#9E9890;font-style:italic;padding:6px 0">Niciun articol lansat</div>';
+  var html='';
+  if(receptie.length){
+    html+=subHeader('🔵 De recepționat ('+receptie.length+')','#2F4A63','#EAF0F8');
+    html+=receptie.map((l,i)=>{
+      const o=getO(l.order_id);
+      const cl=o?.clients?.company_name||o?.clients?.name||'—';
+      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'receptie',
+        orderNo:o?.order_no,client:cl,deliveryDate:o?.delivery_date,isUrgent:o?.priority==='urgent',
+        lines:[makeLineObj(l)],
+        statusLabel:'Cusut ✓ — de recepționat',statusColor:'#2F4A63',statusBg:'#E8EFF6',
+        showMoveUp:i>0,showMoveDown:i<receptie.length-1});
+    }).join('');
+  }
+  if(laTalpuit.length){
+    html+=subHeader('👟 La talpuit ('+laTalpuit.length+')','#1E4A2E','#EAF3ED');
+    html+=laTalpuit.map((l,i)=>{
+      const o=getO(l.order_id);
+      const cl=o?.clients?.company_name||o?.clients?.name||'—';
+      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'talpuit',
+        orderNo:o?.order_no,client:cl,deliveryDate:o?.delivery_date,isUrgent:o?.priority==='urgent',
+        lines:[makeLineObj(l)],
+        statusLabel:'La talpuit',statusColor:'#1E4A2E',statusBg:'#D8EEE0',
+        showMoveUp:i>0,showMoveDown:i<laTalpuit.length-1});
+    }).join('');
+  }
+  if(receptie.length||laTalpuit.length){
+    html+='<button onclick="saveOrdineTalpuit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la talpuit</button>';
+  }
+  if(!receptie.length&&!laTalpuit.length) html='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nimic la talpuit momentan</div>';
+  document.getElementById('pt_receptie_list').innerHTML=html;
+  document.getElementById('pt_list').innerHTML='';
 }
 
 function togProdCard(bodyId,arrowId){
@@ -2472,35 +2446,21 @@ function renderAmbalatList(){
   _prodIds.ambalat=ambOrders.map(o=>o.id);
   const el=document.getElementById('pa_list');
   if(!ambOrders.length){
-    el.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic;padding:10px 0">Nicio comandă la ambalat</div>';
+    el.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic;padding:8px 0">Nicio comandă la ambalat</div>';
     return;
   }
-  el.innerHTML=ambOrders.map((o,i)=>{
+  var html=subHeader('📦 La ambalat ('+ambOrders.length+') — ↑↓ pentru prioritizare','#1E4A2E','#EAF3ED');
+  html+=ambOrders.map((o,i)=>{
     const cl=o.clients?.company_name||o.clients?.name||'—';
-    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
     const isUrgent=o.priority==='urgent';
-    return `<div id="pamb_${o.id}" style="background:#fff;border:1px solid ${isUrgent?'#9C3A2B':'#DDD7CE'};border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;${isUrgent?'border-left:3px solid #9C3A2B;border-radius:0 8px 8px 0;':''}">
-      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-        <span style="font-size:12px;font-weight:700;color:#C8C0B8;min-width:18px;text-align:center">${i+1}</span>
-        <div style="display:flex;flex-direction:column;gap:2px">
-          <button onclick="moveAmbalat('${o.id}',-1)" ${i===0?'disabled':''} style="background:none;border:1px solid #DDD7CE;border-radius:4px;width:22px;height:18px;cursor:pointer;font-size:11px;line-height:1;${i===0?'opacity:.3;':''}">▲</button>
-          <button onclick="moveAmbalat('${o.id}',1)" ${i===ambOrders.length-1?'disabled':''} style="background:none;border:1px solid #DDD7CE;border-radius:4px;width:22px;height:18px;cursor:pointer;font-size:11px;line-height:1;${i===ambOrders.length-1?'opacity:.3;':''}">▼</button>
-        </div>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:10px;font-family:monospace;color:#5A5248">${o.order_no||'—'}</div>
-        <div style="font-size:13px;font-weight:700;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cl}</div>
-        <div style="font-size:11px;color:#5A5248">${o.total_pairs||0} per. · ${dd}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-        ${isUrgent
-          ?`<button onclick="setAmbPriority('${o.id}','normal')" style="padding:3px 8px;border-radius:5px;border:1px solid #9C3A2B;background:#FDF4F2;color:#9C3A2B;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">✕ Urgent</button>`
-          :`<button onclick="setAmbPriority('${o.id}','urgent')" style="padding:3px 8px;border-radius:5px;border:none;background:#9C3A2B;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">⚡ Urgent</button>`
-        }
-      </div>
-    </div>`;
-  }).join('')
-  +'<button onclick="saveOrdineAmbalat()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#B08D57;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la ambalat</button>';
+    return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'ambalat',
+      orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,isUrgent:isUrgent,
+      lines:[],
+      statusLabel:isUrgent?'URGENT':'La ambalat',statusColor:isUrgent?'#9C3A2B':'#B08D57',statusBg:isUrgent?'#FDF4F2':'#FDF6E0',
+      showMoveUp:i>0,showMoveDown:i<ambOrders.length-1});
+  }).join('');
+  html+='<button onclick="saveOrdineAmbalat()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#B08D57;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la ambalat</button>';
+  el.innerHTML=html;
 }
 
 function moveAmbalat(id,dir){
