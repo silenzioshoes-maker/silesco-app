@@ -2442,6 +2442,11 @@ async function loadAmbalatList(){
   renderAmbalatList();
 }
 
+
+function subHeader(label,color,bg){
+  return '<div style="font-size:9px;font-weight:700;color:'+color+';text-transform:uppercase;letter-spacing:1px;padding:5px 10px;background:'+bg+';border-bottom:1px solid rgba(0,0,0,.06);margin-bottom:4px">'+label+'</div>';
+}
+
 function renderAmbalatList(){
   _prodIds.ambalat=ambOrders.map(o=>o.id);
   const el=document.getElementById('pa_list');
