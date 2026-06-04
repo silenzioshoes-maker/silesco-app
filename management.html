@@ -2096,7 +2096,7 @@ function showSection(name,el){
   const titles={dashboard:'Dashboard',orders:'Comenzi',productie:'Producție',clienti:'Clienți',mesaje:'Mesaje',stoc:'Stoc'};
   document.getElementById('pageTitle').textContent=titles[name]||name;
   toggleSidebar(false);
-  if(name==='productie')loadProdDashboard();
+  if(name==='productie')loadOrders().then(()=>loadProdDashboard());
   if(name==='clienti')renderClientiList(clientsList);
 }
 
