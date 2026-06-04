@@ -108,8 +108,6 @@ async function loadOrders(){
     .in('order_id',orderIds);
 
   // Atașăm datele comenzii la fiecare linie
-  // Arătăm TOATE liniile alocate atelierului - indiferent de status
-  // Doar cele complet finalizate (livrate) sunt excluse
   const EXCLUDE_STATUSES=['gata'];
   const pendingLines=(lines||[]).filter(l=>!EXCLUDE_STATUSES.includes(l.production_status));
   const orderMap={};
@@ -118,18 +116,22 @@ async function loadOrders(){
   hideLov();
   const content=document.getElementById('content');
   if(!pendingLines?.length){
-    content.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><div style="font-size:16px;font-weight:700;color:#111111;margin-bottom:8px">Toate comenzile finalizate!</div><div style="font-size:13px">Nu mai aveți articole de cusut.</div></div>`;
+    content.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><div style="font-size:16px;font-weight:700;color:#111111;margin-bottom:8px">Toate comenzile finalizate!</div><div style="font-size:13px">Nu mai aveți articole de cusut.</div></div>';
     return;
   }
-  // Grupează pe comandă
-  const byOrder={};
+  // Grupează pe comandă PĂSTRÂND ORDINEA din sort_order
+  const byOrderMap={};
   pendingLines.forEach(l=>{
-    const oid=l.orders?.id;
-    if(!oid)return;
-    if(!byOrder[oid])byOrder[oid]={order:l.orders,lines:[]};
-    byOrder[oid].lines.push(l);
+    const oid=l.order_id;
+    if(!oid||!orderMap[oid])return;
+    if(!byOrderMap[oid])byOrderMap[oid]={order:orderMap[oid],lines:[]};
+    byOrderMap[oid].lines.push(l);
   });
-  content.innerHTML=Object.values(byOrder).map(g=>{
+  // Sortăm după sort_order din orders
+  const orderedGroups=(orders||[])
+    .filter(o=>byOrderMap[o.id])
+    .map(o=>byOrderMap[o.id]);
+  content.innerHTML=orderedGroups.map(g=>{
     const o=g.order;
     const cl=o.clients?.company_name||o.clients?.name||'Fără client';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
