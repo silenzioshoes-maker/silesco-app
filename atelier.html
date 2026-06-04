@@ -86,17 +86,33 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
 async function loadOrders(){
   showLov('Se încarcă comenzile...');
-  // Articolele asignate acestui atelier care nu sunt gata
-  const{data:lines}=await sb.from('order_lines')
-    .select(`id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,
-      products(code,name),
-      orders!inner(id,order_no,status,delivery_date,clients!orders_client_id_fkey(name,company_name))`)
-    .ilike('workshop',wsName)
-    .in('orders.status',['la_croit','in_productie','fete_gata_cusut','la_cusut_extern'])
-    .order('created_at',{ascending:true});
-  // Filtrează doar articolele nefinalizate
   const DONE_STATUSES=['cusut_gata','la_talpuit','gata','la_impachetat_talpuit'];
+
+  // Pas 1: Găsim comenzile active
+  const{data:orders}=await sb.from('orders')
+    .select('id,order_no,status,delivery_date,sort_order,clients!orders_client_id_fkey(name,company_name)')
+    .in('status',['la_croit','in_productie','fete_gata_cusut','la_cusut_extern'])
+    .order('sort_order',{ascending:true,nullsFirst:false})
+    .order('delivery_date',{ascending:true});
+  const orderIds=(orders||[]).map(o=>o.id);
+  if(!orderIds.length){
+    hideLov();
+    document.getElementById('content').innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><div style="font-size:16px;font-weight:700;color:#111111;margin-bottom:8px">Nicio comandă activă!</div></div>';
+    return;
+  }
+
+  // Pas 2: Găsim liniile pentru acest atelier
+  const{data:lines}=await sb.from('order_lines')
+    .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,order_id,products(code,name)')
+    .ilike('workshop',wsName)
+    .in('order_id',orderIds);
+
+  // Filtrează nefinalizate
   const pendingLines=(lines||[]).filter(l=>!DONE_STATUSES.includes(l.production_status));
+  // Atașăm datele comenzii la fiecare linie
+  const orderMap={};
+  (orders||[]).forEach(o=>orderMap[o.id]=o);
+  pendingLines.forEach(l=>l.orders=orderMap[l.order_id]||null);
   hideLov();
   const content=document.getElementById('content');
   if(!pendingLines?.length){
