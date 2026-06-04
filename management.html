@@ -2205,41 +2205,62 @@ async function loadProdCroit(){
 }
 
 async function loadProdCusut(){
-  // Include și receptie_fete/la_talpuit ca să vedem ce s-a cusut azi
-  const{data:cusutLines}=await sb.from('order_lines')
-    .select('workshop,total_pairs,production_status,product_id,free_model,color,notes,order_id,products(code)')
-    .in('production_status',['la_cusut','cusut_gata','receptie_fete','la_talpuit']);
-  const getOrder=oid=>allOrders.find(o=>o.id===oid);
-  const getM=l=>l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
-  const byWs={};
-  (cusutLines||[]).forEach(l=>{
-    const ws=l.workshop||'intern';
-    if(!byWs[ws])byWs[ws]={inLucru:[],gata:[]};
-    if(l.production_status==='la_cusut')byWs[ws].inLucru.push(l);
-    else byWs[ws].gata.push(l); // cusut_gata + receptie_fete + la_talpuit = cusut finalizat
+  const{data:rawLines}=await sb.from('order_lines')
+    .select('id,workshop,total_pairs,production_status,product_id,free_model,color,notes,order_id,sort_order,ponytage,products(code,name)')
+    .in('production_status',['la_cusut','cusut_gata','receptie_fete','la_talpuit'])
+    .order('sort_order',{ascending:true});
+  const getO=oid=>allOrders.find(o=>o.id===oid);
+  const byOrder={};
+  (rawLines||[]).forEach(l=>{
+    if(!byOrder[l.order_id])byOrder[l.order_id]={inLucru:[],gata:[]};
+    if(l.production_status==='la_cusut')byOrder[l.order_id].inLucru.push(l);
+    else byOrder[l.order_id].gata.push(l);
   });
-  _prodIds.cusut_inlucru=Object.keys(byOrder).filter(function(k){return byOrder[k].inLucru&&byOrder[k].inLucru.length>0;});
   const atelEl=document.getElementById('pcu_ateliere');
-  if(!Object.keys(byWs).length){atelEl.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic">Nicio activitate cusut</div>';document.getElementById('pcu_azi').innerHTML='';document.getElementById('pcu_list').innerHTML='';return;}
-  atelEl.innerHTML=Object.entries(byWs).map(([ws,d])=>`
-    <div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;overflow:hidden;margin-bottom:10px">
-      <div style="background:#2F4A63;padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;font-weight:700;color:#fff;text-transform:capitalize">🧵 ${ws}</div>
-        <div style="display:flex;gap:12px">
-          <span style="font-size:11px;color:rgba(255,255,255,.7)">În lucru: <strong style="color:#fff">${d.inLucru.length}</strong></span>
-          <span style="font-size:11px;color:rgba(255,255,255,.7)">Gata: <strong style="color:#B8D4B8">${d.gata.length}</strong></span>
-        </div>
-      </div>
-      ${d.inLucru.length?`<div style="padding:8px 14px;border-bottom:1px solid #EDE8DF"><div style="font-size:9px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">În lucru</div>${d.inLucru.map(l=>{const o=getOrder(l.order_id);const cl=o?.clients?.company_name||o?.clients?.name||'—';return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F4F1EA"><div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'}</div><div style="font-size:10px;color:#5A5248">${o?.order_no||'—'} · ${cl} · ${l.total_pairs} per.</div></div><span style="font-size:9px;background:#DCE8F5;color:#2F4A63;padding:2px 7px;border-radius:4px;font-weight:700">La cusut</span></div>`;}).join('')}</div>`:''}
-      ${d.gata.length?`<div style="padding:8px 14px"><div style="font-size:9px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cusut gata — de recepționat</div>${d.gata.map(l=>{const o=getOrder(l.order_id);const cl=o?.clients?.company_name||o?.clients?.name||'—';return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F4F1EA"><div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'}</div><div style="font-size:10px;color:#5A5248">${o?.order_no||'—'} · ${cl} · ${l.total_pairs} per.</div></div><span style="font-size:9px;background:#EAF0EC;color:#1E4A2E;padding:2px 7px;border-radius:4px;font-weight:700">✓ Cusut</span></div>`;}).join('')}</div>`:''}
-    </div>`).join('');
-  if(Object.keys(byOrder).filter(k=>byOrder[k].inLucru.length>0).length>0){
-    document.getElementById('pcu_ateliere').innerHTML+='<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la cusut</button>';
+  if(!Object.keys(byOrder).length){
+    atelEl.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic">Nicio activitate cusut</div>';
+    document.getElementById('pcu_azi').innerHTML='';
+    document.getElementById('pcu_list').innerHTML='';
+    return;
   }
+  const inLucruEntries=Object.entries(byOrder).filter(function(e){return e[1].inLucru.length>0;});
+  const gataEntries=Object.entries(byOrder).filter(function(e){return e[1].inLucru.length===0&&e[1].gata.length>0;});
+  _prodIds.cusut_inlucru=inLucruEntries.map(function(e){return e[0];});
+  var html='';
+  if(inLucruEntries.length){
+    html+=subHeader('🧵 La cusut ('+inLucruEntries.length+') — ↑↓ prioritizare','#2F4A63','#EAF0F8');
+    html+=inLucruEntries.map(function(entry,i){
+      var oid=entry[0];var d=entry[1];
+      var o=getO(oid);
+      var cl=o?o.clients?.company_name||o.clients?.name||'—':'—';
+      var allLines=d.inLucru.concat(d.gata);
+      return makeProdCard({id:oid,idx:i,total:o?o.total_pairs:0,section:'cusut_inlucru',
+        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
+        isUrgent:o?o.priority==='urgent':false,
+        lines:allLines.map(makeLineObj),
+        statusLabel:d.inLucru.length+' la cusut',statusColor:'#2F4A63',statusBg:'#DCE8F5',
+        showMoveUp:i>0,showMoveDown:i<inLucruEntries.length-1});
+    }).join('');
+    html+='<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la cusut</button>';
+  }
+  if(gataEntries.length){
+    html+=subHeader('✓ Cusut gata ('+gataEntries.length+') — de recepționat','#1E4A2E','#EAF3ED');
+    html+=gataEntries.map(function(entry,i){
+      var oid=entry[0];var d=entry[1];
+      var o=getO(oid);
+      var cl=o?o.clients?.company_name||o.clients?.name||'—':'—';
+      return makeProdCard({id:oid,idx:i,total:o?o.total_pairs:0,section:'none',
+        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
+        isUrgent:o?o.priority==='urgent':false,
+        lines:d.gata.map(makeLineObj),
+        statusLabel:'Cusut ✓',statusColor:'#1E4A2E',statusBg:'#EAF0EC',
+        showMoveUp:false,showMoveDown:false});
+    }).join('');
+  }
+  atelEl.innerHTML=html;
   document.getElementById('pcu_azi').innerHTML='';
   document.getElementById('pcu_list').innerHTML='';
 }
-
 
 async function loadProdTalpuit(){
   const{data:lines}=await sb.from('order_lines')
