@@ -107,9 +107,11 @@ async function loadOrders(){
     .ilike('workshop',wsName)
     .in('order_id',orderIds);
 
-  // Filtrează nefinalizate
-  const pendingLines=(lines||[]).filter(l=>!DONE_STATUSES.includes(l.production_status));
   // Atașăm datele comenzii la fiecare linie
+  // Arătăm TOATE liniile alocate atelierului - indiferent de status
+  // Doar cele complet finalizate (livrate) sunt excluse
+  const EXCLUDE_STATUSES=['gata'];
+  const pendingLines=(lines||[]).filter(l=>!EXCLUDE_STATUSES.includes(l.production_status));
   const orderMap={};
   (orders||[]).forEach(o=>orderMap[o.id]=o);
   pendingLines.forEach(l=>l.orders=orderMap[l.order_id]||null);
