@@ -1518,9 +1518,10 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
       }).catch(()=>{});
     }
   }
-  hideLov();closeModal('approveModal');
+  closeModal('approveModal');
   showToast('Comandă aprobată'+(externLines.length?' — '+externLines.length+' art. la atelier extern':'')+'!');
-  await loadAll();}
+  await loadAll();
+  hideLov();}
 
 // LANSARE CROIT
 async function sendToCroit(id,e){
