@@ -2221,6 +2221,7 @@ async function loadProdCusut(){
     // Sortam dupa sort_order
     const sorted=laCusut.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
     _prodIds.cusut_inlucru=sorted.map(o=>o.id);
+    _cusutOrdersCache=sorted.slice();
     html+=subHeader('🧵 La cusut ('+sorted.length+') — ↑↓ prioritizare','#2F4A63','#EAF0F8');
     html+=sorted.map(function(o,i){
       const cl=o.clients?.company_name||o.clients?.name||'—';
@@ -2337,7 +2338,8 @@ async function moveProd(section,idx,dir){
     var t=_croitOrdersCache[idx];_croitOrdersCache[idx]=_croitOrdersCache[newIdx];_croitOrdersCache[newIdx]=t;
     renderCroitFromCache();
   }else if(section==='cusut_inlucru'){
-    await loadProdCusut();
+    var tc=_cusutOrdersCache[idx];_cusutOrdersCache[idx]=_cusutOrdersCache[newIdx];_cusutOrdersCache[newIdx]=tc;
+    renderCusutFromCache();
   }else if(section==='talpuit'||section==='receptie'){
     await loadProdTalpuit();
   }else if(section==='ambalat'){
@@ -2400,7 +2402,25 @@ function renderCroitFromCache(){
   el.innerHTML=html;
 }
 
-function renderCusutFromCache(){loadProdCusut();}
+var _cusutOrdersCache=[];
+function renderCusutFromCache(){
+  var sorted=_cusutOrdersCache;
+  var atelEl=document.getElementById('pcu_ateliere');
+  if(!sorted.length){atelEl.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic">Nicio activitate cusut</div>';return;}
+  var html=subHeader('🧵 La cusut ('+sorted.length+') — ↑↓ prioritizare','#2F4A63','#EAF0F8');
+  html+=sorted.map(function(o,i){
+    var cl=o.clients?o.clients.company_name||o.clients.name||'—':'—';
+    var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
+    return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'cusut_inlucru',
+      orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,
+      isUrgent:o.priority==='urgent',
+      lines:wl.map(makeLineObj),
+      statusLabel:'La cusut — '+wl.length+' art.',statusColor:'#2F4A63',statusBg:'#DCE8F5',
+      showMoveUp:i>0,showMoveDown:i<sorted.length-1});
+  }).join('');
+  html+='<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la cusut</button>';
+  atelEl.innerHTML=html;
+}
 function renderTalpuitFromCache(){loadProdTalpuit();}
 
 
