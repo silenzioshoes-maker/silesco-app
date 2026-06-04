@@ -726,6 +726,7 @@ const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
 let CU=null,CP=null,allOrders=[],filteredOrders=[],activeFilter='toate';
+var _prodIds={croit:[],cusut_inlucru:[],cusut_gata:[],receptie:[],talpuit:[],ambalat:[]};
 let allTalpi=[],allBranturi=[],allSireturi=[],allCutii=[];
 let approveOrderId=null,approveLines=[],delOrderId=null,atelierOrderId=null;
 let prods=[],clientsList=[],ateliere=[];
