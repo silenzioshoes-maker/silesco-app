@@ -2234,8 +2234,7 @@ async function loadProdCusut(){
       ${d.gata.length?`<div style="padding:8px 14px"><div style="font-size:9px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cusut gata — de recepționat</div>${d.gata.map(l=>{const o=getOrder(l.order_id);const cl=o?.clients?.company_name||o?.clients?.name||'—';return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F4F1EA"><div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'}</div><div style="font-size:10px;color:#5A5248">${o?.order_no||'—'} · ${cl} · ${l.total_pairs} per.</div></div><span style="font-size:9px;background:#EAF0EC;color:#1E4A2E;padding:2px 7px;border-radius:4px;font-weight:700">✓ Cusut</span></div>`;}).join('')}</div>`:''}
     </div>`).join('');
   if(Object.keys(byOrder).filter(k=>byOrder[k].inLucru.length>0).length>0){
-    var atelEl=document.getElementById('pcu_ateliere');
-    atelEl.innerHTML=atelEl.innerHTML+'<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la cusut</button>';
+    document.getElementById('pcu_ateliere').innerHTML+='<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la cusut</button>';
   }
   document.getElementById('pcu_azi').innerHTML='';
   document.getElementById('pcu_list').innerHTML='';
