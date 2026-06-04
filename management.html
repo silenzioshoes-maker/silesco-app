@@ -2443,6 +2443,58 @@ async function loadAmbalatList(){
 }
 
 
+
+function makeLineObj(l){
+  var ps=l.production_status||'';
+  var PSL={in_lucru:'În lucru',la_croit:'La croit',croit_gata:'Croit ✓',la_cusut:'La cusut',cusut_gata:'Cusut ✓',receptie_fete:'Recepționat',la_talpuit:'La talpuit',la_impachetat:'La ambalat',gata:'✓ Gata'};
+  var PSC={in_lucru:'#5A5248',la_croit:'#5A3E1B',croit_gata:'#2F4A63',la_cusut:'#2F4A63',cusut_gata:'#365A43',receptie_fete:'#365A43',la_talpuit:'#1E4A2E',la_impachetat:'#B08D57',gata:'#1E4A2E'};
+  var PSB={in_lucru:'#F4F1EA',la_croit:'#F5ECD7',croit_gata:'#E8EFF6',la_cusut:'#DCE8F5',cusut_gata:'#EAF0EC',receptie_fete:'#D8EEE0',la_talpuit:'#D8EEE0',la_impachetat:'#FDF6E0',gata:'#C8E6C9'};
+  var mod=l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
+  return {mod:mod,color:l.color||'',total_pairs:l.total_pairs,workshop:l.workshop||'',
+    ponytage:l.ponytage,psLabel:PSL[ps]||ps,psColor:PSC[ps]||'#5A5248',psBg:PSB[ps]||'#F4F1EA'};
+}
+
+function makeProdCard(opts){
+  var dl=opts.deliveryDate?Math.ceil((new Date(opts.deliveryDate)-new Date())/86400000):null;
+  var dlColor=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=2?'#8B6914':'#5A5248';
+  var dlText=dl===null?'':(dl<0?'⚠ '+Math.abs(dl)+'z':dl+'z');
+  var bodyId='pb_'+opts.section+'_'+opts.idx;
+  var arrId='pa_'+opts.section+'_'+opts.idx;
+  var linesHtml=(opts.lines||[]).map(function(l){
+    var pt=l.ponytage?Object.entries(l.ponytage).filter(function(e){return e[1]>0;}).map(function(e){return e[0]+'×'+e[1];}).join(' '):'';
+    return '<div style="padding:6px 12px;border-bottom:1px solid #F4F1EA;display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:11px;font-weight:700;color:#111111">'+l.mod+(l.color?' · '+l.color:'')+(l.total_pairs?' · '+l.total_pairs+' per.':'')+'</div>'
+      +(l.workshop?'<div style="font-size:10px;color:#5A5248">'+l.workshop+'</div>':'')
+      +(pt?'<div style="font-size:10px;color:#9A9088;font-family:monospace">'+pt+'</div>':'')
+      +'</div>'
+      +'<span style="font-size:9px;font-weight:700;color:'+l.psColor+';background:'+l.psBg+';padding:2px 6px;border-radius:4px;flex-shrink:0;white-space:nowrap">'+l.psLabel+'</span>'
+      +'</div>';
+  }).join('');
+  var moveButtons=opts.section!=='none'
+    ?'<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0" onclick="event.stopPropagation()">'
+      +'<button onclick="moveProd(''+opts.section+'','+opts.idx+',-1)" '+(opts.showMoveUp?'':'disabled ')+'style="width:20px;height:18px;border:1px solid #DDD7CE;border-radius:3px;background:#F4F1EA;cursor:pointer;font-size:10px;'+(opts.showMoveUp?'':'opacity:.3')+'">↑</button>'
+      +'<button onclick="moveProd(''+opts.section+'','+opts.idx+',1)" '+(opts.showMoveDown?'':'disabled ')+'style="width:20px;height:18px;border:1px solid #DDD7CE;border-radius:3px;background:#F4F1EA;cursor:pointer;font-size:10px;'+(opts.showMoveDown?'':'opacity:.3')+'">↓</button>'
+      +'</div>':'';
+  return '<div style="background:#fff;border:1px solid '+(opts.isUrgent?'#9C3A2B':'#DDD7CE')+';border-radius:7px;margin-bottom:5px;overflow:hidden'+(opts.isUrgent?';border-left:3px solid #9C3A2B;border-radius:0 7px 7px 0':'')+'">'
+    +'<div style="padding:8px 10px;display:flex;align-items:center;gap:6px">'
+    +moveButtons
+    +'<div onclick="togProdCard(''+bodyId+'',''+arrId+'')" style="flex:1;min-width:0;cursor:pointer">'
+    +'<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">'
+    +(opts.section!=='none'?'<span style="font-size:9px;font-weight:700;color:#B08D57">#'+(opts.idx+1)+'</span>':'')
+    +(opts.isUrgent?'<span style="background:#9C3A2B;color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px">URGENT</span>':'')
+    +'<span style="font-size:9px;font-family:monospace;color:#5A5248">'+(opts.orderNo||'—')+'</span>'
+    +(dlText?'<span style="font-size:9px;color:'+dlColor+';font-weight:700">'+dlText+'</span>':'')
+    +'</div>'
+    +'<div style="font-size:12px;font-weight:700;color:#111111;margin-top:1px">'+(opts.client||'—')+'</div>'
+    +'<div style="font-size:10px;color:#5A5248;margin-top:1px">'+(opts.total||0)+' per. · <span style="color:'+opts.statusColor+';font-weight:700">'+opts.statusLabel+'</span></div>'
+    +'</div>'
+    +'<svg id="'+arrId+'" style="width:13px;height:13px;stroke:#9A9088;fill:none;stroke-width:1.5;flex-shrink:0;transition:transform .2s" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>'
+    +'</div>'
+    +'<div id="'+bodyId+'" style="display:none;border-top:1px solid #EDE8DF">'+linesHtml+'</div>'
+    +'</div>';
+}
+
 function subHeader(label,color,bg){
   return '<div style="font-size:9px;font-weight:700;color:'+color+';text-transform:uppercase;letter-spacing:1px;padding:5px 10px;background:'+bg+';border-bottom:1px solid rgba(0,0,0,.06);margin-bottom:4px">'+label+'</div>';
 }
