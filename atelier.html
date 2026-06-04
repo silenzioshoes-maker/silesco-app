@@ -91,11 +91,11 @@ async function loadOrders(){
     .select(`id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,
       products(code,name),
       orders!inner(id,order_no,status,delivery_date,clients!orders_client_id_fkey(name,company_name))`)
-    .eq('workshop',wsName)
+    .ilike('workshop',wsName)
     .in('orders.status',['la_croit','in_productie','fete_gata_cusut','la_cusut_extern'])
     .order('created_at',{ascending:true});
   // Filtrează doar articolele nefinalizate
-  const DONE_STATUSES=['cusut_gata','la_talpuit','gata'];
+  const DONE_STATUSES=['cusut_gata','la_talpuit','gata','la_impachetat_talpuit'];
   const pendingLines=(lines||[]).filter(l=>!DONE_STATUSES.includes(l.production_status));
   hideLov();
   const content=document.getElementById('content');
