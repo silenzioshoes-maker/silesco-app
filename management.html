@@ -2217,6 +2217,7 @@ async function loadProdCusut(){
     if(l.production_status==='la_cusut')byWs[ws].inLucru.push(l);
     else byWs[ws].gata.push(l); // cusut_gata + receptie_fete + la_talpuit = cusut finalizat
   });
+  _prodIds.cusut_inlucru=Object.keys(byOrder).filter(function(k){return byOrder[k].inLucru&&byOrder[k].inLucru.length>0;});
   const atelEl=document.getElementById('pcu_ateliere');
   if(!Object.keys(byWs).length){atelEl.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic">Nicio activitate cusut</div>';document.getElementById('pcu_azi').innerHTML='';document.getElementById('pcu_list').innerHTML='';return;}
   atelEl.innerHTML=Object.entries(byWs).map(([ws,d])=>`
@@ -2231,6 +2232,10 @@ async function loadProdCusut(){
       ${d.inLucru.length?`<div style="padding:8px 14px;border-bottom:1px solid #EDE8DF"><div style="font-size:9px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">În lucru</div>${d.inLucru.map(l=>{const o=getOrder(l.order_id);const cl=o?.clients?.company_name||o?.clients?.name||'—';return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F4F1EA"><div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'}</div><div style="font-size:10px;color:#5A5248">${o?.order_no||'—'} · ${cl} · ${l.total_pairs} per.</div></div><span style="font-size:9px;background:#DCE8F5;color:#2F4A63;padding:2px 7px;border-radius:4px;font-weight:700">La cusut</span></div>`;}).join('')}</div>`:''}
       ${d.gata.length?`<div style="padding:8px 14px"><div style="font-size:9px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cusut gata — de recepționat</div>${d.gata.map(l=>{const o=getOrder(l.order_id);const cl=o?.clients?.company_name||o?.clients?.name||'—';return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F4F1EA"><div><div style="font-size:12px;font-weight:700;color:#111111">${getM(l)} · ${l.color||'—'}</div><div style="font-size:10px;color:#5A5248">${o?.order_no||'—'} · ${cl} · ${l.total_pairs} per.</div></div><span style="font-size:9px;background:#EAF0EC;color:#1E4A2E;padding:2px 7px;border-radius:4px;font-weight:700">✓ Cusut</span></div>`;}).join('')}</div>`:''}
     </div>`).join('');
+  if(Object.keys(byOrder).filter(k=>byOrder[k].inLucru.length>0).length>0){
+    var atelEl=document.getElementById('pcu_ateliere');
+    atelEl.innerHTML=atelEl.innerHTML+'<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la cusut</button>';
+  }
   document.getElementById('pcu_azi').innerHTML='';
   document.getElementById('pcu_list').innerHTML='';
 }
@@ -2243,6 +2248,10 @@ async function loadProdTalpuit(){
     .order('sort_order',{ascending:true});
   const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata');
   const laTalpuit=(lines||[]).filter(l=>l.production_status==='la_talpuit');
+  _prodIds.receptie=receptie.map(x=>x.id);
+  _prodIds.talpuit=laTalpuit.map(x=>x.id);
+  _talpuitIds=_prodIds.talpuit;
+  _receptieIds=_prodIds.receptie;
   document.getElementById('pt_receptie').textContent=receptie.length;
   document.getElementById('pt_active').textContent=laTalpuit.length;
   const getM=l=>l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
@@ -2317,25 +2326,30 @@ function togProdCard(bodyId,arrowId){
 var _talpuitIds=[], _receptieIds=[], _croitLineIds=[];
 function setTalpuitIds(ids){_talpuitIds=ids;}
 
-async function moveProd(section, idx, dir){
-  var ids, reloadFn;
-  if(section==='talpuit'){ids=_talpuitIds; reloadFn=loadProdTalpuit;}
-  else if(section==='receptie'){ids=_receptieIds; reloadFn=loadProdTalpuit;}
-  else if(section==='croit'){ids=_croitLineIds; reloadFn=loadProdCroit;}
-  else return;
+async function moveProd(section,idx,dir){
+  // Folosim _prodIds ca sursă unică de adevăr
+  var ids=_prodIds[section]||[];
   var newIdx=idx+dir;
-  if(!ids||newIdx<0||newIdx>=ids.length)return;
-  var newIds=[].concat(ids);
-  var tmp=newIds[idx]; newIds[idx]=newIds[newIdx]; newIds[newIdx]=tmp;
-  if(section==='talpuit')_talpuitIds=newIds;
-  else if(section==='receptie')_receptieIds=newIds;
-  else if(section==='croit')_croitLineIds=newIds;
-  showLov('Se salvează ordinea...');
-  await Promise.all(newIds.map(function(id,i){return sb.from('order_lines').update({sort_order:i}).eq('id',id);}));
-  hideLov();
-  if(reloadFn)await reloadFn();
+  if(!ids.length||newIdx<0||newIdx>=ids.length)return;
+  var newIds=ids.slice();
+  var tmp=newIds[idx];newIds[idx]=newIds[newIdx];newIds[newIdx]=tmp;
+  _prodIds[section]=newIds;
+  // Sync cu variabilele legacy
+  if(section==='talpuit'){_talpuitIds=newIds;}
+  if(section==='receptie'){_receptieIds=newIds;}
+  // Render vizual imediat fără reload din DB
+  if(section==='croit'){
+    var t=_croitOrdersCache[idx];_croitOrdersCache[idx]=_croitOrdersCache[newIdx];_croitOrdersCache[newIdx]=t;
+    renderCroitFromCache();
+  }else if(section==='cusut_inlucru'){
+    await loadProdCusut();
+  }else if(section==='talpuit'||section==='receptie'){
+    await loadProdTalpuit();
+  }else if(section==='ambalat'){
+    var t2=ambOrders[idx];ambOrders[idx]=ambOrders[newIdx];ambOrders[newIdx]=t2;
+    renderAmbalatList();
+  }
 }
-
 async function moveTalpuit(idx,dir){await moveProd('talpuit',idx,dir);}
 
 async function moveTalpuit_old(idx,dir){
@@ -2395,6 +2409,38 @@ function renderCusutFromCache(){loadProdCusut();}
 function renderTalpuitFromCache(){loadProdTalpuit();}
 
 
+async function saveOrdineCusut(){
+  var ids=_prodIds.cusut_inlucru||[];
+  if(!ids.length){showToast('Nimic de salvat!');return;}
+  showLov('Se salvează ordinea la cusut...');
+  await Promise.all(ids.map(function(id,i){
+    return sb.from('orders').update({sort_order:i}).eq('id',id);
+  }));
+  hideLov();showToast('✓ Ordinea la cusut salvată!');
+}
+
+async function saveOrdineTalpuit(){
+  var idsT=_prodIds.talpuit||[];
+  var idsR=_prodIds.receptie||[];
+  if(!idsT.length&&!idsR.length){showToast('Nimic de salvat!');return;}
+  showLov('Se salvează ordinea la talpuit...');
+  await Promise.all([
+    ...idsT.map(function(id,i){return sb.from('order_lines').update({sort_order:i}).eq('id',id);}),
+    ...idsR.map(function(id,i){return sb.from('order_lines').update({sort_order:i}).eq('id',id);})
+  ]);
+  hideLov();showToast('✓ Ordinea la talpuit salvată!');
+}
+
+async function saveOrdineAmbalat(){
+  var ids=_prodIds.ambalat||[];
+  if(!ids.length){showToast('Nimic de salvat!');return;}
+  showLov('Se salvează ordinea la ambalat...');
+  await Promise.all(ids.map(function(id,i){
+    return sb.from('orders').update({sort_order:i}).eq('id',id);
+  }));
+  hideLov();showToast('✓ Ordinea la ambalat salvată!');
+}
+
 async function loadProdAmbalat(){
   const finalizate=allOrders.filter(o=>o.status==='finalizat');
   const now=new Date();const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
@@ -2423,6 +2469,7 @@ async function loadAmbalatList(){
 }
 
 function renderAmbalatList(){
+  _prodIds.ambalat=ambOrders.map(o=>o.id);
   const el=document.getElementById('pa_list');
   if(!ambOrders.length){
     el.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic;padding:10px 0">Nicio comandă la ambalat</div>';
@@ -2452,7 +2499,8 @@ function renderAmbalatList(){
         }
       </div>
     </div>`;
-  }).join('');
+  }).join('')
+  +'<button onclick="saveOrdineAmbalat()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#B08D57;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la ambalat</button>';
 }
 
 function moveAmbalat(id,dir){
