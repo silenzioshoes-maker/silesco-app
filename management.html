@@ -1911,10 +1911,10 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
   // Partea 1 - sumar (fără prețuri)
   const sumar=lines.map(l=>{
     const ptEntries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
-    const pt=ptEntries.length?`<table style="border-collapse:collapse;margin-top:4px"><tr>${ptEntries.map(([s])=>`<td style="border:1px solid #bbb;padding:3px 8px;font-size:11px;font-weight:700;text-align:center;background:#f5f5f5">${s}</td>`).join('')}</tr><tr>${ptEntries.map(([,q])=>`<td style="border:1px solid #bbb;padding:3px 8px;font-size:11px;text-align:center;font-weight:700">${q}</td>`).join('')}</tr></table>`:'—';
+    const pt=ptEntries.length?`<table style="border-collapse:collapse;margin-top:4px"><tr>${ptEntries.map(([s])=>`<td style="border:1px solid #bbb;padding:3px 8px;font-size:13px;font-weight:700;text-align:center;background:#f5f5f5">${s}</td>`).join('')}</tr><tr>${ptEntries.map(([,q])=>`<td style="border:1px solid #bbb;padding:3px 8px;font-size:13px;text-align:center;font-weight:700">${q}</td>`).join('')}</tr></table>`:'—';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
-    const obs=l.notes?` <em style="color:#888;font-size:11px">${l.notes.replace(/\[RESTANȚĂ:[^\]]+\]/g,'').replace(/\[Discount:[^\]]+\]/g,'').replace(/\[[^\]]+\]/g,'').trim()}</em>`:'';
-    const stockBadge=l.from_stock?'<span style="background:#E8EFF6;color:#23394F;border:1px solid rgba(47,74,99,.4);font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px">📦 DIN STOC</span>':'';
+    const obs=l.notes?` <em style="color:#111;font-size:13px">${l.notes.replace(/\[RESTANȚĂ:[^\]]+\]/g,'').replace(/\[Discount:[^\]]+\]/g,'').replace(/\[[^\]]+\]/g,'').trim()}</em>`:'';
+    const stockBadge=l.from_stock?'<span style="background:#E8EFF6;color:#23394F;border:1px solid rgba(47,74,99,.4);font-size:13px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px">📦 DIN STOC</span>':'';
     const mat=matByProd[l.product_id]||{};
     const lMat=matMap[l.id]||{};
     const talpaCod=lMat.talpaCod||'—';
@@ -1922,8 +1922,8 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
     const brantCod=lMat.brantCod||'—';
     const siretCod=lMat.siretCod||'—';
     const cutieCod=lMat.cutieCod||'—';
-    const decalaj=mat.notes?` <span style="color:#888;font-size:10px">(decalaj ${mat.notes})</span>`:'';
-    const materialeRow=l.from_stock?'':`<tr style="background:#fafafa"><td colspan="3" style="border:1px solid #ccc;padding:5px 10px;font-size:10px;color:#555">
+    const decalaj=mat.notes?` <span style="color:#111;font-size:13px">(decalaj ${mat.notes})</span>`:'';
+    const materialeRow=l.from_stock?'':`<tr style="background:#fafafa"><td colspan="3" style="border:1px solid #ccc;padding:5px 10px;font-size:13px;color:#222">
       <span style="margin-right:14px">Talpă: <strong>${talpaCod}</strong>${decalaj}</span>
       <span style="margin-right:14px">Calapod: <strong>${calapodCod}</strong></span>
       <span style="margin-right:14px">Branț: <strong>${brantCod}</strong></span>
@@ -1940,7 +1940,7 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
   // Părțile 2-3 - fâșii tăiabile (doar articolele de produs, nu din stoc)
   const fasii=lines.filter(l=>!l.from_stock).map(l=>{
     const ptFasiiEntries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
-    const pt=ptFasiiEntries.length?`<table style="border-collapse:collapse;margin:4px 0"><tr>${ptFasiiEntries.map(([s])=>`<td style="border:2px solid #333;padding:6px 12px;font-size:16px;font-weight:800;text-align:center;background:#f0f0f0;min-width:36px">${s}</td>`).join('')}</tr><tr>${ptFasiiEntries.map(([,q])=>`<td style="border:2px solid #333;padding:6px 12px;font-size:16px;font-weight:700;text-align:center;min-width:36px">${q}</td>`).join('')}</tr></table>`:'—';
+    const pt=ptFasiiEntries.length?`<table style="border-collapse:collapse;margin:4px 0"><tr>${ptFasiiEntries.map(([s])=>`<td style="border:2px solid #333;padding:6px 12px;font-size:20px;font-weight:800;text-align:center;background:#f0f0f0;min-width:36px">${s}</td>`).join('')}</tr><tr>${ptFasiiEntries.map(([,q])=>`<td style="border:2px solid #333;padding:6px 12px;font-size:20px;font-weight:700;text-align:center;min-width:36px">${q}</td>`).join('')}</tr></table>`:'—';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
     const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').replace(/\[RESTANȚĂ:[^\]]+\]\s*/,'').replace(/\[[^\]]+\]\s*/g,'').trim():'';
     const mat=matByProd[l.product_id]||{};
@@ -1953,12 +1953,12 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
     const decalaj=mat.notes?` (decalaj ${mat.notes})`:'';
     return `<div style="border:2px dashed #999;border-radius:4px;padding:14px 18px;margin-bottom:10px;page-break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-        <div style="font-size:18px;font-weight:700">${cl}</div>
-        <div style="font-size:11px;color:#888">${o.order_no} · Termen: ${dd}</div>
+        <div style="font-size:20px;font-weight:700">${cl}</div>
+        <div style="font-size:13px;color:#111">${o.order_no} · Termen: ${dd}</div>
       </div>
-      <div style="font-size:16px;font-weight:700;margin-bottom:6px;color:#1A1814">${modName} · ${l.color||'—'} · ${l.total_pairs} perechi</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:6px;color:#1A1814">${modName} · ${l.color||'—'} · ${l.total_pairs} perechi</div>
       <div style="margin-bottom:8px;padding:8px 0;border-top:1px solid #eee;border-bottom:1px solid #eee">${pt}</div>
-      <div style="font-size:11px;color:#444;margin-top:6px;display:flex;gap:16px;flex-wrap:wrap;padding:6px 10px;background:#F8F5F0;border-radius:4px">
+      <div style="font-size:13px;color:#222;margin-top:6px;display:flex;gap:16px;flex-wrap:wrap;padding:6px 10px;background:#F8F5F0;border-radius:4px">
         <span>Talpă: <strong>${talpaCod}</strong>${decalaj}</span>
         <span>Calapod: <strong>${calapodCod}</strong></span>
         <span>Branț: <strong>${brantCod}</strong></span>
@@ -1966,8 +1966,8 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
         <span>Cutie: <strong>${cutieCod}</strong></span>
       </div>
       ${notesClean?`<div style="font-size:13px;color:#333;margin-top:6px;background:#FFF9EC;border-left:3px solid #B08D57;padding:6px 10px;border-radius:0 4px 4px 0"><strong>Obs:</strong> ${notesClean}</div>`:''}
-      ${o.notes?`<div style="font-size:12px;color:#555;margin-top:4px;padding:5px 10px;background:#F5F5F5;border-radius:4px"><strong>Obs. generale:</strong> ${o.notes}</div>`:''}
-      <div style="text-align:right;font-size:11px;color:#aaa;margin-top:8px">✂ — — — taie aici — — —</div>
+      ${o.notes?`<div style="font-size:14px;color:#222;margin-top:4px;padding:5px 10px;background:#F5F5F5;border-radius:4px"><strong>Obs. generale:</strong> ${o.notes}</div>`:''}
+      <div style="text-align:right;font-size:13px;color:#111;margin-top:8px">✂ — — — taie aici — — —</div>
     </div>`;
   }).join('');
 
@@ -1975,19 +1975,19 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,sans-serif;color:#1A1814;padding:24px;max-width:760px;margin:0 auto}
     h1{font-size:22px;letter-spacing:2px;margin-bottom:2px}
-    .sub{font-size:10px;color:#999;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px}
-    .part-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#888;margin:24px 0 10px;padding-bottom:6px;border-bottom:2px solid #1A1814}
+    .sub{font-size:13px;color:#111;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px}
+    .part-label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#111;margin:24px 0 10px;padding-bottom:6px;border-bottom:2px solid #1A1814}
     table{width:100%;border-collapse:collapse}
-    @media print{.noprint{display:none}.part-fasii{page-break-before:always}}
+    @media print{.noprint{display:none}.part-fasii{page-break-before:auto}}
   </style></head><body>
   <h1>SILESCO</h1><div class="sub">Fișă de Producție · ${o.order_no||'—'} · ${azi}</div>
 
   <div class="part-label">Partea 1 — Sumar comandă</div>
   <div style="display:flex;gap:30px;margin-bottom:14px">
-    <div><div style="font-size:9px;color:#999;text-transform:uppercase;letter-spacing:1px">Client</div><div style="font-size:16px;font-weight:700">${cl}</div></div>
-    <div><div style="font-size:9px;color:#999;text-transform:uppercase;letter-spacing:1px">Termen livrare</div><div style="font-size:16px;font-weight:700">${dd}</div></div>
+    <div><div style="font-size:13px;color:#111;text-transform:uppercase;letter-spacing:1px">Client</div><div style="font-size:20px;font-weight:700">${cl}</div></div>
+    <div><div style="font-size:13px;color:#111;text-transform:uppercase;letter-spacing:1px">Termen livrare</div><div style="font-size:20px;font-weight:700">${dd}</div></div>
   </div>
-  <table><thead><tr><th style="border:1px solid #ccc;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;background:#f5f5f5">Articol</th><th style="border:1px solid #ccc;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;background:#f5f5f5">Pontaj</th><th style="border:1px solid #ccc;padding:8px 10px;text-align:center;font-size:10px;text-transform:uppercase;background:#f5f5f5">Total</th></tr></thead><tbody>${sumar}</tbody></table>
+  <table><thead><tr><th style="border:1px solid #ccc;padding:8px 10px;text-align:left;font-size:13px;text-transform:uppercase;background:#f5f5f5">Articol</th><th style="border:1px solid #ccc;padding:8px 10px;text-align:left;font-size:13px;text-transform:uppercase;background:#f5f5f5">Pontaj</th><th style="border:1px solid #ccc;padding:8px 10px;text-align:center;font-size:13px;text-transform:uppercase;background:#f5f5f5">Total</th></tr></thead><tbody>${sumar}</tbody></table>
   ${o.notes?`<div style="margin-top:12px;padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;font-size:13px"><strong>Observații generale:</strong> ${o.notes}</div>`:''}
 
   <div class="part-fasii">
