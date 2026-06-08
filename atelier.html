@@ -208,11 +208,9 @@ async function loadIstoric(){
     const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
     const o=l.orders;
     const cl=o?.clients?.company_name||o?.clients?.name||'—';
-    const ps={cusut_gata:'Cusut ✓',la_talpuit:'La talpuit',gata:'Gata'}[l.production_status]||l.production_status;
-    return '<div style="padding:10px 14px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:center;gap:8px">'
-      +'<div><div style="font-size:12px;font-weight:700;color:#111111">'+mod+' · '+(l.color||'—')+'</div>'
-      +'<div style="font-size:10px;color:#5A5248;margin-top:2px">'+(o?.order_no||'—')+' · '+cl+' · '+l.total_pairs+' per.</div></div>'
-      +'<span style="font-size:10px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:2px 8px;border-radius:4px;white-space:nowrap">'+ps+'</span>'
+    return '<div style="padding:10px 14px;border-bottom:1px solid #EDE8DF">'
+      +'<div style="font-size:12px;font-weight:700;color:#111111">'+mod+' · '+(l.color||'—')+' · '+l.total_pairs+' per.</div>'
+      +'<div style="font-size:10px;color:#5A5248;margin-top:2px">'+(o?.order_no||'—')+' · '+cl+'</div>'
       +'</div>';
   }).join('');
 }
