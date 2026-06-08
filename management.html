@@ -989,7 +989,13 @@ async function loadProdAlerts(){
     // Verifică solicitări etichete de la împachetat
     const{data:etiMsg}=await sb.from('internal_messages').select('id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
     if(etiMsg?.length>0){
-      alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de la împachetat`,onclick:`window.location.href='/silesco-app/impachetat.html'`});
+      // Luăm order_id-urile din mesaje pentru a deschide etichete direct
+      const{data:etiMsgFull}=await sb.from('internal_messages').select('id,order_id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
+      const etiOrderIds=(etiMsgFull||[]).map(m=>m.order_id).filter(Boolean);
+      const etiUrl=etiOrderIds.length===1
+        ?'etichete.html?order='+etiOrderIds[0]
+        :'etichete.html';
+      alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de printat`,onclick:`window.open('${etiUrl}','_blank')`});
       document.getElementById('impBadge').textContent=etiMsg.length;document.getElementById('impBadge').style.display='inline-block';
     }
   }
