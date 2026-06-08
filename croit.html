@@ -487,8 +487,10 @@ function renderOrderCard(o,i){
     const mod=getModName(l);
     const isDone=st?.done;
     const isStoc=l.from_stock;
+    const isRep=l.notes&&l.notes.includes('[REPARAȚIE]');
+    const repBadge=isRep?` <span style="font-size:9px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;font-weight:700;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>`:'';
     const wsBadge=l.workshop?` <span style="font-size:9px;background:#DCE8F5;color:#2F4A63;padding:1px 5px;border-radius:3px;font-weight:700;text-transform:capitalize">${l.workshop}</span>`:'';
-    return `<span class="art-chip" style="${isDone?'background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E':isStoc?'background:#E8EFF6;border-color:rgba(47,74,99,.3);color:#23394F':''}">${isDone?'✓ ':isStoc?'📦 ':''}${mod} · ${l.color||'—'}${wsBadge}</span>`;
+    return `<span class="art-chip" style="${isDone?'background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E':isRep?'background:#FDF4F2;border-color:rgba(156,58,43,.3);color:#9C3A2B':isStoc?'background:#E8EFF6;border-color:rgba(47,74,99,.3);color:#23394F':''}">${isDone?'✓ ':isRep?'🔧 ':isStoc?'📦 ':''}${mod} · ${l.color||'—'}${wsBadge}</span>`;
   }).join('');
 
   return `<div class="cmd-card" id="cmd_${o.id}">
@@ -549,7 +551,7 @@ function renderArtRow(l,orderId){
   return `<div class="art-row${st.done?' done':''}${st.problem&&!st.done?' has-problem':''}" id="art_${l.id}">
     <div class="art-top">
       <div>
-        <div class="art-name">${modName}${l.from_stock?'<span style="font-size:9px;background:#E8EFF6;color:#23394F;padding:1px 6px;border-radius:3px;margin-left:6px">📦 STOC</span>':''}</div>
+        <div class="art-name">${modName}${l.from_stock?'<span style="font-size:9px;background:#E8EFF6;color:#23394F;padding:1px 6px;border-radius:3px;margin-left:6px">📦 STOC</span>':isRep?'<span style="font-size:9px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;margin-left:6px;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>':''}</div>
         <div class="art-color">${l.color||'—'}</div>
         <div class="art-planned">${totalPlanificat} per. planificate</div>
       </div>
@@ -654,8 +656,13 @@ async function toggleDone(lineId,orderId){
   if(!st)return;
   st.done=!st.done;
   // Salvează statusul în DB
-  const newStatus=st.done?'croit_gata':'la_croit';
-  await sb.from('order_lines').update({production_status:newStatus}).eq('id',lineId);
+  // Reparațiile merg direct la cusut_gata (intern) când croitul e gata
+  const{data:lineData}=await sb.from('order_lines').select('notes,workshop').eq('id',lineId).single();
+  const isRepLine=lineData?.notes&&lineData.notes.includes('[REPARAȚIE]');
+  const newStatus=st.done?(isRepLine?'cusut_gata':'croit_gata'):'la_croit';
+  const updateData={production_status:newStatus};
+  if(isRepLine&&st.done)updateData.workshop='intern';
+  await sb.from('order_lines').update(updateData).eq('id',lineId);
   const o=orders.find(x=>x.order_lines?.some(l=>l.id===lineId));
   const l=o?.order_lines?.find(x=>x.id===lineId);
   if(l){
