@@ -196,8 +196,8 @@ async function loadIstoric(){
     .select('id,color,free_model,total_pairs,production_status,order_id,products(code,name),orders!order_lines_order_id_fkey(order_no,delivery_date,clients!orders_client_id_fkey(name,company_name))')
     .ilike('workshop',wsName)
     .in('production_status',['cusut_gata','la_talpuit','gata'])
-    .gte('updated_at',acum3luni.toISOString())
-    .order('updated_at',{ascending:false})
+    .gte('created_at',acum3luni.toISOString())
+    .order('created_at',{ascending:false})
     .limit(30);
   hideLov();
   const el=document.getElementById('istoricList');
