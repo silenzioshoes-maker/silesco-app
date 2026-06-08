@@ -669,7 +669,7 @@ async function saveReparatie(){
 
   hideLov();closeModal('modalRep');
   showToast('Reparație creată: '+repNo+' — '+total+' per.');
-  await loadOrders();
+  await loadAll();
 }
 
 // ── MESAJ ─────────────────────────────────────────────────
