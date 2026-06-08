@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SILESCO · Management</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#111111}
@@ -14,7 +14,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:#111111;display:flex;flex-direction:column;z-index:100}
 .sidebar-logo{padding:24px 20px 18px}
 .sidebar-brand{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
-.sidebar-title{font-family:'Playfair Display',serif;font-size:18px;color:#fff;font-weight:700}
+.sidebar-title{font-family:Inter,sans-serif;font-size:18px;color:#fff;font-weight:700}
 .sidebar-divider{height:1px;background:rgba(255,255,255,.08);margin:0 16px 12px}
 .sidebar-section{font-size:9px;color:rgba(255,255,255,.25);letter-spacing:2px;text-transform:uppercase;padding:0 20px 8px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;border-radius:6px;margin:1px 8px;cursor:pointer;transition:background .15s}
@@ -33,7 +33,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 /* MAIN */
 .main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column}
 .topbar{background:#fff;border-bottom:1px solid #DDD7CE;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
-.page-title{font-family:'Playfair Display',serif;font-size:20px;color:#111111;font-weight:700}
+.page-title{font-family:Inter,sans-serif;font-size:20px;color:#111111;font-weight:700}
 .topbar-actions{display:flex;gap:8px;align-items:center}
 .content{padding:24px 28px;flex:1}
 
@@ -49,7 +49,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .kpi-card.green{border-top-color:#365A43}
 .kpi-icon{width:28px;height:28px;border-radius:6px;background:#F4F1EA;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .kpi-icon svg{width:14px;height:14px;stroke:#B08D57;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.kpi-val{font-family:'Playfair Display',serif;font-size:22px;color:#111111;font-weight:700;line-height:1;margin-bottom:2px}
+.kpi-val{font-family:Inter,sans-serif;font-size:22px;color:#111111;font-weight:700;line-height:1;margin-bottom:2px}
 .kpi-label{font-size:10px;color:#3A3530;font-weight:500}
 
 /* FILTERS */
@@ -82,20 +82,12 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .detail-label{font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
 
 /* TIMELINE */
-.timeline{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:8px}
-.tl-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:70px}
-.tl-connector{display:flex;align-items:center;width:100%}
-.tl-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;z-index:1}
-.tl-dot.done{background:#111111;border:2px solid #111111}
-.tl-dot.active{background:#B08D57;border:2px solid #B08D57;box-shadow:0 0 0 4px rgba(176,141,87,.18)}
-.tl-dot.idle{background:#fff;border:2px solid #C8C0B8}
-.tl-dot svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.tl-line{flex:1;height:2px}
-.tl-line.done{background:#111111}
-.tl-line.idle{background:#C8C0B8}
-.tl-name{font-size:9px;margin-top:6px;text-align:center;line-height:1.3;max-width:64px;color:#5A5248;font-weight:500}
-.tl-name.done{color:#111111;font-weight:600}
-.tl-name.active{color:#8B6914;font-weight:700}
+
+
+
+
+
+
 
 /* PONTAJ */
 .pontaj-table{display:inline-flex;border:1px solid #C8C0B8;border-radius:5px;overflow:hidden;margin-top:4px}
@@ -138,7 +130,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex}
 .modal-box{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
-.modal-title{font-family:'Playfair Display',serif;font-size:20px;color:#111111;margin-bottom:4px;font-weight:700}
+.modal-title{font-family:Inter,sans-serif;font-size:20px;color:#111111;margin-bottom:4px;font-weight:700}
 .modal-sub{font-size:12px;color:#3A3530;margin-bottom:20px;font-weight:500}
 .fld{margin-bottom:14px}
 .fld label{display:block;font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
@@ -160,7 +152,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .size-nr{font-size:10px;color:#3A3530;font-weight:700;margin-bottom:4px}
 .size-controls{display:flex;align-items:center;justify-content:center;gap:3px}
 .size-btn{width:24px;height:24px;border-radius:5px;border:1.5px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:14px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
-.size-val{font-size:16px;font-weight:700;color:#111111;min-width:18px;text-align:center;font-family:'Playfair Display',serif}
+.size-val{font-size:16px;font-weight:700;color:#111111;min-width:18px;text-align:center;font-family:Inter,sans-serif}
 
 /* ART CARD in modal */
 .art-card{background:#fff;border:1.5px solid #DDD7CE;border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start}
@@ -552,11 +544,11 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
               </div>
               <div style="display:flex;gap:8px">
                 <div style="flex:1;background:#F5ECD7;border-radius:7px;padding:8px 10px;text-align:center">
-                  <div style="font-size:18px;font-weight:700;color:#5A3E1B;font-family:'Playfair Display',serif" id="rCroitAzi">—</div>
+                  <div style="font-size:18px;font-weight:700;color:#5A3E1B;font-family:Inter,sans-serif" id="rCroitAzi">—</div>
                   <div style="font-size:9px;color:#8B6914;text-transform:uppercase;letter-spacing:.5px">Azi</div>
                 </div>
                 <div style="flex:1;background:#F4F1EA;border-radius:7px;padding:8px 10px;text-align:center">
-                  <div style="font-size:18px;font-weight:700;color:#3A3530;font-family:'Playfair Display',serif" id="rCroitSapt">—</div>
+                  <div style="font-size:18px;font-weight:700;color:#3A3530;font-family:Inter,sans-serif" id="rCroitSapt">—</div>
                   <div style="font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px">Săpt.</div>
                 </div>
               </div>
@@ -580,11 +572,11 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
               </div>
               <div style="display:flex;gap:8px">
                 <div style="flex:1;background:#D8EEE0;border-radius:7px;padding:8px 10px;text-align:center">
-                  <div style="font-size:18px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif" id="rTalpuitAzi">—</div>
+                  <div style="font-size:18px;font-weight:700;color:#1E4A2E;font-family:Inter,sans-serif" id="rTalpuitAzi">—</div>
                   <div style="font-size:9px;color:#365A43;text-transform:uppercase;letter-spacing:.5px">Azi</div>
                 </div>
                 <div style="flex:1;background:#F4F1EA;border-radius:7px;padding:8px 10px;text-align:center">
-                  <div style="font-size:18px;font-weight:700;color:#3A3530;font-family:'Playfair Display',serif" id="rTalpuitSapt">—</div>
+                  <div style="font-size:18px;font-weight:700;color:#3A3530;font-family:Inter,sans-serif" id="rTalpuitSapt">—</div>
                   <div style="font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px">Săpt.</div>
                 </div>
               </div>
@@ -1247,7 +1239,7 @@ function _buildOrdersHTML(orders,prefix='ord'){
       <div class="expand-row" id="erow${idx}">
         <div class="detail-grid">
           <div>
-            <div class="detail-section" style="margin-bottom:12px"><div class="detail-label">Progres producție</div>${renderTimeline(o)}</div>
+            
             <div class="detail-section" style="margin-bottom:12px"><div class="detail-label">Articole (${lines.length})</div>${linesHTML||'<div style="font-size:12px;color:#5A5248">Niciun articol.</div>'}</div>
             <!-- Mesaje + Audit încărcate dinamic -->
             <div id="mgmt_omsg_${o.id}"></div>
@@ -1256,7 +1248,7 @@ function _buildOrdersHTML(orders,prefix='ord'){
           <div>
             <div class="detail-section" style="margin-bottom:12px">
               <div class="detail-label">Client · Termen</div>
-              <div style="font-family:'Playfair Display',serif;font-size:15px;color:#111111;margin-bottom:4px">${cl}</div>
+              <div style="font-family:Inter,sans-serif;font-size:15px;color:#111111;margin-bottom:4px">${cl}</div>
               ${o.clients?.phone?`<div style="font-size:11px;color:#3A3530">${o.clients.phone}</div>`:''}
               <div style="font-size:11px;color:#3A3530;margin-top:4px">Termen: <strong>${dd}</strong></div>
               <div style="font-size:11px;color:#3A3530">Plată: ${o.plata||'—'}</div>
@@ -1406,14 +1398,7 @@ async function rejectChanges(orderId,e){
 
 // TIMELINE
 const STAGE_LABELS=['Nou','Verif. stoc','La croit','FEȚE gata','Cusut ext.','Cusut fin.','Recepție','Talpuit','Împachetat','Gata'];
-function renderTimeline(o){
-  const map={nou:0,aprobat:1,in_productie:2,finalizat:9,livrat:9};
-  const cur=map[o.status]??0;
-  return `<div class="timeline">${STAGE_LABELS.map((lbl,i)=>{
-    const st=i<cur?'done':i===cur?'active':'idle';const isLast=i===STAGE_LABELS.length-1;
-    return `<div class="tl-step"><div class="tl-connector">${i>0?`<div class="tl-line ${i<=cur?'done':'idle'}"></div>`:''}<div class="tl-dot ${st}">${st==='done'?'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':st==='active'?'<div style="width:7px;height:7px;border-radius:50%;background:#fff"></div>':''}</div>${!isLast?`<div class="tl-line ${i<cur?'done':'idle'}"></div>`:''}</div><div class="tl-name ${st}">${lbl}</div></div>`;
-  }).join('')}</div>`;
-}
+
 
 // APROBARE
 async function openApprove(id,e){e.stopPropagation();approveOrderId=id;const o=allOrders.find(x=>x.id===id);if(!o)return;
@@ -2118,7 +2103,7 @@ function renderClientiList(list){
     <div style="background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:12px 16px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:#111111;font-family:'Playfair Display',serif">${c.company_name||c.name||'—'}</div>
+          <div style="font-size:14px;font-weight:700;color:#111111;font-family:Inter,sans-serif">${c.company_name||c.name||'—'}</div>
           ${c.cui?`<div style="font-size:11px;color:#5A5248;margin-top:2px">CUI: ${c.cui}</div>`:''}
           ${c.phone?`<div style="font-size:11px;color:#5A5248">${c.phone}</div>`:''}
           ${c.delivery_address?`<div style="font-size:11px;color:#9E9890;margin-top:2px">${c.delivery_address}</div>`:''}
