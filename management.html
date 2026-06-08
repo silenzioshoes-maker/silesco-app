@@ -1910,7 +1910,8 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
 
   // Partea 1 - sumar (fără prețuri)
   const sumar=lines.map(l=>{
-    const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`${s}×${q}`).join('  '):'';
+    const ptEntries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
+    const pt=ptEntries.length?`<table style="border-collapse:collapse;margin-top:4px"><tr>${ptEntries.map(([s])=>`<td style="border:1px solid #bbb;padding:3px 8px;font-size:11px;font-weight:700;text-align:center;background:#f5f5f5">${s}</td>`).join('')}</tr><tr>${ptEntries.map(([,q])=>`<td style="border:1px solid #bbb;padding:3px 8px;font-size:11px;text-align:center;font-weight:700">${q}</td>`).join('')}</tr></table>`:'—';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
     const obs=l.notes?` <em style="color:#888;font-size:11px">${l.notes.replace(/\[RESTANȚĂ:[^\]]+\]/g,'').replace(/\[Discount:[^\]]+\]/g,'').replace(/\[[^\]]+\]/g,'').trim()}</em>`:'';
     const stockBadge=l.from_stock?'<span style="background:#E8EFF6;color:#23394F;border:1px solid rgba(47,74,99,.4);font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px">📦 DIN STOC</span>':'';
@@ -1931,14 +1932,15 @@ async function genFisaProductie(id,e){e.stopPropagation();showLov('Se generează
     </td></tr>`;
     return `<tr${l.from_stock?' style="background:#F0F6FF"':''}>
       <td style="border:1px solid #ccc;padding:8px 10px;font-weight:700;font-size:13px">${modName} · ${l.color||'—'}${stockBadge}${obs}</td>
-      <td style="border:1px solid #ccc;padding:8px 10px;font-family:monospace;font-size:12px">${l.from_stock?'<strong style="color:#23394F">NU PRODUCE — DIN STOC</strong>':pt}</td>
+      <td style="border:1px solid #ccc;padding:8px 10px;">${l.from_stock?'<strong style="color:#23394F">NU PRODUCE — DIN STOC</strong>':pt}</td>
       <td style="border:1px solid #ccc;padding:8px 10px;text-align:center;font-weight:700">${l.total_pairs} per.</td>
     </tr>${materialeRow}`;
   }).join('');
 
   // Părțile 2-3 - fâșii tăiabile (doar articolele de produs, nu din stoc)
   const fasii=lines.filter(l=>!l.from_stock).map(l=>{
-    const pt=l.ponytage?Object.entries(l.ponytage).map(([s,q])=>`<span style="display:inline-block;margin-right:14px;font-size:15px"><strong>${s}</strong>×${q}</span>`).join(''):'';
+    const ptFasiiEntries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
+    const pt=ptFasiiEntries.length?`<table style="border-collapse:collapse;margin:4px 0"><tr>${ptFasiiEntries.map(([s])=>`<td style="border:2px solid #333;padding:6px 12px;font-size:16px;font-weight:800;text-align:center;background:#f0f0f0;min-width:36px">${s}</td>`).join('')}</tr><tr>${ptFasiiEntries.map(([,q])=>`<td style="border:2px solid #333;padding:6px 12px;font-size:16px;font-weight:700;text-align:center;min-width:36px">${q}</td>`).join('')}</tr></table>`:'—';
     const modName=l.products?.code?('Art. '+l.products.code):(l.free_model||(l.color?'['+l.color+']':'—'));
     const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').replace(/\[RESTANȚĂ:[^\]]+\]\s*/,'').replace(/\[[^\]]+\]\s*/g,'').trim():'';
     const mat=matByProd[l.product_id]||{};
