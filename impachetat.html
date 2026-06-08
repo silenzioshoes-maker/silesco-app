@@ -617,37 +617,59 @@ async function saveReparatie(){
   if(!total){showToast('Introdu cantitățile defecte!');return;}
   if(!desc){showToast('Descrie problema!');return;}
 
-  showLov('Se trimite la croit...');
+  showLov('Se creează comanda de reparație...');
 
   const mod=getModName(line);
-  const pontajText=Object.entries(szDefecte).map(([s,q])=>`${s}×${q}`).join(' ');
-  const notaRep=`[REPARAȚIE] ${mod} · ${line.color||'—'} · Defect: ${tipDefect} · Mărimi: ${pontajText} · ${desc}`;
+  const pontajText=Object.entries(szDefecte).map(([s,q])=>s+'x'+q).join(' ');
+  const repNo='REP-'+repOrderNo;
+  const notaRep='[REPARAȚIE] Ref: '+repOrderNo+' · '+mod+' · '+( line.color||'—')+' · Defect: '+tipDefect+' · Mărimi: '+pontajText+' · '+desc;
 
-  // Creează order_line nou cu status la_croit pentru reparație
+  // Găsim comanda mamă pentru a lua client_id și delivery_date
+  const{data:mama}=await sb.from('orders').select('client_id,agent_id,delivery_date').eq('id',repOrderId).single();
+
+  // Creăm comanda nouă de reparație
+  const{data:newOrder,error:orderErr}=await sb.from('orders').insert({
+    order_no:repNo,
+    client_id:mama?.client_id||null,
+    agent_id:mama?.agent_id||null,
+    status:'la_croit',
+    delivery_date:mama?.delivery_date||null,
+    total_pairs:total,
+    notes:notaRep,
+    priority:'urgent',
+    is_repair:true,
+    parent_order_id:repOrderId,
+    order_date:new Date().toISOString().split('T')[0]
+  }).select().single();
+
+  if(orderErr||!newOrder){hideLov();showToast('Eroare la creare comandă!');console.error(orderErr);return;}
+
+  // Creăm linia de producție pe noua comandă
   await sb.from('order_lines').insert({
-    order_id:repOrderId,
+    order_id:newOrder.id,
     product_id:line.product_id||null,
     free_model:line.free_model||null,
     color:line.color,
     ponytage:szDefecte,
     total_pairs:total,
-    production_status:'la_cusut',
+    production_status:'la_croit',
     notes:notaRep,
     workshop:'intern'
   });
 
-  // Mesaj la croit și management
+  // Mesaje notificare
   await sb.from('internal_messages').insert([
-    {from_user_id:CU.id,to_department:'croit',order_id:repOrderId,
-     message:`🔧 REPARAȚIE [${repOrderNo}]: ${mod} · ${line.color||'—'} · ${tipDefect} · ${pontajText} · ${desc}`,
+    {from_user_id:CU.id,to_department:'croit',order_id:newOrder.id,
+     message:'🔧 REPARAȚIE ['+repNo+'] ref. '+repOrderNo+': '+mod+' · '+(line.color||'—')+' · '+tipDefect+' · '+pontajText+' · '+desc,
      priority:'urgent',is_read:false},
-    {from_user_id:CU.id,to_department:'management',order_id:repOrderId,
-     message:`🔧 REPARAȚIE trimisă la croit [${repOrderNo}]: ${mod} · ${line.color||'—'} · ${tipDefect} · ${pontajText} · ${desc}`,
+    {from_user_id:CU.id,to_department:'management',order_id:newOrder.id,
+     message:'🔧 REPARAȚIE trimisă la croit ['+repNo+'] ref. '+repOrderNo+': '+mod+' · '+(line.color||'—')+' · '+tipDefect+' · '+pontajText,
      priority:'urgent',is_read:false}
   ]);
 
   hideLov();closeModal('modalRep');
-  showToast(`Reparație trimisă la croit — ${total} per.`);
+  showToast('Reparație creată: '+repNo+' — '+total+' per.');
+  await loadOrders();
 }
 
 // ── MESAJ ─────────────────────────────────────────────────
