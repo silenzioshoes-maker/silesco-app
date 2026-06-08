@@ -2216,16 +2216,26 @@ async function loadProdCusut(){
   var html='';
   if(laCusut.length){
     // Grupează pe atelier
+  // Separă comenzile cu toate liniile cusute (la_talpuit) de cele în lucru
+  const CUSUT_DONE=['cusut_gata','la_talpuit','gata','la_impachetat_talpuit'];
+  const laCusutActiv=laCusut.filter(function(o){
+    var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
+    return !wl.every(function(l){return CUSUT_DONE.includes(l.production_status);});
+  });
+  const laCusutGata=laCusut.filter(function(o){
+    var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
+    return wl.length>0&&wl.every(function(l){return CUSUT_DONE.includes(l.production_status);});
+  });
     const byAtelier={};
-    laCusut.forEach(function(o){
+    laCusutActiv.forEach(function(o){
       var ws=(o.order_lines&&o.order_lines[0]&&o.order_lines[0].workshop)||'intern';
       ws=ws.toLowerCase();
       if(!byAtelier[ws])byAtelier[ws]=[];
       byAtelier[ws].push(o);
     });
     // Stocăm toate comenzile în cache pentru moveProd
-    _prodIds.cusut_inlucru=laCusut.map(o=>o.id);
-    _cusutOrdersCache=laCusut.slice();
+    _prodIds.cusut_inlucru=laCusutActiv.map(o=>o.id);
+    _cusutOrdersCache=laCusutActiv.slice();
     Object.entries(byAtelier).forEach(function(entry){
       var ws=entry[0];var orders=entry[1];
       var wsLabel=ws.charAt(0).toUpperCase()+ws.slice(1);
@@ -2243,6 +2253,20 @@ async function loadProdCusut(){
       }).join('');
     });
     html+='<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la cusut</button>';
+  }
+  // Comenzi cusute gata - de recepționat la talpuit
+  if(laCusutGata.length){
+    html+=subHeader('✓ Cusut gata ('+laCusutGata.length+') — de recepționat la talpuit','#1E4A2E','#EAF3ED');
+    html+=laCusutGata.map(function(o,i){
+      var cl=o.clients?o.clients.company_name||o.clients.name||'—':'—';
+      var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
+      return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'none',
+        orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,
+        isUrgent:o.priority==='urgent',
+        lines:wl.map(makeLineObj),
+        statusLabel:'Cusut ✓ — la talpuit',statusColor:'#1E4A2E',statusBg:'#EAF0EC',
+        showMoveUp:false,showMoveDown:false});
+    }).join('');
   }
   // Cusut gata - de recepționat
   if(gataLines&&gataLines.length){
