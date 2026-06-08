@@ -525,6 +525,7 @@ function renderOrderCard(o,i){
 function renderArtRow(l,orderId){
   const st=artState[l.id]||{done:false,ponytage_done:{...l.ponytage},problem:null};
   const modName=getModName(l);
+  const isRep=l.notes&&l.notes.includes('[REPARAȚIE]');
   const notesClean=l.notes?l.notes.replace(/\[Discount:[^\]]+\]\s*/,'').replace(/\[[^\]]+\]\s*/,'').trim():'';
 
   // Pontaj planificat
