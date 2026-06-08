@@ -2184,7 +2184,7 @@ async function loadProdDashboard(){
 
 async function loadProdCroit(){
   const{data:croitData}=await sb.from('orders')
-    .select('id,order_no,status,priority,delivery_date,sort_order,total_pairs,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,production_status,workshop,notes,total_pairs,ponytage,sort_order,from_stock,products(code))')
+    .select('id,order_no,status,priority,delivery_date,sort_order,total_pairs,is_repair,parent_order_id,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,production_status,workshop,notes,total_pairs,ponytage,sort_order,from_stock,products(code))')
     .in('status',['aprobat','la_croit','in_productie','fete_gata_cusut'])
     .order('sort_order',{ascending:true,nullsFirst:false})
     .order('delivery_date',{ascending:true});
@@ -2420,8 +2420,11 @@ function renderCroitFromCache(){
       var done=wl.filter(function(l){return ['croit_gata','la_cusut','cusut_gata','la_talpuit','gata'].includes(l.production_status);});
       return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'croit',
         orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,isUrgent:o.priority==='urgent',
+        isRepair:!!o.is_repair,
         lines:wl.map(makeLineObj),
-        statusLabel:done.length+'/'+wl.length+' croite',statusColor:'#5A3E1B',statusBg:'#F5ECD7',
+        statusLabel:o.is_repair?('🔧 Reparație — '+done.length+'/'+wl.length+' croite'):(done.length+'/'+wl.length+' croite'),
+        statusColor:o.is_repair?'#9C3A2B':'#5A3E1B',
+        statusBg:o.is_repair?'#FDF4F2':'#F5ECD7',
         showMoveUp:i>0,showMoveDown:i<deCroit.length-1});
     }).join('');
     html+='<button onclick="saveOrdineCroit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#5A3E1B;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la croit</button>';
@@ -2615,7 +2618,9 @@ function makeProdCard(opts){
     :'';
   var togId=bodyId;
   var togAr=arrId;
-  return '<div style="background:#fff;border:1px solid '+(opts.isUrgent?'#9C3A2B':'#DDD7CE')+';border-radius:7px;margin-bottom:5px;overflow:hidden;">'
+  var borderColor=opts.isRepair?'#9C3A2B':opts.isUrgent?'#9C3A2B':'#DDD7CE';
+  var borderLeft=opts.isRepair?';border-left:3px solid #9C3A2B':'';  
+  return '<div style="background:#fff;border:1px solid '+borderColor+';border-radius:7px;margin-bottom:5px;overflow:hidden'+borderLeft+';">' 
     +'<div style="padding:8px 10px;display:flex;align-items:center;gap:6px;">'
     +moveBtns
     +'<div data-body="'+togId+'" data-arr="'+togAr+'" onclick="togProdCard(this.dataset.body,this.dataset.arr)" style="flex:1;min-width:0;cursor:pointer;">'
