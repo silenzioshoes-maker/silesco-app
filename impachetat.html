@@ -2,16 +2,84 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SILESCO · Împachetat</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+
+/* ── MOBILE RESET ───────────────────────────────── */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{font-family:Inter,system-ui,sans-serif;background:#F4F1EA;color:#111;min-height:100vh;-webkit-text-size-adjust:100%}
+
+/* ── HEADER ─────────────────────────────────────── */
+.hdr{background:#111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.hdr-brand{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.hdr-title{font-size:20px;color:#fff;font-weight:800;font-family:Inter,sans-serif}
+.hdr-ws{font-size:13px;color:#B08D57;font-weight:700;margin-top:2px}
+.hdr-reload{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:44px}
+
+/* ── CARDS ──────────────────────────────────────── */
+.content{padding:12px;max-width:640px;margin:0 auto}
+.card{background:#fff;border:1px solid #DDD7CE;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-header{padding:16px}
+.order-no{font-size:11px;font-family:monospace;color:#5A5248;margin-bottom:4px;letter-spacing:.5px}
+.client{font-size:20px;color:#111;font-weight:800;margin-bottom:4px;font-family:Inter,sans-serif;line-height:1.2}
+.deadline{font-size:13px;color:#5A5248;font-weight:500}
+
+/* ── ART ROW ────────────────────────────────────── */
+.art-row{padding:16px;border-top:1px solid #EDE8DF;display:flex;flex-direction:column;gap:12px}
+.art-info{}
+.art-name{font-size:16px;font-weight:800;color:#111}
+.art-color{font-size:14px;color:#5A5248;margin-top:3px;font-weight:500}
+.art-total{font-size:15px;font-weight:700;color:#1E4A2E;margin-top:4px}
+.pontaj{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pchip{background:#F4F1EA;border:1px solid #C8C0B8;border-radius:6px;padding:5px 10px;font-size:13px;font-weight:700;color:#111;font-family:monospace}
+.art-status{display:flex;align-items:center}
+
+/* ── BUTOANE PRINCIPALE ─────────────────────────── */
+.btn-done{width:100%;padding:16px;border-radius:10px;border:none;background:#1E4A2E;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:52px;letter-spacing:.3px}
+.btn-done:active{background:#163a22}
+.btn-done:disabled{background:#C8C0B8;cursor:not-allowed}
+.status-done{display:inline-block;font-size:13px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:8px 14px;border-radius:8px;border:1px solid #C8DEC8}
+
+/* ── CARD FOOTER ────────────────────────────────── */
+.card-footer{padding:14px 16px;background:#EAF0EC;border-top:1px solid #C8DEC8}
+.card-footer span{font-size:14px;font-weight:700;color:#1E4A2E}
+
+/* ── EMPTY STATE ────────────────────────────────── */
+.empty{text-align:center;padding:60px 20px;color:#9E9890}
+.empty svg{width:48px;height:48px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 20px;display:block}
+.empty h3{font-size:18px;font-weight:700;color:#111;margin-bottom:8px}
+.empty p{font-size:14px;color:#5A5248}
+
+/* ── LOADING ────────────────────────────────────── */
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.lov.show{display:flex}
+.spinner{width:36px;height:36px;border:3px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lov-text{font-size:15px;color:#111;font-weight:700;font-family:Inter,sans-serif}
+
+/* ── TOAST ──────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:14px 22px;border-radius:10px;font-size:14px;font-weight:700;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+
+/* ── INVALID ────────────────────────────────────── */
+.invalid{text-align:center;padding:60px 20px}
+.invalid h2{font-size:22px;color:#7A2418;margin-bottom:12px;font-weight:800}
+.invalid p{font-size:15px;color:#5A5248}
+
+/* ── ISTORIC ────────────────────────────────────── */
+#btnIstoric{width:100%;padding:16px;border-radius:10px;border:1px solid #DDD7CE;background:#fff;color:#5A5248;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:52px}
+
+/* ── SPECIFIC ─── */
+
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#111111}
 .hdr{background:#111111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
 .hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px}
-.hdr-title{font-family:'Playfair Display',serif;font-size:20px;color:#fff;font-weight:700}
+.hdr-title{font-family:Inter,sans-serif;font-size:20px;color:#fff;font-weight:700}
 .hdr-right{display:flex;align-items:center;gap:8px}
 .hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#B08D57;font-weight:600}
 .logout-btn{background:none;border:none;cursor:pointer;padding:6px}
@@ -24,7 +92,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .stat-item{flex-shrink:0;padding:5px 16px 5px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px}
 .stat-item:last-child{border-right:none;margin-right:0;padding-right:0}
 .stat-label{font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
-.stat-val{font-size:16px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif}
+.stat-val{font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif}
 .stat-sub{font-size:8px;color:rgba(255,255,255,.3)}
 .wrap{padding:12px 14px 80px}
 /* CARDS */
@@ -32,12 +100,12 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .cmd-card.urgent{border-color:#9C3A2B;border-left:4px solid #9C3A2B;border-radius:0 10px 10px 0}
 .cmd-header{padding:13px 15px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
 .cmd-header:active{background:#F4F1EA}
-.cmd-no{font-size:10px;font-family:'Courier New',monospace;color:#5A5248;margin-bottom:2px}
-.cmd-client{font-family:'Playfair Display',serif;font-size:16px;color:#111111;margin-bottom:4px}
+.cmd-no{font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:2px}
+.cmd-client{font-family:Inter,sans-serif;font-size:16px;color:#111111;margin-bottom:4px}
 .cmd-meta{font-size:11px;color:#5A5248;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .urgent-tag{background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.5px}
 .cmd-progress{text-align:right;flex-shrink:0}
-.cmd-prog-num{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
+.cmd-prog-num{font-family:Inter,sans-serif;font-size:20px;font-weight:700}
 .cmd-prog-label{font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px}
 .cmd-arrow{width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex-shrink:0;margin-top:4px}
 .cmd-body{display:none;border-top:1px solid #EDE8DF}
@@ -46,7 +114,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .art-name{font-size:13px;font-weight:700;color:#111111}
 .art-pairs{font-size:11px;color:#5A5248;margin-top:2px}
 .pontaj{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px}
-.pchip{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:3px 7px;font-size:12px;font-weight:700;font-family:'Playfair Display',serif}
+.pchip{background:#F4F1EA;border:1px solid #DDD7CE;border-radius:4px;padding:3px 7px;font-size:12px;font-weight:700;font-family:Inter,sans-serif}
 /* BUTOANE */
 .btn-gata{padding:10px 16px;border-radius:8px;border:none;background:#1E4A2E;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px}
 .btn-gata svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
@@ -66,7 +134,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:flex-end;justify-content:center}
 .modal-bg.show{display:flex}
 .modal-box{background:#fff;border-radius:16px 16px 0 0;padding:22px 18px 40px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
-.modal-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111111;margin-bottom:3px}
+.modal-title{font-family:Inter,sans-serif;font-size:17px;font-weight:700;color:#111111;margin-bottom:3px}
 .modal-sub{font-size:12px;color:#5A5248;margin-bottom:16px}
 .fld{margin-bottom:13px}
 .fld label{display:block;font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
@@ -76,7 +144,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .sz-reparatie{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
 .sz-r{text-align:center}
 .sz-r span{display:block;font-size:11px;font-weight:700;color:#5A5248;margin-bottom:4px}
-.sz-r input{width:100%;padding:7px 4px;border:1.5px solid #DDD7CE;border-radius:7px;text-align:center;font-size:15px;font-weight:700;font-family:'Playfair Display',serif;color:#111111;outline:none}
+.sz-r input{width:100%;padding:7px 4px;border:1.5px solid #DDD7CE;border-radius:7px;text-align:center;font-size:15px;font-weight:700;font-family:Inter,sans-serif;color:#111111;outline:none}
 .sz-r input:focus{border-color:#8B6914}
 .btn-primary-modal{width:100%;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:6px}
 .btn-cancel-modal{width:100%;padding:11px;border-radius:10px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px}
@@ -88,6 +156,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .lov-box{background:#fff;border-radius:12px;padding:20px 28px;font-size:14px;font-weight:600;color:#111111}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+
 </style>
 </head>
 <body>
@@ -510,7 +579,7 @@ function renderIstoric(orders){
       <div style="padding:12px 15px;display:flex;justify-content:space-between;align-items:center">
         <div>
           <div class="cmd-no">${o.order_no||'—'}</div>
-          <div style="font-family:'Playfair Display',serif;font-size:15px;color:#111111">${cl}</div>
+          <div style="font-family:Inter,sans-serif;font-size:15px;color:#111111">${cl}</div>
           <div style="font-size:11px;color:#5A5248;margin-top:2px">${o.total_pairs||0} perechi · ${dd}</div>
         </div>
         <span style="font-size:11px;font-weight:700;background:#EAF0EC;color:#1E4A2E;padding:3px 9px;border-radius:4px">✓ Livrat</span>
