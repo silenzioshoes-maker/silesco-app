@@ -168,9 +168,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   </div>
   <div class="hdr-right">
     <div class="hdr-badge" id="hdrBadge">—</div>
-    <button class="logout-btn" onclick="sb.auth.signOut().then(()=>window.location.href='/silesco-app/index.html')">
-      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    </button>
+    
   </div>
 </div>
 
@@ -321,12 +319,20 @@ let repOrderId='', repOrderNo='', repLines=[];
 let etOrderId='', etOrderNo='';
 
 window.addEventListener('DOMContentLoaded',async()=>{
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session){window.location.href='/silesco-app/index.html';return;}
+  const urlToken=new URLSearchParams(window.location.search).get('token');
+  if(urlToken!=='im-9034-vL7w'){
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;background:#F4F1EA"><div style="text-align:center;padding:40px"><div style="font-size:48px;margin-bottom:16px">&#128274;</div><div style="font-size:20px;font-weight:700;color:#111;margin-bottom:8px">Acces restricționat</div><div style="font-size:14px;color:#5A5248">Link invalid. Contactează managementul.</div></div></div>';
+    return;
+  }
+  let{data:{session}}=await sb.auth.getSession();
+  if(!session){
+    const{data:sd,error:se}=await sb.auth.signInWithPassword({email:'impachetat@silesco.internal',password:'Impachetat#9034vL7w'});
+    if(se||!sd.session){document.body.innerHTML='<p style="padding:40px;font-family:Inter">Eroare autentificare. Reîncarcă pagina.</p>';return;}
+    session=sd.session;
+  }
   CU=session.user;
   const{data:p}=await sb.from('user_profiles').select('role').eq('id',CU.id).single();
-  if(!['management','impachetat'].includes(p?.role)){window.location.href='/silesco-app/index.html';return;}
-  sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT')window.location.href='/silesco-app/index.html';});
+  CP=p;
   await loadAll();
 });
 
