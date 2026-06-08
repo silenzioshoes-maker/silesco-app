@@ -2,16 +2,84 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SILESCO · Croit</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+
+/* ── MOBILE RESET ───────────────────────────────── */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{font-family:Inter,system-ui,sans-serif;background:#F4F1EA;color:#111;min-height:100vh;-webkit-text-size-adjust:100%}
+
+/* ── HEADER ─────────────────────────────────────── */
+.hdr{background:#111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.hdr-brand{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.hdr-title{font-size:20px;color:#fff;font-weight:800;font-family:Inter,sans-serif}
+.hdr-ws{font-size:13px;color:#B08D57;font-weight:700;margin-top:2px}
+.hdr-reload{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:44px}
+
+/* ── CARDS ──────────────────────────────────────── */
+.content{padding:12px;max-width:640px;margin:0 auto}
+.card{background:#fff;border:1px solid #DDD7CE;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-header{padding:16px}
+.order-no{font-size:11px;font-family:monospace;color:#5A5248;margin-bottom:4px;letter-spacing:.5px}
+.client{font-size:20px;color:#111;font-weight:800;margin-bottom:4px;font-family:Inter,sans-serif;line-height:1.2}
+.deadline{font-size:13px;color:#5A5248;font-weight:500}
+
+/* ── ART ROW ────────────────────────────────────── */
+.art-row{padding:16px;border-top:1px solid #EDE8DF;display:flex;flex-direction:column;gap:12px}
+.art-info{}
+.art-name{font-size:16px;font-weight:800;color:#111}
+.art-color{font-size:14px;color:#5A5248;margin-top:3px;font-weight:500}
+.art-total{font-size:15px;font-weight:700;color:#1E4A2E;margin-top:4px}
+.pontaj{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pchip{background:#F4F1EA;border:1px solid #C8C0B8;border-radius:6px;padding:5px 10px;font-size:13px;font-weight:700;color:#111;font-family:monospace}
+.art-status{display:flex;align-items:center}
+
+/* ── BUTOANE PRINCIPALE ─────────────────────────── */
+.btn-done{width:100%;padding:16px;border-radius:10px;border:none;background:#1E4A2E;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:52px;letter-spacing:.3px}
+.btn-done:active{background:#163a22}
+.btn-done:disabled{background:#C8C0B8;cursor:not-allowed}
+.status-done{display:inline-block;font-size:13px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:8px 14px;border-radius:8px;border:1px solid #C8DEC8}
+
+/* ── CARD FOOTER ────────────────────────────────── */
+.card-footer{padding:14px 16px;background:#EAF0EC;border-top:1px solid #C8DEC8}
+.card-footer span{font-size:14px;font-weight:700;color:#1E4A2E}
+
+/* ── EMPTY STATE ────────────────────────────────── */
+.empty{text-align:center;padding:60px 20px;color:#9E9890}
+.empty svg{width:48px;height:48px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 20px;display:block}
+.empty h3{font-size:18px;font-weight:700;color:#111;margin-bottom:8px}
+.empty p{font-size:14px;color:#5A5248}
+
+/* ── LOADING ────────────────────────────────────── */
+.lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.lov.show{display:flex}
+.spinner{width:36px;height:36px;border:3px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lov-text{font-size:15px;color:#111;font-weight:700;font-family:Inter,sans-serif}
+
+/* ── TOAST ──────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:14px 22px;border-radius:10px;font-size:14px;font-weight:700;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+
+/* ── INVALID ────────────────────────────────────── */
+.invalid{text-align:center;padding:60px 20px}
+.invalid h2{font-size:22px;color:#7A2418;margin-bottom:12px;font-weight:800}
+.invalid p{font-size:15px;color:#5A5248}
+
+/* ── ISTORIC ────────────────────────────────────── */
+#btnIstoric{width:100%;padding:16px;border-radius:10px;border:1px solid #DDD7CE;background:#fff;color:#5A5248;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:52px}
+
+/* ── SPECIFIC ─── */
+
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#111111}
 .hdr{background:#111111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
 .hdr-left .hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px}
-.hdr-left .hdr-title{font-family:'Playfair Display',serif;font-size:20px;color:#fff;font-weight:700}
+.hdr-left .hdr-title{font-family:Inter,sans-serif;font-size:20px;color:#fff;font-weight:700}
 .hdr-right{display:flex;align-items:center;gap:8px}
 .hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#B08D57;font-weight:600}
 .msg-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;cursor:pointer;position:relative;display:flex;align-items:center;gap:5px;color:#fff;font-size:11px;font-weight:700;font-family:'Inter',sans-serif}
@@ -29,13 +97,13 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .cmd-header{padding:14px 16px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
 .cmd-header:active{background:#F4F1EA}
 .cmd-main{flex:1;min-width:0}
-.cmd-no{font-size:10px;font-family:'Courier New',monospace;color:#5A5248;margin-bottom:3px}
-.cmd-client{font-family:'Playfair Display',serif;font-size:17px;color:#111111;margin-bottom:5px}
+.cmd-no{font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:3px}
+.cmd-client{font-family:Inter,sans-serif;font-size:17px;color:#111111;margin-bottom:5px}
 .cmd-preview{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
 .art-chip{font-size:10px;color:#3A3530;background:#F4F1EA;border:1px solid #DDD7CE;padding:2px 8px;border-radius:4px;white-space:nowrap}
 .cmd-meta{font-size:11px;color:#5A5248}
 .cmd-progress{text-align:right;flex-shrink:0}
-.cmd-prog-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1}
+.cmd-prog-num{font-family:Inter,sans-serif;font-size:22px;font-weight:700;line-height:1}
 .cmd-prog-label{font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 .cmd-arrow{width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex-shrink:0;margin-top:6px}
 
@@ -62,7 +130,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .sz-planned{font-size:9px;color:#9E9890;margin-bottom:3px}
 .sz-controls{display:flex;align-items:center;gap:3px;justify-content:center}
 .sz-btn{width:24px;height:24px;border-radius:5px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
-.sz-val{font-size:16px;font-weight:700;color:#111111;min-width:18px;text-align:center;font-family:'Playfair Display',serif}
+.sz-val{font-size:16px;font-weight:700;color:#111111;min-width:18px;text-align:center;font-family:Inter,sans-serif}
 
 /* ACTIONS */
 .art-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
@@ -113,7 +181,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center}
 .modal-overlay.show{display:flex}
 .modal-box{background:#fff;border-radius:14px 14px 0 0;padding:22px 20px 36px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
-.modal-title{font-family:'Playfair Display',serif;font-size:18px;color:#111111;margin-bottom:6px;font-weight:700}
+.modal-title{font-family:Inter,sans-serif;font-size:18px;color:#111111;margin-bottom:6px;font-weight:700}
 .modal-sub{font-size:12px;color:#5A5248;margin-bottom:16px}
 .fld{margin-bottom:12px}
 .fld label{display:block;font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
@@ -131,6 +199,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .lov-text{font-size:13px;color:#2A2A2A;font-weight:600}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
+
 </style>
 </head>
 <body>
@@ -256,17 +325,17 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 <div id="statsBar" style="background:#111111;padding:8px 14px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
   <div class="stat-item" id="stat_azi" style="flex-shrink:0;padding:6px 16px 6px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
     <div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Azi</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="stat_azi_val">—</div>
+    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_azi_val">—</div>
     <div style="font-size:9px;color:rgba(255,255,255,.3)">per. croite</div>
   </div>
   <div class="stat-item" style="flex-shrink:0;padding:6px 16px 6px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
     <div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Săptămâna</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="stat_saptamana_val">—</div>
+    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_saptamana_val">—</div>
     <div style="font-size:9px;color:rgba(255,255,255,.3)">per. croite</div>
   </div>
   <div class="stat-item" style="flex-shrink:0;padding:6px 0">
     <div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Luna</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="stat_luna_val">—</div>
+    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_luna_val">—</div>
     <div style="font-size:9px;color:rgba(255,255,255,.3)">per. croite</div>
   </div>
 </div>
@@ -592,7 +661,7 @@ function renderFinalizate(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
           <div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:3px">${o.order_no||'—'}</div>
-          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#111111;margin-bottom:6px">${cl}</div>
+          <div style="font-family:Inter,sans-serif;font-size:16px;color:#111111;margin-bottom:6px">${cl}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px">
             ${lines.map(l=>`<span class="art-chip" style="background:#EAF0EC;border-color:rgba(54,90,67,.2);color:#1E4A2E">✓ ${getModName(l)} · ${l.color||'—'}</span>`).join('')}
           </div>
@@ -948,7 +1017,7 @@ function renderCoSzGrid(){
       <div style="font-size:10px;color:#5A5248;font-weight:600;margin-bottom:3px">Nr.${s}</div>
       <div style="display:flex;align-items:center;gap:3px;justify-content:center">
         <button onclick="adjCoSz('${s}',-1)" style="width:22px;height:22px;border-radius:4px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif">−</button>
-        <span id="csv_${s}" style="font-size:15px;font-weight:700;color:#111111;min-width:16px;text-align:center;font-family:'Playfair Display',serif">${coSzV[s]||0}</span>
+        <span id="csv_${s}" style="font-size:15px;font-weight:700;color:#111111;min-width:16px;text-align:center;font-family:Inter,sans-serif">${coSzV[s]||0}</span>
         <button onclick="adjCoSz('${s}',1)" style="width:22px;height:22px;border-radius:4px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif">+</button>
       </div>
     </div>`).join('');
@@ -1066,13 +1135,13 @@ async function saveCompleteRestanta(){
 <!-- MODAL COMPLETARE RESTANȚĂ -->
 <div class="modal-overlay" id="restantaModal" style="z-index:300">
   <div style="background:#fff;border-radius:14px;padding:24px;width:100%;max-width:360px">
-    <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:4px">Completează restanța</div>
+    <div style="font-family:Inter,sans-serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:4px">Completează restanța</div>
     <div style="font-size:12px;color:#5A5248;margin-bottom:12px" id="restantaModalSub">—</div>
     <div id="restantaSizesInfo"></div>
     <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Perechi croite acum</div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
       <button onclick="adjRestanta(-1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:18px;font-weight:700;cursor:pointer">−</button>
-      <span id="restantaQty" style="font-size:28px;font-weight:700;color:#111111;font-family:'Playfair Display',serif;min-width:40px;text-align:center">0</span>
+      <span id="restantaQty" style="font-size:28px;font-weight:700;color:#111111;font-family:Inter,sans-serif;min-width:40px;text-align:center">0</span>
       <button onclick="adjRestanta(1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:18px;font-weight:700;cursor:pointer">+</button>
       <span style="font-size:11px;color:#9E9890" id="restantaMax">/ 0 restante</span>
     </div>
