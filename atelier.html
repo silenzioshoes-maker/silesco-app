@@ -62,6 +62,15 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   <div class="lov show" id="initLov"><div class="spinner"></div><div class="lov-text">Se verifică accesul...</div></div>
 </div>
 
+<div style="max-width:600px;margin:0 auto;padding:0 20px 40px">
+  <div style="text-align:center;margin-bottom:12px">
+    <button id="btnIstoric" onclick="loadIstoric()" style="padding:10px 20px;border-radius:8px;border:1px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
+      📋 Istoric cusut (ultimele 3 luni)
+    </button>
+  </div>
+  <div id="istoricList" style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden;display:none"></div>
+</div>
+
 <script>
 const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
@@ -108,7 +117,7 @@ async function loadOrders(){
     .in('order_id',orderIds);
 
   // Atașăm datele comenzii la fiecare linie
-  const EXCLUDE_STATUSES=['gata'];
+  const EXCLUDE_STATUSES=['cusut_gata','la_talpuit','gata','la_impachetat_talpuit'];
   const pendingLines=(lines||[]).filter(l=>!EXCLUDE_STATUSES.includes(l.production_status));
   const orderMap={};
   (orders||[]).forEach(o=>orderMap[o.id]=o);
@@ -175,6 +184,37 @@ async function markDone(lineId,orderId,orderNo){
   await sb.from('orders').update({updated_at:new Date().toISOString()}).eq('id',orderId);
   hideLov();showToast('Marcat ca finalizat!');
   await loadOrders();
+}
+
+async function loadIstoric(){
+  const btn=document.getElementById('btnIstoric');
+  if(btn)btn.style.display='none';
+  showLov('Se încarcă istoricul...');
+  const acum3luni=new Date();
+  acum3luni.setMonth(acum3luni.getMonth()-3);
+  const{data:lines}=await sb.from('order_lines')
+    .select('id,color,free_model,total_pairs,production_status,order_id,products(code,name),orders!order_lines_order_id_fkey(order_no,delivery_date,clients!orders_client_id_fkey(name,company_name))')
+    .ilike('workshop',wsName)
+    .in('production_status',['cusut_gata','la_talpuit','gata'])
+    .gte('updated_at',acum3luni.toISOString())
+    .order('updated_at',{ascending:false})
+    .limit(30);
+  hideLov();
+  const el=document.getElementById('istoricList');
+  if(!el)return;
+  if(!lines||!lines.length){el.innerHTML='<div style="font-size:12px;color:#9E9890;text-align:center;padding:16px">Niciun articol în ultimele 3 luni</div>';return;}
+  el.style.display='block';
+  el.innerHTML=lines.map(l=>{
+    const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+    const o=l.orders;
+    const cl=o?.clients?.company_name||o?.clients?.name||'—';
+    const ps={cusut_gata:'Cusut ✓',la_talpuit:'La talpuit',gata:'Gata'}[l.production_status]||l.production_status;
+    return '<div style="padding:10px 14px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:center;gap:8px">'
+      +'<div><div style="font-size:12px;font-weight:700;color:#111111">'+mod+' · '+(l.color||'—')+'</div>'
+      +'<div style="font-size:10px;color:#5A5248;margin-top:2px">'+(o?.order_no||'—')+' · '+cl+' · '+l.total_pairs+' per.</div></div>'
+      +'<span style="font-size:10px;font-weight:700;color:#1E4A2E;background:#EAF0EC;padding:2px 8px;border-radius:4px;white-space:nowrap">'+ps+'</span>'
+      +'</div>';
+  }).join('');
 }
 
 function showInvalid(msg){
