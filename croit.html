@@ -389,7 +389,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   }
   let{data:{session}}=await sb.auth.getSession();
   if(!session){
-    const{data:sd,error:se}=await sb.auth.signInWithPassword({email:'croit@silesco.internal',password:'Croit#2847xK9p'});
+    const{data:sd,error:se}=await sb.auth.signInWithPassword({email:'croit@silesco.ro',password:'Croit#2847xK9p'});
     if(se||!sd.session){document.body.innerHTML='<p style="padding:40px;font-family:Inter">Eroare autentificare. Reîncarcă pagina.</p>';return;}
     session=sd.session;
   }
