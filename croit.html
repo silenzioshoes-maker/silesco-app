@@ -15,24 +15,24 @@ body{font-family:Inter,system-ui,sans-serif;background:#F4F1EA;color:#111;min-he
 
 /* ── HEADER ─────────────────────────────────────── */
 .hdr{background:#111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
-.hdr-brand{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.hdr-brand{font-size:14px;color:rgba(255,255,255,.9);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
 .hdr-title{font-size:20px;color:#fff;font-weight:800;font-family:Inter,sans-serif}
-.hdr-ws{font-size:13px;color:#B08D57;font-weight:700;margin-top:2px}
+.hdr-ws{font-size:13px;color:#111111;font-weight:700;margin-top:2px}
 .hdr-reload{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:44px}
 
 /* ── CARDS ──────────────────────────────────────── */
 .content{padding:12px;max-width:640px;margin:0 auto}
 .card{background:#fff;border:1px solid #DDD7CE;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .card-header{padding:16px}
-.order-no{font-size:11px;font-family:monospace;color:#5A5248;margin-bottom:4px;letter-spacing:.5px}
+.order-no{font-size:14px;font-family:monospace;color:#111111;margin-bottom:4px;letter-spacing:.5px}
 .client{font-size:20px;color:#111;font-weight:800;margin-bottom:4px;font-family:Inter,sans-serif;line-height:1.2}
-.deadline{font-size:13px;color:#5A5248;font-weight:500}
+.deadline{font-size:13px;color:#111111;font-weight:500}
 
 /* ── ART ROW ────────────────────────────────────── */
 .art-row{padding:16px;border-top:1px solid #EDE8DF;display:flex;flex-direction:column;gap:12px}
 .art-info{}
 .art-name{font-size:16px;font-weight:800;color:#111}
-.art-color{font-size:14px;color:#5A5248;margin-top:3px;font-weight:500}
+.art-color{font-size:14px;color:#111111;margin-top:3px;font-weight:500}
 .art-total{font-size:15px;font-weight:700;color:#1E4A2E;margin-top:4px}
 .pontaj{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .pchip{background:#F4F1EA;border:1px solid #C8C0B8;border-radius:6px;padding:5px 10px;font-size:13px;font-weight:700;color:#111;font-family:monospace}
@@ -49,15 +49,15 @@ body{font-family:Inter,system-ui,sans-serif;background:#F4F1EA;color:#111;min-he
 .card-footer span{font-size:14px;font-weight:700;color:#1E4A2E}
 
 /* ── EMPTY STATE ────────────────────────────────── */
-.empty{text-align:center;padding:60px 20px;color:#9E9890}
+.empty{text-align:center;padding:60px 20px;color:#333333}
 .empty svg{width:48px;height:48px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 20px;display:block}
 .empty h3{font-size:18px;font-weight:700;color:#111;margin-bottom:8px}
-.empty p{font-size:14px;color:#5A5248}
+.empty p{font-size:14px;color:#111111}
 
 /* ── LOADING ────────────────────────────────────── */
 .lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:16px}
 .lov.show{display:flex}
-.spinner{width:36px;height:36px;border:3px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+.spinner{width:36px;height:36px;border:3px solid #DDD7CE;border-top-color:#111111;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lov-text{font-size:15px;color:#111;font-weight:700;font-family:Inter,sans-serif}
 
@@ -68,29 +68,29 @@ body{font-family:Inter,system-ui,sans-serif;background:#F4F1EA;color:#111;min-he
 /* ── INVALID ────────────────────────────────────── */
 .invalid{text-align:center;padding:60px 20px}
 .invalid h2{font-size:22px;color:#7A2418;margin-bottom:12px;font-weight:800}
-.invalid p{font-size:15px;color:#5A5248}
+.invalid p{font-size:15px;color:#111111}
 
 /* ── ISTORIC ────────────────────────────────────── */
-#btnIstoric{width:100%;padding:16px;border-radius:10px;border:1px solid #DDD7CE;background:#fff;color:#5A5248;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:52px}
+#btnIstoric{width:100%;padding:16px;border-radius:10px;border:1px solid #DDD7CE;background:#fff;color:#111111;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;min-height:52px}
 
 /* ── SPECIFIC ─── */
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#111111}
 .hdr{background:#111111;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
-.hdr-left .hdr-brand{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px}
+.hdr-left .hdr-brand{font-size:14px;color:rgba(255,255,255,.8);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px}
 .hdr-left .hdr-title{font-family:Inter,sans-serif;font-size:20px;color:#fff;font-weight:700}
 .hdr-right{display:flex;align-items:center;gap:8px}
-.hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#B08D57;font-weight:600}
-.msg-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;cursor:pointer;position:relative;display:flex;align-items:center;gap:5px;color:#fff;font-size:11px;font-weight:700;font-family:'Inter',sans-serif}
+.hdr-badge{background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:20px;padding:4px 12px;font-size:14px;color:#111111;font-weight:600}
+.msg-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;cursor:pointer;position:relative;display:flex;align-items:center;gap:5px;color:#fff;font-size:14px;font-weight:700;font-family:'Inter',sans-serif}
 .msg-btn svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.msg-badge{background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center}
+.msg-badge{background:#9C3A2B;color:#fff;font-size:14px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center}
 .logout-btn{background:none;border:none;cursor:pointer;padding:6px}
 .logout-btn svg{width:16px;height:16px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── TABS MOBILE FRIENDLY ───────────────────────── */
 .tabs{background:#F4F1EA;padding:10px 12px;display:flex;gap:8px;position:sticky;top:57px;z-index:40;border-bottom:1px solid #DDD7CE}
-.tab{flex:1;padding:12px 8px;text-align:center;font-size:13px;font-weight:700;color:#5A5248;cursor:pointer;border-radius:8px;border:2px solid #DDD7CE;background:#fff;font-family:Inter,sans-serif;transition:all .15s;min-height:48px;display:flex;align-items:center;justify-content:center;line-height:1.2}
+.tab{flex:1;padding:12px 8px;text-align:center;font-size:13px;font-weight:700;color:#111111;cursor:pointer;border-radius:8px;border:2px solid #DDD7CE;background:#fff;font-family:Inter,sans-serif;transition:all .15s;min-height:48px;display:flex;align-items:center;justify-content:center;line-height:1.2}
 .tab.active{color:#fff;background:#111;border-color:#111}
 .tab:active{opacity:.8}
 
@@ -101,14 +101,14 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .cmd-header{padding:14px 16px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
 .cmd-header:active{background:#F4F1EA}
 .cmd-main{flex:1;min-width:0}
-.cmd-no{font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:3px}
+.cmd-no{font-size:14px;font-family:monospace;color:#111111;margin-bottom:3px}
 .cmd-client{font-family:Inter,sans-serif;font-size:17px;color:#111111;margin-bottom:5px}
 .cmd-preview{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
-.art-chip{font-size:10px;color:#3A3530;background:#F4F1EA;border:1px solid #DDD7CE;padding:2px 8px;border-radius:4px;white-space:nowrap}
-.cmd-meta{font-size:11px;color:#5A5248}
+.art-chip{font-size:14px;color:#3A3530;background:#F4F1EA;border:1px solid #DDD7CE;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.cmd-meta{font-size:14px;color:#111111}
 .cmd-progress{text-align:right;flex-shrink:0}
 .cmd-prog-num{font-family:Inter,sans-serif;font-size:22px;font-weight:700;line-height:1}
-.cmd-prog-label{font-size:9px;color:#5A5248;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.cmd-prog-label{font-size:14px;color:#111111;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 .cmd-arrow{width:14px;height:14px;stroke:#5A5248;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex-shrink:0;margin-top:6px}
 
 /* BODY */
@@ -120,45 +120,45 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .art-row.has-problem{background:#FFF8F8}
 .art-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
 .art-name{font-size:14px;font-weight:700;color:#111111}
-.art-color{font-size:12px;color:#5A5248}
-.art-planned{font-size:11px;color:#9E9890;margin-top:2px}
+.art-color{font-size:15px;color:#111111}
+.art-planned{font-size:14px;color:#333333;margin-top:2px}
 
 /* PONTAJ EDITABIL */
 .pontaj-edit{margin:10px 0}
-.pontaj-edit-label{font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.pontaj-edit-label{font-size:14px;font-weight:700;color:#111111;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
 .pontaj-grid{display:flex;flex-wrap:wrap;gap:6px}
 .sz-cell{background:#F4F1EA;border:1.5px solid #DDD7CE;border-radius:8px;padding:8px 6px;text-align:center;min-width:56px}
 .sz-cell.modified{background:#FFF3CD;border-color:#B0892B}
 .sz-cell.zero{background:#F5EAE8;border-color:rgba(156,58,43,.3);opacity:.7}
-.sz-nr{font-size:10px;color:#5A5248;font-weight:700;margin-bottom:4px}
-.sz-planned{font-size:9px;color:#9E9890;margin-bottom:3px}
+.sz-nr{font-size:14px;color:#111111;font-weight:700;margin-bottom:4px}
+.sz-planned{font-size:14px;color:#333333;margin-bottom:3px}
 .sz-controls{display:flex;align-items:center;gap:3px;justify-content:center}
-.sz-btn{width:24px;height:24px;border-radius:5px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+.sz-btn{width:24px;height:24px;border-radius:5px;border:1.5px solid #B08D57;background:#F6F0E5;color:#111111;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
 .sz-val{font-size:16px;font-weight:700;color:#111111;min-width:18px;text-align:center;font-family:Inter,sans-serif}
 
 /* ACTIONS */
 .art-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.btn-done{padding:9px 16px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
+.btn-done{padding:9px 16px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
 .btn-done svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.btn-done.undone{background:#F4F1EA;border:1.5px solid #DDD7CE;color:#5A5248}
+.btn-done.undone{background:#F4F1EA;border:1.5px solid #DDD7CE;color:#111111}
 .btn-done.undone svg{stroke:#5A5248}
-.btn-problem{padding:9px 14px;border-radius:7px;border:1.5px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
-.btn-fisa{padding:9px 14px;border-radius:7px;border:1.5px solid #5A5248;background:#fff;color:#3A3530;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
+.btn-problem{padding:9px 14px;border-radius:7px;border:1.5px solid #9C3A2B;background:#F5EAE8;color:#7A2418;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-fisa{padding:9px 14px;border-radius:7px;border:1.5px solid #5A5248;background:#fff;color:#3A3530;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
 .btn-fisa svg{width:13px;height:13px;stroke:#3A3530;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .done-info{display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 10px;background:#EAF0EC;border-radius:6px}
 .done-info svg{width:14px;height:14px;stroke:#1E4A2E;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.done-info-text{font-size:12px;font-weight:700;color:#1E4A2E}
-.problem-info{margin-top:6px;padding:8px 10px;background:#F5EAE8;border-radius:6px;font-size:11px;color:#7A2418;font-style:italic}
-.diff-info{margin-top:6px;padding:8px 10px;background:#FFF3CD;border-left:3px solid #B0892B;border-radius:0 6px 6px 0;font-size:11px;color:#8B6914}
+.done-info-text{font-size:15px;font-weight:700;color:#1E4A2E}
+.problem-info{margin-top:6px;padding:8px 10px;background:#F5EAE8;border-radius:6px;font-size:14px;color:#7A2418;font-style:italic}
+.diff-info{margin-top:6px;padding:8px 10px;background:#FFF3CD;border-left:3px solid #B0892B;border-radius:0 6px 6px 0;font-size:14px;color:#111111}
 
 /* MESAJE IN COMANDA */
 .order-msgs{padding:12px 16px;background:#F4F1EA;border-top:1px solid #EDE8DF}
-.order-msgs-label{font-size:9px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.order-msgs-label{font-size:14px;font-weight:700;color:#111111;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
 .msg-bubble{background:#fff;border-radius:8px;padding:9px 12px;margin-bottom:6px}
 .msg-bubble.mine{background:#E8EFF6}
-.msg-sender{font-size:10px;font-weight:700;color:#3A3530;margin-bottom:3px}
-.msg-text{font-size:12px;color:#111111;line-height:1.5}
-.msg-reply{margin-top:5px;padding:5px 8px;background:rgba(54,90,67,.1);border-radius:5px;font-size:11px;color:#1E4A2E}
+.msg-sender{font-size:14px;font-weight:700;color:#3A3530;margin-bottom:3px}
+.msg-text{font-size:15px;color:#111111;line-height:1.5}
+.msg-reply{margin-top:5px;padding:5px 8px;background:rgba(54,90,67,.1);border-radius:5px;font-size:14px;color:#1E4A2E}
 
 /* FINALIZARE */
 .finalize-wrap{padding:14px 16px;border-top:1px solid #EDE8DF}
@@ -169,16 +169,16 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 /* MESAJE TAB */
 .msg-item{background:#fff;border-bottom:1px solid #EDE8DF;padding:14px 16px;cursor:pointer}
 .msg-item.unread{background:#FFF9F0;border-left:3px solid #9C3A2B}
-.msg-from{font-size:12px;font-weight:700;color:#111111;margin-bottom:2px}
-.msg-preview{font-size:12px;color:#5A5248;margin-top:2px}
-.msg-time{font-size:10px;color:#9E9890;margin-top:3px}
-.msg-order-tag{font-size:9px;font-weight:700;color:#8B6914;font-family:monospace;margin-bottom:2px}
+.msg-from{font-size:15px;font-weight:700;color:#111111;margin-bottom:2px}
+.msg-preview{font-size:15px;color:#111111;margin-top:2px}
+.msg-time{font-size:14px;color:#333333;margin-top:3px}
+.msg-order-tag{font-size:14px;font-weight:700;color:#111111;font-family:monospace;margin-bottom:2px}
 
 /* FINALIZATE */
 .fin-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:14px 16px;margin-bottom:8px}
 
 /* EMPTY */
-.empty{text-align:center;padding:60px 20px;color:#9E9890}
+.empty{text-align:center;padding:60px 20px;color:#333333}
 .empty svg{width:36px;height:36px;stroke:#DDD7CE;fill:none;stroke-width:1.5;margin:0 auto 12px;display:block}
 
 /* MODAL */
@@ -186,9 +186,9 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .modal-overlay.show{display:flex}
 .modal-box{background:#fff;border-radius:14px 14px 0 0;padding:22px 20px 36px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
 .modal-title{font-family:Inter,sans-serif;font-size:18px;color:#111111;margin-bottom:6px;font-weight:700}
-.modal-sub{font-size:12px;color:#5A5248;margin-bottom:16px}
+.modal-sub{font-size:15px;color:#111111;margin-bottom:16px}
 .fld{margin-bottom:12px}
-.fld label{display:block;font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.fld label{display:block;font-size:14px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
 .fld textarea,.fld select{width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none;background:#fff}
 .fld textarea{resize:none;height:80px}
 .btn-red{width:100%;padding:13px;border-radius:8px;border:none;background:#9C3A2B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px}
@@ -198,10 +198,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 /* LOADING / TOAST */
 .lov{display:none;position:fixed;inset:0;background:rgba(244,241,234,.96);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
 .lov.show{display:flex}
-.spinner{width:28px;height:28px;border:2px solid #DDD7CE;border-top-color:#B08D57;border-radius:50%;animation:spin .8s linear infinite}
+.spinner{width:28px;height:28px;border:2px solid #DDD7CE;border-top-color:#111111;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lov-text{font-size:13px;color:#2A2A2A;font-weight:600}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111111;color:#fff;padding:10px 18px;border-radius:8px;font-size:15px;font-weight:700;white-space:nowrap;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
 
 </style>
@@ -255,7 +255,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 
     <!-- CLIENT -->
     <div class="fld">
-      <label>Client <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+      <label>Client <span style="color:#333333;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
       <input type="text" id="coClient" placeholder="Caută sau scrie clientul..." style="width:100%;padding:11px 13px;border:1.5px solid #C8C0B8;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
     </div>
 
@@ -264,7 +264,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 
     <!-- ADAUGĂ ARTICOL -->
     <div style="background:#F4F1EA;border-radius:8px;padding:12px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:700;color:#B08D57;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">Adaugă articol</div>
+      <div style="font-size:14px;font-weight:700;color:#111111;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">Adaugă articol</div>
       <div class="fld" style="margin-bottom:8px">
         <label>Model</label>
         <input type="text" id="coMod" placeholder="ex: 140, Cizme dans, model special..." style="width:100%;padding:10px 12px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
@@ -275,21 +275,21 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       </div>
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <label style="font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px">Mărimi și cantități</label>
-          <button onclick="setCroitStd()" style="padding:4px 10px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Standard</button>
+          <label style="font-size:14px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px">Mărimi și cantități</label>
+          <button onclick="setCroitStd()" style="padding:4px 10px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#111111;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Standard</button>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:6px" id="coSzGrid"></div>
-        <button onclick="addCoSize()" style="width:100%;margin-top:6px;padding:6px;border-radius:6px;border:1.5px dashed #C8C0B8;background:#fff;color:#5A5248;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă mărime</button>
+        <button onclick="addCoSize()" style="width:100%;margin-top:6px;padding:6px;border-radius:6px;border:1.5px dashed #C8C0B8;background:#fff;color:#111111;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă mărime</button>
       </div>
       <div class="fld" style="margin-bottom:8px">
-        <label>Observații <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+        <label>Observații <span style="color:#333333;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
         <input type="text" id="coObs" placeholder="ex: talpici cu ață neagră..." style="width:100%;padding:10px 12px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
       </div>
       <button onclick="addCoArt()" style="width:100%;padding:10px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Adaugă articol</button>
     </div>
 
     <div class="fld">
-      <label>Observații generale <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
+      <label>Observații generale <span style="color:#333333;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label>
       <input type="text" id="coGenObs" placeholder="ex: urgent pentru târg..." style="width:100%;padding:10px 12px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;outline:none"/>
     </div>
 
@@ -305,7 +305,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="hdr-title">Atelier Croit</div>
   </div>
   <div class="hdr-right">
-    <button onclick="openCroitOrder()" style="background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:8px;padding:6px 12px;color:#B08D57;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Comandă</button>
+    <button onclick="openCroitOrder()" style="background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:8px;padding:6px 12px;color:#111111;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Comandă</button>
     <div class="hdr-badge" id="hdrBadge">0 comenzi</div>
     <button class="msg-btn" onclick="setTab('mesaje')">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -326,19 +326,19 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 <!-- STATS BAR -->
 <div id="statsBar" style="background:#111111;padding:8px 14px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
   <div class="stat-item" id="stat_azi" style="flex-shrink:0;padding:6px 16px 6px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
-    <div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Azi</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_azi_val">—</div>
-    <div style="font-size:9px;color:rgba(255,255,255,.3)">per. croite</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.95);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Azi</div>
+    <div style="font-size:16px;font-weight:700;color:#111111;font-family:Inter,sans-serif" id="stat_azi_val">—</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.85)">per. croite</div>
   </div>
   <div class="stat-item" style="flex-shrink:0;padding:6px 16px 6px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
-    <div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Săptămâna</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_saptamana_val">—</div>
-    <div style="font-size:9px;color:rgba(255,255,255,.3)">per. croite</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.95);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Săptămâna</div>
+    <div style="font-size:16px;font-weight:700;color:#111111;font-family:Inter,sans-serif" id="stat_saptamana_val">—</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.85)">per. croite</div>
   </div>
   <div class="stat-item" style="flex-shrink:0;padding:6px 0">
-    <div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Luna</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_luna_val">—</div>
-    <div style="font-size:9px;color:rgba(255,255,255,.3)">per. croite</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.95);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Luna</div>
+    <div style="font-size:16px;font-weight:700;color:#111111;font-family:Inter,sans-serif" id="stat_luna_val">—</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.85)">per. croite</div>
   </div>
 </div>
 
@@ -348,8 +348,8 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <!-- BANNER RESTANȚE DIN DB -->
     <div id="restanteBanner" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;padding:12px 14px;margin-bottom:12px"></div>
     <div id="diffBanner" style="display:none;background:#FFF3CD;border:1.5px solid #B0892B;border-radius:8px;padding:12px 14px;margin-bottom:12px">
-      <div style="font-size:12px;font-weight:700;color:#7A5A00;margin-bottom:6px">⚠ Articole necroite complet</div>
-      <div id="diffBannerList" style="font-size:11px;color:#8B6914;line-height:1.7"></div>
+      <div style="font-size:15px;font-weight:700;color:#111111;margin-bottom:6px">⚠ Articole necroite complet</div>
+      <div id="diffBannerList" style="font-size:14px;color:#111111;line-height:1.7"></div>
     </div>
     <div id="cmdList"></div>
     <div class="empty" id="cmdEmpty" style="display:none">
@@ -363,8 +363,8 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   </div>
   <div id="viewMesaje" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:9px;font-weight:700;color:#4A4540;text-transform:uppercase;letter-spacing:2px">Mesaje</div>
-      <button onclick="openNewMsg()" style="padding:6px 14px;border-radius:6px;border:none;background:#111111;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Mesaj nou</button>
+      <div style="font-size:14px;font-weight:700;color:#4A4540;text-transform:uppercase;letter-spacing:2px">Mesaje</div>
+      <button onclick="openNewMsg()" style="padding:6px 14px;border-radius:6px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Mesaj nou</button>
     </div>
     <div id="msgList"></div>
     <div class="empty" id="msgEmpty" style="display:none">
@@ -388,7 +388,7 @@ let artState={};
 window.addEventListener('DOMContentLoaded',async()=>{
   const urlToken=new URLSearchParams(window.location.search).get('token');
   if(urlToken!=='cr-2847-xK9p'){
-    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;background:#F4F1EA"><div style="text-align:center;padding:40px"><div style="font-size:48px;margin-bottom:16px">&#128274;</div><div style="font-size:20px;font-weight:700;color:#111;margin-bottom:8px">Acces restricționat</div><div style="font-size:14px;color:#5A5248">Link invalid. Contactează managementul.</div></div></div>';
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;background:#F4F1EA"><div style="text-align:center;padding:40px"><div style="font-size:48px;margin-bottom:16px">&#128274;</div><div style="font-size:20px;font-weight:700;color:#111;margin-bottom:8px">Acces restricționat</div><div style="font-size:14px;color:#111111">Link invalid. Contactează managementul.</div></div></div>';
     return;
   }
   let{data:{session}}=await sb.auth.getSession();
@@ -422,7 +422,7 @@ async function loadRestanteBanner(){
   banner.style.display='block';
   banner.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span style="font-size:13px;font-weight:700;color:#7A5A00">⚠ Restanțe necroite (${restante.length} articole)</span>
+      <span style="font-size:13px;font-weight:700;color:#111111">⚠ Restanțe necroite (${restante.length} articole)</span>
     </div>
     ${restante.map(l=>{
       const mod=l.products?.code?'Art. '+l.products.code:l.free_model||(l.color?'['+l.color+']':'—');
@@ -444,12 +444,12 @@ async function loadRestanteBanner(){
       return `<div style="padding:8px 0;border-bottom:1px solid rgba(176,137,43,.15)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
           <div>
-            <div style="font-size:12px;font-weight:700;color:#7A5A00">${mod} · ${l.color||'—'} — <strong>${restQty} per. restante</strong></div>
-            ${orderInfo?`<div style="font-size:10px;color:#8B6914;margin-top:2px">${orderInfo}</div>`:''}
-            ${Object.keys(missSizes).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">${Object.entries(missSizes).map(([s,q])=>`<span style="background:#FFF3CD;border:1px solid #B0892B;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:700;color:#7A5A00;font-family:monospace">${s}×${q}</span>`).join('')}</div>`:''}
+            <div style="font-size:15px;font-weight:700;color:#111111">${mod} · ${l.color||'—'} — <strong>${restQty} per. restante</strong></div>
+            ${orderInfo?`<div style="font-size:14px;color:#111111;margin-top:2px">${orderInfo}</div>`:''}
+            ${Object.keys(missSizes).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">${Object.entries(missSizes).map(([s,q])=>`<span style="background:#FFF3CD;border:1px solid #B0892B;border-radius:3px;padding:1px 6px;font-size:14px;font-weight:700;color:#111111;font-family:monospace">${s}×${q}</span>`).join('')}</div>`:''}
           </div>
           <button onclick="openCompleteRestanta('${l.id}','${mod}','${l.color||''}',${restQty},'${sizesEncoded}')" 
-            style="padding:6px 12px;border-radius:6px;border:none;background:#B0892B;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0">
+            style="padding:6px 12px;border-radius:6px;border:none;background:#B0892B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0">
             ✂ Completează
           </button>
         </div>
@@ -566,15 +566,15 @@ function renderOrderCard(o,i){
     const isDone=st?.done;
     const isStoc=l.from_stock;
     const isRep=l.notes&&l.notes.includes('[REPARAȚIE]');
-    const repBadge=isRep?` <span style="font-size:9px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;font-weight:700;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>`:'';
-    const wsBadge=l.workshop?` <span style="font-size:9px;background:#DCE8F5;color:#2F4A63;padding:1px 5px;border-radius:3px;font-weight:700;text-transform:capitalize">${l.workshop}</span>`:'';
+    const repBadge=isRep?` <span style="font-size:14px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;font-weight:700;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>`:'';
+    const wsBadge=l.workshop?` <span style="font-size:14px;background:#DCE8F5;color:#2F4A63;padding:1px 5px;border-radius:3px;font-weight:700;text-transform:capitalize">${l.workshop}</span>`:'';
     return `<span class="art-chip" style="${isDone?'background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E':isRep?'background:#FDF4F2;border-color:rgba(156,58,43,.3);color:#9C3A2B':isStoc?'background:#E8EFF6;border-color:rgba(47,74,99,.3);color:#23394F':''}">${isDone?'✓ ':isRep?'🔧 ':isStoc?'📦 ':''}${mod} · ${l.color||'—'}${wsBadge}</span>`;
   }).join('');
 
   return `<div class="cmd-card" id="cmd_${o.id}" style="${o.is_repair?'border:2px solid #9C3A2B;border-left:4px solid #9C3A2B':''}"> 
     <div class="cmd-header" onclick="togCmd('${o.id}','arr_${o.id}')">
       <div class="cmd-main">
-        <div class="cmd-no">${o.order_no||'—'}${o.is_repair?' <span style="font-size:9px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;font-weight:700;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>':''}</div>
+        <div class="cmd-no">${o.order_no||'—'}${o.is_repair?' <span style="font-size:14px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;font-weight:700;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>':''}</div>
         <div class="cmd-client">${cl}</div>
         <div class="cmd-preview">${previewChips}</div>
         <div class="cmd-meta"><span style="color:${dc};font-weight:${dl!==null&&dl<=3?700:400}">${dtText}</span>${dtText?' · ':''}<span>Livrare: ${dd}</span></div>
@@ -586,9 +586,9 @@ function renderOrderCard(o,i){
       <svg class="cmd-arrow" id="arr_${o.id}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="cmd-body" id="body_${o.id}">
-      ${o.notes?`<div style="padding:10px 16px;background:#FAF3E0;border-bottom:1px solid #EDE8DF;font-size:12px;color:#8B6914"><strong>Obs. comandă:</strong> ${o.notes}</div>`:''}
+      ${o.notes?`<div style="padding:10px 16px;background:#FAF3E0;border-bottom:1px solid #EDE8DF;font-size:15px;color:#111111"><strong>Obs. comandă:</strong> ${o.notes}</div>`:''}
       ${workLines.map(l=>renderArtRow(l,o.id)).join('')}
-      ${lines.filter(l=>l.from_stock).length?`<div style="padding:10px 16px;border-bottom:1px solid #EDE8DF;font-size:12px;color:#23394F;background:#F0F6FF">📦 ${lines.filter(l=>l.from_stock).map(l=>getModName(l)+' · '+l.color).join(', ')} — din stoc, nu se croiește</div>`:''}
+      ${lines.filter(l=>l.from_stock).length?`<div style="padding:10px 16px;border-bottom:1px solid #EDE8DF;font-size:15px;color:#23394F;background:#F0F6FF">📦 ${lines.filter(l=>l.from_stock).map(l=>getModName(l)+' · '+l.color).join(', ')} — din stoc, nu se croiește</div>`:''}
       <div id="omsg_${o.id}" class="order-msgs" style="display:none"></div>
       <div class="finalize-wrap">
         <button class="btn-finalize" id="fin_${o.id}" onclick="finalizeOrder('${o.id}')" ${allDone?'':'disabled'}>
@@ -630,12 +630,12 @@ function renderArtRow(l,orderId){
   return `<div class="art-row${st.done?' done':''}${st.problem&&!st.done?' has-problem':''}" id="art_${l.id}">
     <div class="art-top">
       <div>
-        <div class="art-name">${modName}${l.from_stock?'<span style="font-size:9px;background:#E8EFF6;color:#23394F;padding:1px 6px;border-radius:3px;margin-left:6px">📦 STOC</span>':isRep?'<span style="font-size:9px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;margin-left:6px;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>':''}</div>
+        <div class="art-name">${modName}${l.from_stock?'<span style="font-size:14px;background:#E8EFF6;color:#23394F;padding:1px 6px;border-radius:3px;margin-left:6px">📦 STOC</span>':isRep?'<span style="font-size:14px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;margin-left:6px;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>':''}</div>
         <div class="art-color">${l.color||'—'}</div>
         <div class="art-planned">${totalPlanificat} per. planificate</div>
       </div>
     </div>
-    ${notesClean?`<div style="font-size:11px;color:#8B6914;margin-bottom:8px;padding:5px 8px;background:#FAF3E0;border-radius:5px"><strong>Obs:</strong> ${notesClean}</div>`:''}
+    ${notesClean?`<div style="font-size:14px;color:#111111;margin-bottom:8px;padding:5px 8px;background:#FAF3E0;border-radius:5px"><strong>Obs:</strong> ${notesClean}</div>`:''}
     <div class="pontaj-edit">
       <div class="pontaj-edit-label">Pontaj croit (ajustează dacă e nevoie)</div>
       <div class="pontaj-grid">${pontajHTML}</div>
@@ -669,15 +669,15 @@ function renderFinalizate(){
     return `<div class="fin-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div style="font-size:10px;font-family:monospace;color:#5A5248;margin-bottom:3px">${o.order_no||'—'}</div>
+          <div style="font-size:14px;font-family:monospace;color:#111111;margin-bottom:3px">${o.order_no||'—'}</div>
           <div style="font-family:Inter,sans-serif;font-size:16px;color:#111111;margin-bottom:6px">${cl}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px">
             ${lines.map(l=>`<span class="art-chip" style="background:#EAF0EC;border-color:rgba(54,90,67,.2);color:#1E4A2E">✓ ${getModName(l)} · ${l.color||'—'}</span>`).join('')}
           </div>
         </div>
-        <div style="font-size:10px;color:#9E9890;white-space:nowrap;margin-left:8px">${dt}</div>
+        <div style="font-size:14px;color:#333333;white-space:nowrap;margin-left:8px">${dt}</div>
       </div>
-      <div style="margin-top:8px;font-size:11px;color:#1E4A2E;font-weight:600">✓ Fețe gata — la cusut</div>
+      <div style="margin-top:8px;font-size:14px;color:#1E4A2E;font-weight:600">✓ Fețe gata — la cusut</div>
     </div>`;
   }).join('');
 }
@@ -882,7 +882,7 @@ async function loadOrderMsgs(orderId){
         ${m.reply?`<div class="msg-reply"><strong>Răspuns:</strong> ${m.reply}</div>`:''}
       </div>`;
     }).join('')}
-    <a href="/agent-messages.html" style="font-size:11px;color:#B08D57;font-weight:700;text-decoration:none">Vezi toate →</a>`;
+    <a href="/agent-messages.html" style="font-size:14px;color:#111111;font-weight:700;text-decoration:none">Vezi toate →</a>`;
 }
 
 // ── FIȘĂ PRODUCȚIE ────────────────────────────────────────────
@@ -904,25 +904,25 @@ async function genFisaProductie(orderId){
     return `<tr>
       <td style="border:1px solid #ccc;padding:8px 10px;font-weight:700">${mod}</td>
       <td style="border:1px solid #ccc;padding:8px 10px">${l.color||'—'}</td>
-      <td style="border:1px solid #ccc;padding:8px 10px;font-family:monospace;font-size:12px">${pt}</td>
+      <td style="border:1px solid #ccc;padding:8px 10px;font-family:monospace;font-size:15px">${pt}</td>
       <td style="border:1px solid #ccc;padding:8px 10px;text-align:center;font-weight:700">${l.total_pairs}</td>
-      ${notesClean?`<td style="border:1px solid #ccc;padding:8px 10px;font-size:11px;color:#B08D57">${notesClean}</td>`:'<td style="border:1px solid #ccc;padding:8px 10px">—</td>'}
+      ${notesClean?`<td style="border:1px solid #ccc;padding:8px 10px;font-size:14px;color:#B08D57">${notesClean}</td>`:'<td style="border:1px solid #ccc;padding:8px 10px">—</td>'}
     </tr>`;
   }).join('');
   const html=`<html><head><meta charset="UTF-8"><style>
     body{font-family:Arial,sans-serif;padding:24px;color:#111}
     h1{font-size:20px;margin-bottom:4px}
-    .sub{font-size:11px;color:#888;margin-bottom:20px;text-transform:uppercase;letter-spacing:1px}
+    .sub{font-size:14px;color:#888;margin-bottom:20px;text-transform:uppercase;letter-spacing:1px}
     table{width:100%;border-collapse:collapse;margin-top:16px}
-    th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ccc;background:#f9f9f9;text-align:left}
+    th{font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:8px 10px;border:1px solid #ccc;background:#f9f9f9;text-align:left}
     @media print{.noprint{display:none}}
   </style></head><body>
   <h1>SILESCO · Fișă Croit</h1>
   <div class="sub">${o.order_no||'—'} · ${cl} · ${azi}</div>
   <div style="display:flex;gap:40px;margin-bottom:20px">
-    <div><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Client</div><div style="font-weight:700">${cl}</div></div>
-    <div><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Termen</div><div style="font-weight:700">${dd}</div></div>
-    <div><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total</div><div style="font-weight:700">${o.total_pairs||0} perechi</div></div>
+    <div><div style="font-size:14px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Client</div><div style="font-weight:700">${cl}</div></div>
+    <div><div style="font-size:14px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Termen</div><div style="font-weight:700">${dd}</div></div>
+    <div><div style="font-size:14px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total</div><div style="font-weight:700">${o.total_pairs||0} perechi</div></div>
   </div>
   <table>
     <thead><tr>
@@ -930,8 +930,8 @@ async function genFisaProductie(orderId){
     </tr></thead>
     <tbody>${sumar}</tbody>
   </table>
-  ${o.notes?`<div style="margin-top:16px;padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;font-size:12px"><strong>Obs. generale:</strong> ${o.notes}</div>`:''}
-  <br><button class="noprint" onclick="window.print()" style="margin-top:16px;padding:10px 20px;background:#111;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:700">Printează</button>
+  ${o.notes?`<div style="margin-top:16px;padding:10px 14px;background:#FAF3E0;border-left:3px solid #B08D57;font-size:15px"><strong>Obs. generale:</strong> ${o.notes}</div>`:''}
+  <br><button class="noprint" onclick="window.print()" style="margin-top:16px;padding:10px 20px;background:#111;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;font-weight:700">Printează</button>
   </body></html>`;
   const w=window.open('','_blank','width=700,height=900');
   w.document.write(html);w.document.close();
@@ -965,7 +965,7 @@ async function loadMsgs(){
       ${m.orders?`<div class="msg-order-tag">${m.orders.order_no}</div>`:''}
       <div class="msg-from">${sender}${isUrgent?' ⚡':''}</div>
       <div class="msg-preview">${m.subject||m.message.slice(0,80)}</div>
-      ${m.reply?`<div style="margin-top:5px;padding:5px 8px;background:#EAF0EC;border-radius:5px;font-size:11px;color:#1E4A2E"><strong>Răspuns:</strong> ${m.reply}</div>`:''}
+      ${m.reply?`<div style="margin-top:5px;padding:5px 8px;background:#EAF0EC;border-radius:5px;font-size:14px;color:#1E4A2E"><strong>Răspuns:</strong> ${m.reply}</div>`:''}
       <div class="msg-time">${timeStr}</div>
     </div>`;
   }).join('');
@@ -1023,11 +1023,11 @@ function openCroitOrder(){
 function renderCoSzGrid(){
   document.getElementById('coSzGrid').innerHTML=coSzList.map(s=>`
     <div style="background:#fff;border:1.5px solid #DDD7CE;border-radius:7px;padding:8px 6px;text-align:center;min-width:52px">
-      <div style="font-size:10px;color:#5A5248;font-weight:600;margin-bottom:3px">Nr.${s}</div>
+      <div style="font-size:14px;color:#111111;font-weight:600;margin-bottom:3px">Nr.${s}</div>
       <div style="display:flex;align-items:center;gap:3px;justify-content:center">
-        <button onclick="adjCoSz('${s}',-1)" style="width:22px;height:22px;border-radius:4px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif">−</button>
+        <button onclick="adjCoSz('${s}',-1)" style="width:22px;height:22px;border-radius:4px;border:1.5px solid #B08D57;background:#F6F0E5;color:#111111;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif">−</button>
         <span id="csv_${s}" style="font-size:15px;font-weight:700;color:#111111;min-width:16px;text-align:center;font-family:Inter,sans-serif">${coSzV[s]||0}</span>
-        <button onclick="adjCoSz('${s}',1)" style="width:22px;height:22px;border-radius:4px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif">+</button>
+        <button onclick="adjCoSz('${s}',1)" style="width:22px;height:22px;border-radius:4px;border:1.5px solid #B08D57;background:#F6F0E5;color:#111111;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif">+</button>
       </div>
     </div>`).join('');
 }
@@ -1063,10 +1063,10 @@ function renderCoArtList(){
     <div style="background:#fff;border:1.5px solid #DDD7CE;border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start">
       <div>
         <div style="font-size:13px;font-weight:700;color:#111111">${a.model} · ${a.color}</div>
-        <div style="font-size:11px;color:#5A5248;margin-top:2px">${a.total} per. · ${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
-        ${a.obs?`<div style="font-size:11px;color:#B08D57;margin-top:2px;font-style:italic">${a.obs}</div>`:''}
+        <div style="font-size:14px;color:#111111;margin-top:2px">${a.total} per. · ${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div>
+        ${a.obs?`<div style="font-size:14px;color:#111111;margin-top:2px;font-style:italic">${a.obs}</div>`:''}
       </div>
-      <button onclick="coArts.splice(${i},1);renderCoArtList()" style="background:none;border:none;color:#9E9890;font-size:18px;cursor:pointer;padding:0 4px">×</button>
+      <button onclick="coArts.splice(${i},1);renderCoArtList()" style="background:none;border:none;color:#333333;font-size:18px;cursor:pointer;padding:0 4px">×</button>
     </div>`).join('');
 }
 
@@ -1111,7 +1111,7 @@ function openCompleteRestanta(lineId,mod,color,maxQty,sizesJson){
   const szEl=document.getElementById('restantaSizesInfo');
   if(szEl){
     const szEntries=Object.entries(restantaSizes).filter(([,q])=>q>0);
-    szEl.innerHTML=szEntries.length?'<div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Mărimi lipsă</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">'+szEntries.map(([s,q])=>`<span style="background:#FFF3CD;border:1px solid #B0892B;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;font-family:monospace;color:#7A5A00">${s}×${q}</span>`).join('')+'</div>':'';
+    szEl.innerHTML=szEntries.length?'<div style="font-size:14px;font-weight:700;color:#111111;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Mărimi lipsă</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">'+szEntries.map(([s,q])=>`<span style="background:#FFF3CD;border:1px solid #B0892B;border-radius:4px;padding:3px 8px;font-size:14px;font-weight:700;font-family:monospace;color:#111111">${s}×${q}</span>`).join('')+'</div>':'';
   }
   document.getElementById('restantaModal').classList.add('show');
 }
@@ -1145,14 +1145,14 @@ async function saveCompleteRestanta(){
 <div class="modal-overlay" id="restantaModal" style="z-index:300">
   <div style="background:#fff;border-radius:14px;padding:24px;width:100%;max-width:360px">
     <div style="font-family:Inter,sans-serif;font-size:18px;font-weight:700;color:#111111;margin-bottom:4px">Completează restanța</div>
-    <div style="font-size:12px;color:#5A5248;margin-bottom:12px" id="restantaModalSub">—</div>
+    <div style="font-size:15px;color:#111111;margin-bottom:12px" id="restantaModalSub">—</div>
     <div id="restantaSizesInfo"></div>
-    <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Perechi croite acum</div>
+    <div style="font-size:14px;font-weight:700;color:#111111;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Perechi croite acum</div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button onclick="adjRestanta(-1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:18px;font-weight:700;cursor:pointer">−</button>
+      <button onclick="adjRestanta(-1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#111111;font-size:18px;font-weight:700;cursor:pointer">−</button>
       <span id="restantaQty" style="font-size:28px;font-weight:700;color:#111111;font-family:Inter,sans-serif;min-width:40px;text-align:center">0</span>
-      <button onclick="adjRestanta(1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#B08D57;font-size:18px;font-weight:700;cursor:pointer">+</button>
-      <span style="font-size:11px;color:#9E9890" id="restantaMax">/ 0 restante</span>
+      <button onclick="adjRestanta(1)" style="width:36px;height:36px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#111111;font-size:18px;font-weight:700;cursor:pointer">+</button>
+      <span style="font-size:14px;color:#333333" id="restantaMax">/ 0 restante</span>
     </div>
     <button onclick="saveCompleteRestanta()" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px">Salvează</button>
     <button onclick="closeModal('restantaModal')" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Anulează</button>
