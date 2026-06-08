@@ -726,9 +726,7 @@ async function loadOrderData(){
     .select('id,order_no,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,ponytage,total_pairs,products(code,name))')
     .eq('id',oid).single();
   if(!o){setStatus('Eroare la încărcare','err');return;}
-  // Setăm brand-ul cu numele clientului
-  const cl=o.clients?.company_name||o.clients?.name||'';
-  document.getElementById('customBrandName').value=cl;
+  // Nu setăm brandul automat - utilizatorul îl completează manual
   // Construim articolele din liniile comenzii
   articles=[];articleId=0;
   (o.order_lines||[]).forEach(l=>{
