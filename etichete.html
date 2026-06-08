@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SILESCO · Etichete</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#f0ece6;color:#1a1a1a;font-size:15px;}
+
+/* ── MAIN LAYOUT: header + body ── */
+.app{display:flex;flex-direction:column;height:100vh;}
+
+/* TOP BAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:#1a1a1a;color:#fff;padding:0 20px;height:56px;flex-shrink:0;
+}
+.topbar h1{font-size:1.1rem;letter-spacing:0.2em;font-weight:400;}
+.topbar .actions{display:flex;gap:8px;align-items:center;}
+.tb-btn{
+  padding:8px 20px;border:none;border-radius:3px;cursor:pointer;
+  font-size:0.82rem;letter-spacing:0.1em;text-transform:uppercase;
+  font-family:inherit;transition:all 0.15s;
+}
+.tb-btn.primary{background:#fff;color:#1a1a1a;}
+.tb-btn.primary:hover{background:#e8e3db;}
+.tb-btn.ghost{background:transparent;color:#ccc;border:1px solid #666;}
+.tb-btn.ghost:hover{border-color:#fff;color:#fff;}
+.tb-btn.danger{background:#c00;color:#fff;}
+.tb-btn.danger:hover{background:#a00;}
+.tb-btn:disabled{opacity:0.5;cursor:not-allowed;}
+#status{font-size:0.82rem;color:#555;min-width:220px;text-align:right;}
+#status.ok{color:#6f6;}
+#status.err{color:#f66;}
+
+/* ── BODY: left + right ── */
+.body{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT PANEL */
+.left{
+  width:780px;flex-shrink:0;background:#fff;
+  display:flex;flex-direction:column;
+  border-right:1px solid #e0dbd4;overflow:hidden;
+}
+
+.left-top{padding:20px 22px 16px;border-bottom:2px solid #e0dbd4;flex-shrink:0;}
+.settings-row{display:flex;gap:14px;align-items:flex-end;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;color:#333;font-weight:600;margin-bottom:5px;}
+.field input{padding:10px 12px;border:1.5px solid #bbb;border-radius:4px;font-size:1.05rem;font-family:inherit;color:#1a1a1a;}
+.field input:focus{outline:none;border-color:#1a1a1a;}
+
+.logo-row{display:flex;align-items:center;gap:10px;margin-top:0;}
+.logo-label{
+  padding:10px 18px;background:#1a1a1a;color:#fff;border-radius:4px;
+  font-size:0.82rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;
+  white-space:nowrap;
+}
+#logoName{font-size:0.88rem;color:#444;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#logoRemove{background:none;border:none;color:#e44;cursor:pointer;font-size:1.1rem;line-height:1;padding:0 2px;}
+#logoPreviewCanvas{height:36px;width:auto;border:1px solid #ddd;border-radius:3px;vertical-align:middle;}
+
+/* ARTICLES TABLE */
+.articles-wrap{flex:1;overflow-y:auto;padding:12px 22px;}
+
+.art-table{width:100%;border-collapse:collapse;margin-bottom:8px;}
+.art-table thead th{
+  font-size:0.82rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:#333;padding:9px 8px;border-bottom:2px solid #e0dbd4;text-align:left;font-weight:700;
+}
+.art-table tbody tr{border-bottom:1px solid #f0ece6;}
+.art-table tbody tr:hover{background:#faf8f5;}
+
+.art-table td{padding:9px 6px;vertical-align:middle;}
+.art-table td input[type=text]{
+  width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:4px;
+  font-size:1rem;font-family:inherit;color:#1a1a1a;
+}
+.art-table td input[type=text]:focus{outline:none;border-color:#1a1a1a;}
+
+/* sizes inline */
+.sizes-inline{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+.sz-cell{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.sz-cell span{font-size:0.85rem;color:#222;font-weight:700;}
+.sz-cell input{width:46px;padding:7px 2px;border:1.5px solid #ddd;border-radius:4px;text-align:center;font-size:1rem;font-family:inherit;color:#1a1a1a;font-weight:700;}
+.sz-cell input:focus{outline:none;border-color:#1a1a1a;}
+.add-sz{display:flex;align-items:center;gap:3px;margin-left:4px;}
+.add-sz input{width:44px;padding:7px 3px;border:1.5px solid #ddd;border-radius:4px;text-align:center;font-size:0.9rem;}
+.add-sz button{padding:7px 10px;background:#333;border:none;border-radius:4px;cursor:pointer;font-size:0.85rem;color:#fff;font-weight:600;}
+.add-sz button:hover{background:#555;}
+
+.del-btn{background:none;border:none;color:#bbb;cursor:pointer;font-size:1.3rem;padding:0 6px;}
+.del-btn:hover{color:#e44;}
+
+.add-art-btn{
+  width:100%;padding:13px;background:none;border:2px dashed #bbb;border-radius:5px;
+  font-size:0.9rem;letter-spacing:0.15em;text-transform:uppercase;color:#555;
+  cursor:pointer;font-family:inherit;transition:all 0.15s;margin-bottom:4px;
+}
+.add-art-btn:hover{border-color:#1a1a1a;color:#1a1a1a;}
+
+/* RIGHT PANEL */
+.right{
+  flex:1;background:#e8e3db;display:flex;flex-direction:column;overflow:hidden;padding:16px;
+}
+.preview-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;}
+.preview-title{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:#444;}
+.preview-count{font-size:0.75rem;color:#555;font-weight:600;}
+.preview-scroll{flex:1;overflow-y:auto;}
+.preview-page{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.12);margin:0 auto 16px;}
+.preview-page canvas{display:block;width:100%;}
+.empty-preview{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#888;gap:8px;}
+.empty-preview .icon{font-size:2.5rem;}
+.empty-preview p{font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;}
+
+/* CROP MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:6px;padding:20px;width:500px;max-width:95vw;display:flex;flex-direction:column;gap:12px;}
+.modal-title{font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:#555;}
+.crop-workspace{position:relative;overflow:hidden;background:#111;border-radius:4px;width:100%;height:240px;cursor:grab;user-select:none;}
+.crop-workspace:active{cursor:grabbing;}
+.crop-workspace canvas{position:absolute;transform-origin:0 0;}
+.crop-overlay{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,0.4);}
+.crop-controls{display:flex;gap:10px;align-items:center;}
+.crop-controls label{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#444;margin:0;}
+.crop-controls input[type=range]{width:120px;}
+.modal-actions{display:flex;gap:8px;}
+.modal-actions button{flex:1;padding:9px;border:none;border-radius:3px;cursor:pointer;font-family:inherit;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;}
+.btn-confirm{background:#1a1a1a;color:#fff;}
+.btn-cancel{background:#eee;color:#555;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1>SILESCO · Etichete &nbsp;·&nbsp; <span style="color:#888;font-size:0.75rem">70×37mm · 24/coală A4</span></h1>
+  <div class="actions">
+    <div id="status"></div>
+    <button class="tb-btn ghost" onclick="refreshPreview()">↻ Preview</button>
+    <button class="tb-btn primary" id="genBtn" onclick="openPDF()">⎙ Deschide PDF</button>
+    <button class="tb-btn ghost" id="dlBtn" onclick="downloadPDF()">↓ Descarcă</button>
+    <button class="tb-btn danger" onclick="resetAll()">✕ Nou</button>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- LEFT: SETTINGS + ARTICLES TABLE -->
+  <div class="left">
+
+    <!-- Selector comandă -->
+    <div style="padding:12px 22px;border-bottom:1px solid #e0dbd4;background:#faf8f5;display:flex;gap:10px;align-items:flex-end">
+      <div style="flex:1">
+        <label style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:#333;font-weight:600;display:block;margin-bottom:5px">Încarcă comandă</label>
+        <select id="orderSelect" onchange="loadOrderData()" style="width:100%;padding:9px 12px;border:1.5px solid #bbb;border-radius:4px;font-size:0.95rem;font-family:inherit;color:#1a1a1a;background:#fff;">
+          <option value="">— Selectează comanda —</option>
+        </select>
+      </div>
+      <button onclick="loadOrders()" style="padding:9px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap">↻ Actualizează</button>
+    </div>
+
+    <!-- Settings row -->
+    <div class="left-top">
+      <div class="settings-row">
+        <div class="field" style="flex:1">
+          <label>Brand (text)</label>
+          <input type="text" id="customBrandName" placeholder="ex: 6AM — lasă gol dacă nu vrei" oninput="refreshPreview()" />
+        </div>
+        <div class="field">
+          <label>Logo</label>
+          <div class="logo-row" style="margin:0">
+            <label class="logo-label" for="logoInput">+ Logo</label>
+            <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="loadLogo(this)" />
+            <span id="logoName">–</span>
+            <button id="logoRemove" onclick="removeLogo()" style="display:none">×</button>
+            <canvas id="logoPreviewCanvas" style="display:none"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Articles table -->
+    <div class="articles-wrap">
+      <table class="art-table" id="artTable">
+        <thead>
+          <tr>
+            <th style="width:24px">#</th>
+            <th style="width:80px">ART</th>
+            <th style="width:110px">CULOARE</th>
+            <th>MĂRIMI (cantitate)</th>
+            <th style="width:24px"></th>
+          </tr>
+        </thead>
+        <tbody id="artBody"></tbody>
+      </table>
+      <button class="add-art-btn" onclick="addArticle()">+ Articol nou</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: PREVIEW -->
+  <div class="right">
+    <div class="preview-header">
+      <span class="preview-title">Preview etichete</span>
+      <span class="preview-count" id="previewCount"></span>
+    </div>
+    <div class="preview-scroll" id="previewArea">
+      <div class="empty-preview">
+        <div class="icon">🏷️</div>
+        <p>Completează datele și apasă Preview</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /body -->
+</div><!-- /app -->
+
+<!-- CROP MODAL -->
+<div class="modal-overlay" id="cropModal">
+  <div class="modal-box">
+    <div class="modal-title">Ajustează logo — trage &amp; scroll/pinch pentru zoom</div>
+    <div class="crop-workspace" id="cropWorkspace">
+      <canvas id="cropCanvas"></canvas>
+      <div class="crop-overlay"></div>
+    </div>
+    <div class="crop-controls">
+      <label>Zoom</label>
+      <input type="range" id="cropZoom" min="0.1" max="5" step="0.01" value="1" oninput="cropZoomFromSlider()">
+      <label id="cropZoomVal">100%</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCrop()">Anulează</button>
+      <button class="btn-confirm" onclick="confirmCrop()">✓ Aplică</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let articles = [], articleId = 0;
+let logoImg = null, logoCroppedCanvas = null;
+let cropZoom = 1, cropOffX = 0, cropOffY = 0;
+let cropDragging = false, cropDragStartX, cropDragStartY, cropDragOffX, cropDragOffY;
+
+const PREFIXES = {
+  'MARRONE':'M','NERO':'NM','LAC NERO':'NL','NEGRU':'NM',
+  'NEGRU VELUR':'NM','NEGRU IMPERO':'NM','MARRONE IMPERO':'M',
+  'BEJ':'BEJ','BEJ VELUR':'BEJ','ALB':'ALB','GRI':'GRI'
+};
+function getPrefix(col){const u=col.trim().toUpperCase();return PREFIXES[u]||u.replace(/\s+/g,'').substring(0,4);}
+function getBrand(){return document.getElementById('customBrandName').value.trim();}
+
+// ── ARTICLES ───────────────────────────────────────────
+function addArticle(){
+  const id=++articleId;
+  articles.push({id,art:'',col:'',sizes:[
+    {s:'39',q:''},{s:'40',q:''},{s:'41',q:''},{s:'42',q:''},{s:'43',q:''},{s:'44',q:''}
+  ]});
+  renderArticles();
+}
+
+function removeArticle(id){
+  articles=articles.filter(a=>a.id!==id);
+  renderArticles();
+}
+
+function addSize(id){
+  const inp=document.getElementById(`ns_${id}`);
+  const sz=inp.value.trim();if(!sz)return;
+  const art=articles.find(a=>a.id===id);
+  if(art&&!art.sizes.find(s=>s.s===sz)){art.sizes.push({s:sz,q:''});renderArticles();}
+  inp.value='';
+}
+
+function renderArticles(){
+  const tbody=document.getElementById('artBody');
+  tbody.innerHTML='';
+  articles.forEach((art,idx)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:#666;font-size:0.75rem;font-weight:600">${idx+1}</td>
+      <td><input type="text" placeholder="0062" value="${art.art}" oninput="articles[${idx}].art=this.value"/></td>
+      <td><input type="text" placeholder="MARRONE" value="${art.col}" oninput="articles[${idx}].col=this.value"/></td>
+      <td>
+        <div class="sizes-inline">
+          ${art.sizes.map((s,si)=>`
+            <div class="sz-cell">
+              <span>${s.s}</span>
+              <input type="number" min="0" placeholder="0" value="${s.q}"
+                oninput="articles[${idx}].sizes[${si}].q=this.value"/>
+            </div>`).join('')}
+          <div class="add-sz">
+            <input type="text" id="ns_${art.id}" placeholder="45" onkeydown="if(event.key==='Enter')addSize(${art.id})"/>
+            <button onclick="addSize(${art.id})">+</button>
+          </div>
+        </div>
+      </td>
+      <td><button class="del-btn" onclick="removeArticle(${art.id})">×</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function buildLabels(){
+  const labels=[];
+  for(const art of articles){
+    if(!art.art||!art.col)continue;
+    const prefix=getPrefix(art.col);
+    for(const sz of art.sizes){
+      const qty=parseInt(sz.q)||0;
+      for(let i=0;i<qty;i++)labels.push({art:art.art.toUpperCase(),col:art.col.toUpperCase(),prefix,size:sz.s});
+    }
+  }
+  return labels;
+}
+
+// ── LOGO / CROP ────────────────────────────────────────
+function loadLogo(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    logoImg=new Image();
+    logoImg.onload=()=>{
+      document.getElementById('logoName').textContent=file.name;
+      document.getElementById('logoRemove').style.display='inline';
+      cropZoom=1;cropOffX=0;cropOffY=0;
+      openCrop();
+    };
+    logoImg.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function openCrop(){
+  const ws=document.getElementById('cropWorkspace');
+  const canvas=document.getElementById('cropCanvas');
+  canvas.width=logoImg.width;canvas.height=logoImg.height;
+  canvas.getContext('2d').drawImage(logoImg,0,0);
+  const scaleW=ws.clientWidth/logoImg.width,scaleH=ws.clientHeight/logoImg.height;
+  cropZoom=Math.min(scaleW,scaleH,1);
+  cropOffX=(ws.clientWidth-logoImg.width*cropZoom)/2;
+  cropOffY=(ws.clientHeight-logoImg.height*cropZoom)/2;
+
+  ws.onmousedown=e=>{cropDragging=true;cropDragStartX=e.clientX;cropDragStartY=e.clientY;cropDragOffX=cropOffX;cropDragOffY=cropOffY;};
+  window.onmousemove=e=>{if(!cropDragging)return;cropOffX=cropDragOffX+(e.clientX-cropDragStartX);cropOffY=cropDragOffY+(e.clientY-cropDragStartY);cropRender();};
+  window.onmouseup=()=>{cropDragging=false;};
+  ws.onwheel=e=>{
+    e.preventDefault();
+    const delta=e.deltaY>0?0.9:1.1;
+    const nz=Math.max(0.1,Math.min(5,cropZoom*delta));
+    const rect=ws.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    cropOffX=mx-(mx-cropOffX)*(nz/cropZoom);cropOffY=my-(my-cropOffY)*(nz/cropZoom);
+    cropZoom=nz;cropRender();
+  };
+  let pinchStartDist=0,pinchStartZoom=1;
+  ws.ontouchstart=e=>{
+    e.preventDefault();
+    if(e.touches.length===1){cropDragging=true;cropDragStartX=e.touches[0].clientX;cropDragStartY=e.touches[0].clientY;cropDragOffX=cropOffX;cropDragOffY=cropOffY;}
+    else if(e.touches.length===2){cropDragging=false;pinchStartDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);pinchStartZoom=cropZoom;}
+  };
+  ws.ontouchmove=e=>{
+    e.preventDefault();
+    if(e.touches.length===1&&cropDragging){cropOffX=cropDragOffX+(e.touches[0].clientX-cropDragStartX);cropOffY=cropDragOffY+(e.touches[0].clientY-cropDragStartY);cropRender();}
+    else if(e.touches.length===2){
+      const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      const nz=Math.max(0.1,Math.min(5,pinchStartZoom*(dist/pinchStartDist)));
+      const rect=document.getElementById('cropWorkspace').getBoundingClientRect();
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-rect.left,my=(e.touches[0].clientY+e.touches[1].clientY)/2-rect.top;
+      cropOffX=mx-(mx-cropOffX)*(nz/cropZoom);cropOffY=my-(my-cropOffY)*(nz/cropZoom);cropZoom=nz;cropRender();
+    }
+  };
+  ws.ontouchend=e=>{if(e.touches.length<1)cropDragging=false;};
+  document.getElementById('cropModal').classList.add('open');
+  cropRender();
+}
+
+function cropZoomFromSlider(){cropZoom=parseFloat(document.getElementById('cropZoom').value);cropRender();}
+function cropRender(){
+  document.getElementById('cropZoomVal').textContent=Math.round(cropZoom*100)+'%';
+  document.getElementById('cropZoom').value=cropZoom;
+  document.getElementById('cropCanvas').style.transform=`translate(${cropOffX}px,${cropOffY}px) scale(${cropZoom})`;
+}
+function closeCrop(){document.getElementById('cropModal').classList.remove('open');}
+function confirmCrop(){
+  const ws=document.getElementById('cropWorkspace');
+  const out=document.createElement('canvas');
+  out.width=ws.clientWidth;out.height=ws.clientHeight;
+  const ctx=out.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,out.width,out.height);
+  ctx.drawImage(logoImg,0,0,logoImg.width,logoImg.height,cropOffX,cropOffY,logoImg.width*cropZoom,logoImg.height*cropZoom);
+  logoCroppedCanvas=out;
+  const pc=document.getElementById('logoPreviewCanvas');
+  pc.style.display='inline';
+  const h=28,w=Math.round(28*out.width/out.height);
+  pc.width=w;pc.height=h;pc.getContext('2d').drawImage(out,0,0,w,h);
+  closeCrop();refreshPreview();
+}
+function removeLogo(){
+  logoImg=null;logoCroppedCanvas=null;
+  document.getElementById('logoName').textContent='–';
+  document.getElementById('logoRemove').style.display='none';
+  document.getElementById('logoPreviewCanvas').style.display='none';
+  document.getElementById('logoInput').value='';
+  refreshPreview();
+}
+
+// ── CANVAS PREVIEW ─────────────────────────────────────
+function refreshPreview(){
+  const labels=buildLabels();
+  const area=document.getElementById('previewArea');
+  const countEl=document.getElementById('previewCount');
+  if(labels.length===0){
+    area.innerHTML=`<div class="empty-preview"><div class="icon">🏷️</div><p>Nicio etichetă de afișat</p></div>`;
+    countEl.textContent='';return;
+  }
+  const brand=getBrand();
+  const COLS=3,ROWS=8,perPage=24;
+  const pages=Math.ceil(labels.length/perPage);
+  countEl.textContent=`${labels.length} etichete · ${pages} ${pages===1?'pagină':'pagini'}`;
+  area.innerHTML='';
+  const panelW=document.getElementById('previewArea').clientWidth-16;
+  const canvasW=Math.min(panelW,760);
+  const canvasH=Math.round(canvasW*297/210);
+  const LW=canvasW/3,LH=canvasH/8;
+  for(let p=0;p<pages;p++){
+    const wrap=document.createElement('div');
+    wrap.className='preview-page';wrap.style.width=canvasW+'px';
+    const cv=document.createElement('canvas');cv.width=canvasW;cv.height=canvasH;
+    wrap.appendChild(cv);area.appendChild(wrap);
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvasW,canvasH);
+    labels.slice(p*perPage,(p+1)*perPage).forEach((lbl,i)=>{
+      drawLabelCanvas(ctx,i%COLS*LW,Math.floor(i/COLS)*LH,LW,LH,lbl,brand);
+    });
+    ctx.strokeStyle='#ddd';ctx.lineWidth=0.5;
+    for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*LH);ctx.lineTo(canvasW,r*LH);ctx.stroke();}
+    for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*LW,0);ctx.lineTo(c*LW,canvasH);ctx.stroke();}
+  }
+}
+
+function drawLabelCanvas(ctx,x,y,LW,LH,lbl,brand){
+  const bv=`${lbl.prefix}/${lbl.art}/${lbl.size}`;
+  const ptScale=LW/198.4;const pt=v=>v*ptScale;
+  const PAD_L=pt(17),PAD_R=pt(10),TOP_H=pt(52),BOT_H=LH-pt(52),TXT_MAX=pt(105);
+  const fontSize=Math.round(pt(12.5)),lineH=fontSize*1.3;
+
+  // ART / COL — dacă e logo: font se micșorează să nu depășească TXT_MAX
+  //             dacă nu e logo: wrap normal pe rând nou cu font normal
+  ctx.fillStyle='#111'; ctx.textAlign='left';
+  const hasLogo = !!logoCroppedCanvas;
+  const hasBrand = !!getBrand();
+  const txtMaxW = (hasLogo || hasBrand) ? TXT_MAX : LW - PAD_L - PAD_R;
+
+  // Calculează fontSize potrivit
+  let fs = fontSize;
+  if (hasLogo || hasBrand) {
+    // Micșorează fontul până încap pe un singur rând în limita TXT_MAX
+    ctx.font = `bold ${fs}px Arial`;
+    while (fs > pt(6)) {
+      const artW = ctx.measureText(`ART: ${lbl.art}`).width;
+      const colW = ctx.measureText(`COL: ${lbl.col}`).width;
+      if (artW <= TXT_MAX && colW <= TXT_MAX) break;
+      fs -= 0.5;
+      ctx.font = `bold ${Math.round(fs)}px Arial`;
+    }
+  }
+  const lH = fs * 1.3;
+
+  ctx.font = `bold ${Math.round(fs)}px Arial`;
+  const artLines = wrapText(ctx, `ART: ${lbl.art}`, txtMaxW);
+  let curY = y + pt(16) + fs;
+  artLines.forEach(l => { ctx.fillText(l, x + PAD_L, curY); curY += lH; });
+
+  curY += fs * 0.1;
+  const colLines = wrapText(ctx, `COL: ${lbl.col}`, txtMaxW);
+  colLines.forEach(l => { ctx.fillText(l, x + PAD_L, curY); curY += lH; });
+
+  // Brand/Logo
+  const bAX=x+pt(120),bAW=LW-pt(120)-PAD_R,bAY=y+pt(6),bAH=TOP_H-pt(8);
+  if(logoCroppedCanvas){
+    const r=logoCroppedCanvas.width/logoCroppedCanvas.height;
+    let lw=bAW,lh=bAW/r;if(lh>bAH){lh=bAH;lw=lh*r;}
+    ctx.drawImage(logoCroppedCanvas,bAX+(bAW-lw)/2,bAY+(bAH-lh)/2,lw,lh);
+  } else if(brand){
+    let bfs=Math.round(pt(22));ctx.font=`${bfs}px Georgia`;
+    while(ctx.measureText(brand).width>bAW&&bfs>pt(7)){bfs--;ctx.font=`${bfs}px Georgia`;}
+    ctx.textAlign='left';ctx.fillText(brand,bAX,bAY+bAH/2+bfs*0.35);
+  }
+
+  // Bottom zone
+  const botTop=y+TOP_H,PAD_BOT=pt(3);
+  const codeTextFs=Math.round(pt(7)),codeTextGap=pt(2);
+  const barH=BOT_H*0.55,bcY=botTop+PAD_BOT;
+  const codeTextY=bcY+barH+codeTextGap+codeTextFs;
+
+  // Size number
+  let szFs=barH*0.92,maxSzW=pt(34);
+  ctx.font=`bold ${Math.round(szFs)}px Arial`;
+  while(ctx.measureText(lbl.size).width>maxSzW&&szFs>pt(6)){szFs-=0.5;ctx.font=`bold ${Math.round(szFs)}px Arial`;}
+  const szW=ctx.measureText(lbl.size).width;
+  ctx.fillStyle='#111';ctx.textAlign='left';
+  ctx.fillText(lbl.size,x+PAD_L,bcY+barH);
+
+  // Barcode
+  const bcX=x+PAD_L+szW+pt(4),bcW=x+LW-PAD_R-bcX;
+  drawBarcodeCanvas(ctx,bv,bcX,bcY,bcW,barH);
+  ctx.font=`${codeTextFs}px Arial`;ctx.textAlign='center';
+  ctx.fillText(bv,bcX+bcW/2,codeTextY);
+}
+
+function wrapText(ctx,text,maxW){
+  if(ctx.measureText(text).width<=maxW)return[text];
+  const words=text.split(' '),lines=[];let line='';
+  for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;}
+  if(line)lines.push(line);return lines;
+}
+
+function drawBarcodeCanvas(ctx,text,x,y,maxW,h){
+  const bits=encodeCode128(text);if(!bits)return;
+  const bw=maxW/bits.length;ctx.fillStyle='#000';
+  for(let i=0;i<bits.length;i++)if(bits[i]==='1')ctx.fillRect(x+i*bw,y,bw+0.5,h);
+}
+
+// ── PDF ────────────────────────────────────────────────
+async function buildPDFDoc(){
+  const labels=buildLabels();if(!labels.length)return null;
+  const brand=getBrand();
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const LW=70,LH=37,COLS=3,ROWS=8;
+  let idx=0,total=labels.length;
+  while(idx<total){
+    if(idx>0)doc.addPage();
+    for(let row=0;row<ROWS;row++){
+      for(let col=0;col<COLS;col++){
+        if(idx>=total)break;
+        drawLabelPDF(doc,col*LW,row*LH,LW,LH,labels[idx],brand);idx++;
+      }
+      if(idx>=total)break;
+    }
+  }
+  return doc;
+}
+
+async function openPDF(){
+  const labels=buildLabels();
+  if(!labels.length){setStatus('Nicio etichetă!','err');return;}
+  document.getElementById('genBtn').disabled=true;
+  setStatus(`Se generează ${labels.length} etichete...`);
+  try{
+    const doc=await buildPDFDoc();
+    window.open(URL.createObjectURL(doc.output('blob')),'_blank');
+    setStatus(`✓ PDF deschis — Ctrl+P pentru print`,'ok');
+  }catch(e){setStatus('Eroare: '+e.message,'err');}
+  document.getElementById('genBtn').disabled=false;
+}
+
+async function downloadPDF(){
+  const labels=buildLabels();
+  if(!labels.length){setStatus('Nicio etichetă!','err');return;}
+  document.getElementById('dlBtn').disabled=true;
+  setStatus('Se generează...');
+  try{const doc=await buildPDFDoc();doc.save('etichete.pdf');setStatus(`✓ Descărcat`,'ok');}
+  catch(e){setStatus('Eroare: '+e.message,'err');}
+  document.getElementById('dlBtn').disabled=false;
+}
+
+function drawLabelPDF(doc,x,y,LW,LH,lbl,brand){
+  const bv=`${lbl.prefix}/${lbl.art}/${lbl.size}`;
+  const mm=v=>v/2.835;
+  doc.setDrawColor(200);doc.setLineWidth(0.15);doc.rect(x,y,LW,LH);
+  const PAD_L=mm(17),PAD_R=mm(10),TOP_H=mm(52),BOT_H=LH-mm(52),TXT_MAX=mm(105);
+  const FONT=12.5,LINE_H=mm(14);
+
+  const hasLogo = !!logoCroppedCanvas;
+  const hasBrand = !!brand;
+  const txtMaxW = (hasLogo || hasBrand) ? TXT_MAX : LW - PAD_L - PAD_R;
+
+  // Font auto-shrink dacă e logo/brand și textul e lung
+  let FONT_USE = FONT;
+  if (hasLogo || hasBrand) {
+    doc.setFont('helvetica','bold'); doc.setFontSize(FONT_USE);
+    while (FONT_USE > 5) {
+      const artW = doc.getTextWidth(`ART: ${lbl.art}`);
+      const colW = doc.getTextWidth(`COL: ${lbl.col}`);
+      if (artW <= TXT_MAX && colW <= TXT_MAX) break;
+      FONT_USE -= 0.3; doc.setFontSize(FONT_USE);
+    }
+  }
+  const LINE_USE = FONT_USE / 2.835 + mm(2);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(FONT_USE); doc.setTextColor(20);
+  const artLines = wrapTextPDF(doc, `ART: ${lbl.art}`, txtMaxW, FONT_USE);
+  let curY = y + mm(16) + mm(FONT_USE/2.835);
+  artLines.forEach(l => { doc.text(l, x+PAD_L, curY); curY += LINE_USE; });
+  curY += mm(1);
+  const colLines = wrapTextPDF(doc, `COL: ${lbl.col}`, txtMaxW, FONT_USE);
+  colLines.forEach(l => { doc.text(l, x+PAD_L, curY); curY += LINE_USE; });
+
+  const bX=x+mm(120),bW=LW-mm(120)-PAD_R,bY=y+mm(6),bH=TOP_H-mm(8);
+  if(logoCroppedCanvas){
+    const logoURL=logoCroppedCanvas.toDataURL('image/png');
+    const r=logoCroppedCanvas.width/logoCroppedCanvas.height;
+    let lw=bW,lh=bW/r;if(lh>bH){lh=bH;lw=lh*r;}
+    doc.addImage(logoURL,'PNG',bX+(bW-lw)/2,bY+(bH-lh)/2,lw,lh);
+  } else if(brand){
+    let bSize=22;doc.setFont('helvetica','bold');doc.setFontSize(bSize);
+    while(doc.getTextWidth(brand)>bW&&bSize>5){bSize-=0.5;doc.setFontSize(bSize);}
+    doc.text(brand,bX,bY+bH/2+mm(bSize*0.35));
+  }
+
+  const botTop=y+TOP_H,PAD_BOT=mm(1.5);
+  const codeTextH=mm(7.85),codeTextGap=mm(1.5);
+  const barH=BOT_H*0.55,bcY=botTop+PAD_BOT;
+  const codeTextY=bcY+barH+codeTextGap+codeTextH;
+
+  let szSize=barH*2.835*0.92;
+  doc.setFont('helvetica','bold');doc.setFontSize(szSize);
+  const maxSzW=mm(34);
+  while(doc.getTextWidth(lbl.size)>maxSzW&&szSize>5){szSize-=0.3;doc.setFontSize(szSize);}
+  const szW=doc.getTextWidth(lbl.size);
+  doc.text(lbl.size,x+PAD_L,bcY+barH);
+
+  const bcX=x+PAD_L+szW+mm(4),bcW=x+LW-PAD_R-bcX,bits=encodeCode128(bv);
+  if(bits&&bcW>0){
+    const bw=bcW/bits.length;doc.setFillColor(0);
+    for(let i=0;i<bits.length;i++)if(bits[i]==='1')doc.rect(bcX+i*bw,bcY,bw+0.02,barH,'F');
+  }
+  doc.setFont('helvetica','normal');doc.setFontSize(7);
+  doc.text(bv,bcX+bcW/2,codeTextY,{align:'center'});
+}
+
+function wrapTextPDF(doc,text,maxW,fontSize){
+  doc.setFontSize(fontSize);
+  if(doc.getTextWidth(text)<=maxW)return[text];
+  const words=text.split(' '),lines=[];let line='';
+  for(const w of words){const t=line?line+' '+w:w;if(doc.getTextWidth(t)>maxW&&line){lines.push(line);line=w;}else line=t;}
+  if(line)lines.push(line);return lines;
+}
+
+// Code128 B
+function encodeCode128(text){
+  const C=['11011001100','11001101100','11001100110','10010011000','10010001100','10001001100','10011001000','10011000100','10001100100','11001001000','11001000100','11000100100','10110011100','10011011100','10011001110','10111001100','10011101100','10011100110','11001110010','11001011100','11001001110','11011100100','11001110100','11101101110','11101001100','11100101100','11100100110','11101100100','11100110100','11100110010','11011011000','11011000110','11000110110','10100011000','10001011000','10001000110','10110001000','10001101000','10001100010','11010001000','11000101000','11000100010','10110111000','10110001110','10001101110','10111011000','10111000110','10001110110','11101110110','11010001110','11000101110','11011101000','11011100010','11011101110','11101011000','11101000110','11100010110','11101101000','11101100010','11100011010','11101111010','11001000010','11110001010','10100110000','10100001100','10010110000','10010000110','10000101100','10000100110','10110010000','10110000100','10011010000','10011000010','10000110100','10000110010','11000010010','11001010000','11110111010','11000010100','10001111010','10100111100','10010111100','10010011110','10111100100','10011110100','10011110010','11110100100','11110010100','11110010010','11011011110','11011110110','11110110110','10101111000','10100011110','10001011110','10111101000','10111100010','11110101000','11110100010','10111011110','10111101110','11101011110','11110101110','11010000100','11010010000','11010011100','1100011101011'];
+  const S=104,T=106;let chk=S,bits=C[S];
+  for(let i=0;i<text.length;i++){const c=text.charCodeAt(i)-32;if(c<0||c>95)return null;chk+=c*(i+1);bits+=C[c];}
+  bits+=C[chk%103]+C[T]+'11';return bits;
+}
+
+function resetAll(){
+  if(!confirm('Ștergi tot și începi de la zero?'))return;
+  articles=[];articleId=0;
+  document.getElementById('customBrandName').value='';
+  removeLogo();renderArticles();
+  document.getElementById('previewArea').innerHTML=`<div class="empty-preview"><div class="icon">🏷️</div><p>Completează datele și apasă Preview</p></div>`;
+  document.getElementById('previewCount').textContent='';
+  setStatus('');addArticle();addArticle();
+}
+
+function setStatus(msg,cls=''){
+  const el=document.getElementById('status');el.textContent=msg;el.className=cls;
+}
+
+// Init
+addArticle();addArticle();
+
+// ── SUPABASE ───────────────────────────────────────────
+const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
+const{createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+
+async function loadOrders(){
+  const{data}=await sb.from('orders')
+    .select('id,order_no,clients!orders_client_id_fkey(name,company_name)')
+    .in('status',['la_impachetat','finalizat','gata_livrare'])
+    .order('created_at',{ascending:false})
+    .limit(50);
+  const sel=document.getElementById('orderSelect');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— Selectează comanda —</option>';
+  (data||[]).forEach(o=>{
+    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const opt=document.createElement('option');
+    opt.value=o.id;
+    opt.textContent=o.order_no+' · '+cl;
+    sel.appendChild(opt);
+  });
+  if(cur)sel.value=cur;
+}
+
+async function loadOrderData(){
+  const oid=document.getElementById('orderSelect').value;
+  if(!oid)return;
+  setStatus('Se încarcă comanda...');
+  const{data:o}=await sb.from('orders')
+    .select('id,order_no,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,ponytage,total_pairs,products(code,name))')
+    .eq('id',oid).single();
+  if(!o){setStatus('Eroare la încărcare','err');return;}
+  // Setăm brand-ul cu numele clientului
+  const cl=o.clients?.company_name||o.clients?.name||'';
+  document.getElementById('customBrandName').value=cl;
+  // Construim articolele din liniile comenzii
+  articles=[];articleId=0;
+  (o.order_lines||[]).forEach(l=>{
+    const id=++articleId;
+    const code=l.products?.code||l.free_model||'—';
+    const col=(l.color||'').toUpperCase();
+    const sizes=l.ponytage
+      ?Object.entries(l.ponytage).filter(([,q])=>q>0).map(([s,q])=>({s,q:String(q)}))
+      :[{s:'39',q:''},{s:'40',q:''},{s:'41',q:''},{s:'42',q:''},{s:'43',q:''},{s:'44',q:''}];
+    articles.push({id,art:code,col,sizes});
+  });
+  renderArticles();
+  refreshPreview();
+  setStatus('✓ Comanda '+o.order_no+' încărcată — '+articles.length+' articole','ok');
+}
+
+// Încarcă comenzile la start
+(async()=>{
+  await loadOrders();
+  // Verifică dacă e venit din management cu un orderId
+  const params=new URLSearchParams(window.location.search);
+  const oid=params.get('order');
+  if(oid){
+    document.getElementById('orderSelect').value=oid;
+    await loadOrderData();
+  }
+})();
+</script>
+</body>
+</html>
