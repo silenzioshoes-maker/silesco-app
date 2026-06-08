@@ -410,7 +410,7 @@ async function loadCroitStats(){
 
 async function loadOrders(){
   const{data:active}=await sb.from('orders')
-    .select(`id,order_no,status,delivery_date,total_pairs,notes,
+    .select(`id,order_no,status,delivery_date,total_pairs,notes,is_repair,parent_order_id,
       clients!orders_client_id_fkey(name,company_name),
       order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,products(code,name))`)
     .in('status',['la_croit','in_productie'])
@@ -493,10 +493,10 @@ function renderOrderCard(o,i){
     return `<span class="art-chip" style="${isDone?'background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E':isRep?'background:#FDF4F2;border-color:rgba(156,58,43,.3);color:#9C3A2B':isStoc?'background:#E8EFF6;border-color:rgba(47,74,99,.3);color:#23394F':''}">${isDone?'✓ ':isRep?'🔧 ':isStoc?'📦 ':''}${mod} · ${l.color||'—'}${wsBadge}</span>`;
   }).join('');
 
-  return `<div class="cmd-card" id="cmd_${o.id}">
+  return `<div class="cmd-card" id="cmd_${o.id}" style="${o.is_repair?'border:2px solid #9C3A2B;border-left:4px solid #9C3A2B':''}"> 
     <div class="cmd-header" onclick="togCmd('${o.id}','arr_${o.id}')">
       <div class="cmd-main">
-        <div class="cmd-no">${o.order_no||'—'}</div>
+        <div class="cmd-no">${o.order_no||'—'}${o.is_repair?' <span style="font-size:9px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;font-weight:700;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>':''}</div>
         <div class="cmd-client">${cl}</div>
         <div class="cmd-preview">${previewChips}</div>
         <div class="cmd-meta"><span style="color:${dc};font-weight:${dl!==null&&dl<=3?700:400}">${dtText}</span>${dtText?' · ':''}<span>Livrare: ${dd}</span></div>
