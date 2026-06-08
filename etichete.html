@@ -163,7 +163,8 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;ba
           <option value="">— Selectează comanda —</option>
         </select>
       </div>
-      <button onclick="loadOrders()" style="padding:9px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap">↻ Actualizează</button>
+      <button onclick="loadOrders()" style="padding:9px 14px;background:#555;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap">↻</button>
+      <button onclick="addOrderData()" style="padding:9px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap">+ Adaugă</button>
     </div>
 
     <!-- Settings row -->
@@ -693,6 +694,28 @@ async function loadOrders(){
     sel.appendChild(opt);
   });
   if(cur)sel.value=cur;
+}
+
+async function addOrderData(){
+  const oid=document.getElementById('orderSelect').value;
+  if(!oid)return;
+  setStatus('Se adaugă comanda...');
+  const{data:o}=await sb.from('orders')
+    .select('id,order_no,order_lines(id,color,free_model,ponytage,total_pairs,products(code,name))')
+    .eq('id',oid).single();
+  if(!o){setStatus('Eroare la încărcare','err');return;}
+  (o.order_lines||[]).forEach(l=>{
+    const id=++articleId;
+    const code=l.products?.code||l.free_model||'—';
+    const col=(l.color||'').toUpperCase();
+    const sizes=l.ponytage
+      ?Object.entries(l.ponytage).filter(([,q])=>q>0).map(([s,q])=>({s,q:String(q)}))
+      :[{s:'39',q:''},{s:'40',q:''},{s:'41',q:''},{s:'42',q:''},{s:'43',q:''},{s:'44',q:''}];
+    articles.push({id,art:code,col,sizes});
+  });
+  renderArticles();
+  refreshPreview();
+  setStatus('✓ Adăugat '+o.order_no+' — total '+articles.length+' articole','ok');
 }
 
 async function loadOrderData(){
