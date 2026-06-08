@@ -545,10 +545,7 @@ async function marcheazaLivrat(orderId,orderNo){
 
 // ── ETICHETE ──────────────────────────────────────────────
 function openEtichete(orderId,orderNo){
-  etOrderId=orderId;etOrderNo=orderNo;
-  document.getElementById('etSub').textContent=`Comanda ${orderNo}`;
-  document.getElementById('etObs').value='';
-  document.getElementById('modalEtichete').classList.add('show');
+  window.open('etichete.html?order='+orderId,'_blank');
 }
 
 async function saveEtichete(){
