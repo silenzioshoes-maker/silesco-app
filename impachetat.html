@@ -408,7 +408,7 @@ function renderAmbalat(orders){
             <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
             Etichete
           </button>
-          <button class="btn-reparatie" onclick="openReparatie('${o.id}','${o.order_no||''}',${JSON.stringify(lines).replace(/'/g,"&#39;")})">
+          <button class="btn-reparatie" data-oid="${o.id}" data-ono="${o.order_no||''}" onclick="openReparatieBtn(this)">
             🔧 Reparație
           </button>
           <button class="btn-mesaj" onclick="openMesajModal('${o.id}','${o.order_no||''}')">
@@ -545,7 +545,10 @@ async function marcheazaLivrat(orderId,orderNo){
 
 // ── ETICHETE ──────────────────────────────────────────────
 function openEtichete(orderId,orderNo){
-  window.open('etichete.html?order='+orderId,'_blank');
+  etOrderId=orderId;etOrderNo=orderNo;
+  document.getElementById('etSub').textContent=`Comanda ${orderNo}`;
+  document.getElementById('etObs').value='';
+  document.getElementById('modalEtichete').classList.add('show');
 }
 
 async function saveEtichete(){
@@ -561,6 +564,18 @@ async function saveEtichete(){
 }
 
 // ── REPARAȚIE ─────────────────────────────────────────────
+async function openReparatieBtn(btn){
+  const orderId=btn.dataset.oid;
+  const orderNo=btn.dataset.ono;
+  showLov('Se încarcă articolele...');
+  const{data:o}=await sb.from('orders')
+    .select('id,order_lines(id,product_id,free_model,color,ponytage,total_pairs,from_stock,products(code,name))')
+    .eq('id',orderId).single();
+  hideLov();
+  if(!o){showToast('Eroare la încărcare!');return;}
+  openReparatie(orderId,orderNo,o.order_lines||[]);
+}
+
 function openReparatie(orderId,orderNo,lines){
   repOrderId=orderId;repOrderNo=orderNo;
   repLines=lines.filter(l=>!l.from_stock);
