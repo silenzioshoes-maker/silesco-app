@@ -457,6 +457,11 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <span>Împachetat</span>
       <span class="nav-badge" id="impBadge" style="display:none">!</span>
     </div>
+    <div class="nav-item" onclick="window.open('etichete.html','_blank')" style="position:relative">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+      <span>Etichete</span>
+      <span class="nav-badge" id="etiBadge" style="display:none">!</span>
+    </div>
     <div class="nav-item" onclick="window.location.href='messages.html'">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Mesaje</span>
@@ -991,18 +996,16 @@ async function loadProdAlerts(){
   const finalizate=allOrders.filter(o=>o.status==='finalizat').length;
   if(finalizate>0){
     alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${finalizate} comenzi</strong> gata — de ambalat și livrat`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('finalizat',document.querySelector('.filter-btn'));`});
-    // Verifică solicitări etichete de la împachetat
-    const{data:etiMsg}=await sb.from('internal_messages').select('id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
-    if(etiMsg?.length>0){
-      // Luăm order_id-urile din mesaje pentru a deschide etichete direct
-      const{data:etiMsgFull}=await sb.from('internal_messages').select('id,order_id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
-      const etiOrderIds=(etiMsgFull||[]).map(m=>m.order_id).filter(Boolean);
-      const etiUrl=etiOrderIds.length===1
-        ?'etichete.html?order='+etiOrderIds[0]
-        :'etichete.html';
-      alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de printat`,onclick:`window.open('${etiUrl}','_blank')`});
-      document.getElementById('impBadge').textContent=etiMsg.length;document.getElementById('impBadge').style.display='inline-block';
-    }
+  }
+  // Solicitări etichete de la împachetat — independent de statusul comenzilor
+  const{data:etiMsg}=await sb.from('internal_messages').select('id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
+  if(etiMsg?.length>0){
+    const{data:etiMsgFull}=await sb.from('internal_messages').select('id,order_id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
+    const etiOrderIds=(etiMsgFull||[]).map(m=>m.order_id).filter(Boolean);
+    const etiUrl=etiOrderIds.length===1?'etichete.html?order='+etiOrderIds[0]:'etichete.html';
+    alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de printat`,onclick:`window.open('${etiUrl}','_blank')`});
+    const etiBadgeEl=document.getElementById('etiBadge');
+    if(etiBadgeEl){etiBadgeEl.textContent=etiMsg.length;etiBadgeEl.style.display='inline-block';}
   }
   const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
   if(intarz>0){
