@@ -2185,94 +2185,24 @@ async function loadProdCroit(){
 }
 
 async function loadProdCusut(){
-  const laCusut=allOrders.filter(o=>o.status==='fete_gata_cusut')
+  const laCusut=allOrders.filter(o=>o.status==='la_cusut')
     .sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  const{data:gataLines}=await sb.from('order_lines')
-    .select('id,workshop,total_pairs,production_status,product_id,free_model,color,notes,order_id,sort_order,ponytage,products(code,name)')
-    .eq('production_status','cusut_gata')
-    .order('sort_order',{ascending:true});
   const atelEl=document.getElementById('pcu_ateliere');
-  var html='';
-  if(laCusut.length){
-    // Grupează pe atelier
-  // Separă comenzile cu toate liniile cusute (la_talpuit) de cele în lucru
-  const CUSUT_DONE=['cusut_gata','la_talpuit','gata','la_impachetat_talpuit'];
+  const CUSUT_DONE=['cusut_gata','pregatit_lansat','in_talpuit','la_talpuit','gata','la_impachetat_talpuit','pregatit_livrare','finalizat'];
+  const EXCL_CUSUT=['la_talpuit','la_impachetat','gata_livrare','finalizat','livrat'];
+  const exclCusutIds=new Set(allOrders.filter(o=>EXCL_CUSUT.includes(o.status)).map(o=>o.id));
   const laCusutActiv=laCusut.filter(function(o){
+    if(exclCusutIds.has(o.id)) return false;
     var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
     return !wl.every(function(l){return CUSUT_DONE.includes(l.production_status);});
   });
-  const laCusutGata=laCusut.filter(function(o){
-    var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
-    return wl.length>0&&wl.every(function(l){return CUSUT_DONE.includes(l.production_status);});
-  });
-    const byAtelier={};
-    laCusutActiv.forEach(function(o){
-      var ws=(o.order_lines&&o.order_lines[0]&&o.order_lines[0].workshop)||'intern';
-      ws=ws.toLowerCase();
-      if(!byAtelier[ws])byAtelier[ws]=[];
-      byAtelier[ws].push(o);
-    });
-    // Stocăm toate comenzile în cache pentru moveProd
-    _prodIds.cusut_inlucru=laCusutActiv.map(o=>o.id);
-    _cusutOrdersCache=laCusutActiv.slice();
-    Object.entries(byAtelier).forEach(function(entry){
-      var ws=entry[0];var orders=entry[1];
-      var wsLabel=ws.charAt(0).toUpperCase()+ws.slice(1);
-      html+=subHeader('🧵 '+wsLabel+' ('+orders.length+' comenzi)','#2F4A63','#EAF0F8');
-      html+=orders.map(function(o,i){
-        var globalIdx=laCusut.indexOf(o);
-        var cl=o.clients?o.clients.company_name||o.clients.name||'—':'—';
-        var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
-        var hasRepair=wl.some(function(l){return l.notes&&l.notes.includes('[REPARAȚIE]');});
-        return makeProdCard({id:o.id,idx:globalIdx,total:o.total_pairs,section:'cusut_inlucru',
-          orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,
-          isUrgent:o.priority==='urgent',
-          isRepair:hasRepair,
-          lines:wl.map(makeLineObj),
-          statusLabel:hasRepair?'🔧 Reparație — intern':'La cusut — '+wl.length+' art.',
-          statusColor:hasRepair?'#9C3A2B':'#2F4A63',
-          statusBg:hasRepair?'#FDF4F2':'#DCE8F5',
-          showMoveUp:globalIdx>0,showMoveDown:globalIdx<laCusut.length-1});
-      }).join('');
-    });
-    html+='<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la cusut</button>';
-  }
-  // Comenzi cusute gata - de recepționat la talpuit
-  if(laCusutGata.length){
-    html+=subHeader('✓ Cusut gata ('+laCusutGata.length+') — de recepționat la talpuit','#1E4A2E','#EAF3ED');
-    html+=laCusutGata.map(function(o,i){
-      var cl=o.clients?o.clients.company_name||o.clients.name||'—':'—';
-      var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
-      return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'none',
-        orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,
-        isUrgent:o.priority==='urgent',
-        lines:wl.map(makeLineObj),
-        statusLabel:'Cusut ✓ — la talpuit',statusColor:'#1E4A2E',statusBg:'#EAF0EC',
-        showMoveUp:false,showMoveDown:false});
-    }).join('');
-  }
-  // Cusut gata - de recepționat
-  if(gataLines&&gataLines.length){
-    const byOrd={};
-    (gataLines||[]).forEach(l=>{if(!byOrd[l.order_id])byOrd[l.order_id]=[];byOrd[l.order_id].push(l);});
-    html+=subHeader('✓ Cusut gata ('+Object.keys(byOrd).length+') — de recepționat','#1E4A2E','#EAF3ED');
-    html+=Object.entries(byOrd).map(function(entry,i){
-      var o=allOrders.find(function(x){return x.id===entry[0];});
-      var cl=o?o.clients?.company_name||o.clients?.name||'—':'—';
-      return makeProdCard({id:entry[0],idx:i,total:o?o.total_pairs:0,section:'none',
-        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
-        isUrgent:o?o.priority==='urgent':false,
-        lines:entry[1].map(makeLineObj),
-        statusLabel:'Cusut ✓',statusColor:'#1E4A2E',statusBg:'#EAF0EC',
-        showMoveUp:false,showMoveDown:false});
-    }).join('');
-  }
-  if(!html) html='<div style="font-size:12px;color:#9E9890;font-style:italic">Nicio activitate cusut</div>';
-  atelEl.innerHTML=html;
-  document.getElementById('pcu_azi').innerHTML='';
-  document.getElementById('pcu_list').innerHTML='';
+  _prodIds.cusut_inlucru=laCusutActiv.map(o=>o.id);
+  _cusutOrdersCache=laCusutActiv.slice();
+  renderCusutFromCache();
+  var html='';
+  if(!laCusutActiv.length) html='<div style="font-size:12px;color:#9E9890;font-style:italic;padding:8px 0">Nicio activitate cusut</div>';
+  if(html) atelEl.innerHTML=html;
 }
-
 async function loadProdTalpuit(){
   const{data:lines}=await sb.from('order_lines')
     .select('id,total_pairs,production_status,product_id,free_model,color,notes,workshop,order_id,sort_order,ponytage,products(code,name)')
