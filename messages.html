@@ -292,23 +292,21 @@ async function loadOrders(){
 }
 
 async function loadMsgs(){
-  // Aduce mesajele destinate Management
-  const{data,error}=await sb.from('internal_messages')
+  const{data}=await sb.from('internal_messages')
     .select(`id,from_user_id,to_department,order_id,message,subject,priority,is_read,created_at,parent_id,
       user_profiles!internal_messages_from_user_id_fkey(full_name,role),
       orders(order_no,clients!orders_client_id_fkey(name,company_name))`)
     .eq('to_department','management')
     .is('parent_id',null)
     .order('created_at',{ascending:false});
-  // Filtrează local notificările automate de status (subject null e întotdeauna mesaj manual — păstrat)
-  const autoSubjects=['Croit finalizat','Modificări aprobate','Modificări respinse','Articol gata'];
-  const autoMessages=['✅ Comanda','🧵 ATELIER EXTERN','Comanda'];
+  // Păstrează DOAR mesajele scrise manual — exclude tot ce e notificare automată
+  const autoSubjects=['Croit finalizat','Modificări aprobate','Modificări respinse','Articol gata','Comandă nouă croit'];
+  const autoMsgPrefixes=['✅','🧵','🖨','🔧','📋'];
   allMsgs=(data||[]).filter(m=>{
-    if(!m.subject) return true; // null subject = mesaj manual, păstrează întotdeauna
-    if(autoSubjects.some(s=>m.subject.startsWith(s))) return false;
+    if(m.subject&&autoSubjects.some(s=>m.subject.startsWith(s))) return false;
+    if(autoMsgPrefixes.some(p=>m.message?.startsWith(p))) return false;
     return true;
   });
-
   buildConversations();
 }
 
