@@ -457,11 +457,6 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <span>Împachetat</span>
       <span class="nav-badge" id="impBadge" style="display:none">!</span>
     </div>
-    <div class="nav-item" onclick="window.open('etichete.html','_blank')" style="position:relative">
-      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-      <span>Etichete</span>
-      <span class="nav-badge" id="etiBadge" style="display:none">!</span>
-    </div>
     <div class="nav-item" onclick="window.location.href='messages.html'">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Mesaje</span>
@@ -993,19 +988,26 @@ async function loadProdAlerts(){
   if(cusutGata?.length){
     alerts.push({color:'#23394F',bg:'#E8EFF6',border:'#2F4A63',icon:'🧵',text:`<strong>${cusutGata.length} articole</strong> cusute — de recepționat la talpuit`,onclick:`showSection('productie',document.getElementById('nav_productie'));`});
   }
+  // Articole gata de livrare — marcate de Împachetat
+  const{data:gataLivrare}=await sb.from('order_lines').select('id').eq('production_status','gata');
+  if(gataLivrare?.length){
+    alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${gataLivrare.length} articole</strong> gata de livrare — ambalate`,onclick:`showSection('productie',document.getElementById('nav_productie'));`});
+  }
   const finalizate=allOrders.filter(o=>o.status==='finalizat').length;
   if(finalizate>0){
     alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${finalizate} comenzi</strong> gata — de ambalat și livrat`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('finalizat',document.querySelector('.filter-btn'));`});
-  }
-  // Solicitări etichete de la împachetat — independent de statusul comenzilor
-  const{data:etiMsg}=await sb.from('internal_messages').select('id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
-  if(etiMsg?.length>0){
-    const{data:etiMsgFull}=await sb.from('internal_messages').select('id,order_id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
-    const etiOrderIds=(etiMsgFull||[]).map(m=>m.order_id).filter(Boolean);
-    const etiUrl=etiOrderIds.length===1?'etichete.html?order='+etiOrderIds[0]:'etichete.html';
-    alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de printat`,onclick:`window.open('${etiUrl}','_blank')`});
-    const etiBadgeEl=document.getElementById('etiBadge');
-    if(etiBadgeEl){etiBadgeEl.textContent=etiMsg.length;etiBadgeEl.style.display='inline-block';}
+    // Verifică solicitări etichete de la împachetat
+    const{data:etiMsg}=await sb.from('internal_messages').select('id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
+    if(etiMsg?.length>0){
+      // Luăm order_id-urile din mesaje pentru a deschide etichete direct
+      const{data:etiMsgFull}=await sb.from('internal_messages').select('id,order_id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
+      const etiOrderIds=(etiMsgFull||[]).map(m=>m.order_id).filter(Boolean);
+      const etiUrl=etiOrderIds.length===1
+        ?'etichete.html?order='+etiOrderIds[0]
+        :'etichete.html';
+      alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de printat`,onclick:`window.open('${etiUrl}','_blank')`});
+      document.getElementById('impBadge').textContent=etiMsg.length;document.getElementById('impBadge').style.display='inline-block';
+    }
   }
   const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
   if(intarz>0){
@@ -2569,7 +2571,7 @@ function showToast(m){const e=document.getElementById('toast');e.textContent=m;e
 let ambOrders=[];
 async function loadAmbalatList(){
   const{data}=await sb.from('orders')
-    .select('id,order_no,status,priority,delivery_date,total_pairs,clients!orders_client_id_fkey(name,company_name)')
+    .select('id,order_no,status,priority,delivery_date,total_pairs,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,ponytage,total_pairs,product_id,free_model,notes,from_stock,production_status,products(code,name))')
     .eq('status','la_impachetat')
     .order('priority',{ascending:false})
     .order('delivery_date',{ascending:true});
@@ -2658,10 +2660,16 @@ function renderAmbalatList(){
   html+=ambOrders.map((o,i)=>{
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const isUrgent=o.priority==='urgent';
+    const workLines=(o.order_lines||[]).filter(l=>!l.from_stock);
+    const nrGata=workLines.filter(l=>l.production_status==='gata').length;
+    const allGata=workLines.length>0&&nrGata===workLines.length;
+    const statusLabel=isUrgent?'URGENT':allGata?`Gata livrare (${nrGata}/${workLines.length})`:`La ambalat — ${nrGata}/${workLines.length} gata`;
+    const statusColor=isUrgent?'#9C3A2B':allGata?'#1E4A2E':'#B08D57';
+    const statusBg=isUrgent?'#FDF4F2':allGata?'#EAF0EC':'#FDF6E0';
     return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'ambalat',
       orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,isUrgent:isUrgent,
-      lines:[],
-      statusLabel:isUrgent?'URGENT':'La ambalat',statusColor:isUrgent?'#9C3A2B':'#B08D57',statusBg:isUrgent?'#FDF4F2':'#FDF6E0',
+      lines:workLines.map(makeLineObj),
+      statusLabel,statusColor,statusBg,
       showMoveUp:i>0,showMoveDown:i<ambOrders.length-1});
   }).join('');
   html+='<button onclick="saveOrdineAmbalat()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#B08D57;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la ambalat</button>';
