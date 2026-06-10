@@ -486,7 +486,7 @@ async function loadOrders(){
   const{data:active}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,total_pairs,notes,is_repair,parent_order_id,
       clients!orders_client_id_fkey(name,company_name),
-      order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,products(code,name))`)
+      order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,production_status,products(code,name))`)
     .in('status',['la_croit','in_productie'])
     .order('sort_order',{ascending:true,nullsFirst:false})
     .order('delivery_date',{ascending:true});
@@ -504,7 +504,8 @@ async function loadOrders(){
   orders.forEach(o=>{
     (o.order_lines||[]).filter(l=>!l.from_stock).forEach(l=>{
       if(!artState[l.id]){
-        artState[l.id]={done:false,ponytage_done:{...l.ponytage},problem:null};
+        const isDone=l.production_status==='croit_gata'||l.production_status==='cusut_gata';
+        artState[l.id]={done:isDone,ponytage_done:{...l.ponytage},problem:null};
       }
     });
   });
@@ -545,7 +546,7 @@ function getModName(l){
 }
 
 function renderOrderCard(o,i){
-  const cl=o.clients?.company_name||o.clients?.name||'—';
+  const cl=o.clients?.company_name||o.clients?.name||'STOC';
   const lines=o.order_lines||[];
   const workLines=lines.filter(l=>!l.from_stock);
   const doneCnt=workLines.filter(l=>artState[l.id]?.done).length;
@@ -659,7 +660,7 @@ function renderFinalizate(){
   if(!finOrders.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   el.innerHTML=finOrders.map(o=>{
-    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const cl=o.clients?.company_name||o.clients?.name||'STOC';
     const lines=o.order_lines||[];
     const dt=o.updated_at?new Date(o.updated_at).toLocaleDateString('ro-RO'):'—';
     return `<div class="fin-card">
@@ -889,7 +890,7 @@ async function genFisaProductie(orderId){
     .eq('id',orderId).single();
   hideLov();
   if(!o)return;
-  const cl=o.clients?.company_name||o.clients?.name||'—';
+  const cl=o.clients?.company_name||o.clients?.name||'STOC';
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const azi=new Date().toLocaleDateString('ro-RO');
   const sumar=o.order_lines.map(l=>{
