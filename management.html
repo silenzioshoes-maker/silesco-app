@@ -652,44 +652,24 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <!-- PRODUCȚIE DASHBOARD -->
     <div id="sectionProductie" style="display:none">
 
-      <!-- CROIT -->
       <div class="prod-header" style="background:#F5ECD7;border-left:3px solid #8B6914">
         <div style="font-size:11px;font-weight:700;color:#5A3E1B;text-transform:uppercase;letter-spacing:1.5px">Croit</div>
-        <div style="display:flex;gap:12px">
-          <span style="font-size:11px;color:#5A3E1B">La croit: <strong id="pc_active">—</strong></span>
-          <span style="font-size:11px;color:#5A3E1B">Croit azi: <strong id="pc_azi">—</strong> per.</span>
-          <span style="font-size:11px;color:#7A2418">Restanțe: <strong id="pc_restante">0</strong></span>
-        </div>
       </div>
       <div id="pc_list" style="margin-bottom:20px"></div>
 
-      <!-- CUSUT -->
       <div class="prod-header" style="background:#E8EFF6;border-left:3px solid #2F4A63">
         <div style="font-size:11px;font-weight:700;color:#2F4A63;text-transform:uppercase;letter-spacing:1.5px">Cusut</div>
-        <div style="font-size:11px;color:#2F4A63">Per atelier</div>
       </div>
       <div id="pcu_ateliere" style="margin-bottom:20px"></div>
 
-      <!-- TALPUIT -->
       <div class="prod-header" style="background:#D8EEE0;border-left:3px solid #1E4A2E">
         <div style="font-size:11px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px">Talpuit</div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <span style="font-size:11px;color:#1E4A2E">Receptie: <strong id="pt_receptie">—</strong></span>
-          <span style="font-size:11px;color:#1E4A2E">In talpuit: <strong id="pt_active">—</strong></span>
-          <button onclick="loadProdTalpuit()" style="font-size:10px;color:#1E4A2E;background:none;border:1px solid #1E4A2E;border-radius:4px;padding:3px 8px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">↻</button>
-          <a href="talpuit.html?token=tp-5521-mQ3r" style="font-size:10px;color:#1E4A2E;font-weight:700;text-decoration:none;padding:3px 8px;border:1px solid #1E4A2E;border-radius:4px">Deschide →</a>
-        </div>
+        <a href="talpuit.html?token=tp-5521-mQ3r" style="font-size:10px;color:#1E4A2E;font-weight:700;text-decoration:none;padding:3px 8px;border:1px solid #1E4A2E;border-radius:4px">Deschide →</a>
       </div>
       <div id="pt_receptie_list" style="margin-bottom:20px"></div>
 
-      <!-- AMBALAT -->
       <div class="prod-header" style="background:#EAF0EC;border-left:3px solid #365A43">
         <div style="font-size:11px;font-weight:700;color:#1E4A2E;text-transform:uppercase;letter-spacing:1.5px">Ambalat</div>
-        <div style="display:flex;gap:12px;align-items:center">
-          <span style="font-size:11px;color:#1E4A2E">La ambalat: <strong id="pa_gata">—</strong></span>
-          <span style="font-size:11px;color:#1E4A2E">Gata livrare: <strong id="pa_gata_livrare">—</strong></span>
-          <button onclick="loadProdAmbalat()" style="font-size:10px;color:#1E4A2E;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">↻</button>
-        </div>
       </div>
       <div id="pa_list" style="margin-bottom:20px"></div>
 
@@ -2156,31 +2136,50 @@ async function loadProdDashboard(){
 }
 
 async function loadProdCroit(){
-  const{data:croitData}=await sb.from('orders')
-    .select('id,order_no,status,priority,delivery_date,sort_order,total_pairs,is_repair,parent_order_id,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,production_status,workshop,notes,total_pairs,ponytage,sort_order,from_stock,products(code))')
-    .in('status',['aprobat','la_croit','in_productie','fete_gata_cusut'])
+  const{data}=await sb.from('orders')
+    .select('id,order_no,priority,delivery_date,sort_order,total_pairs,is_repair,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,production_status,workshop,notes,total_pairs,ponytage,sort_order,from_stock,products(code))')
+    .in('status',['aprobat','la_croit','in_productie'])
     .order('sort_order',{ascending:true,nullsFirst:false})
     .order('delivery_date',{ascending:true});
-  const croitOrders=croitData||[];
-  document.getElementById('pc_active').textContent=croitOrders.filter(o=>['la_croit','in_productie'].includes(o.status)).length;
-  const now=new Date();
-  const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
-  const{data:auditData}=await sb.from('audit_log').select('new_data').eq('action','update').like('new_data->>action','Croit finalizat%').gte('created_at',aziStart);
-  let croitAzi=0;
-  (auditData||[]).forEach(h=>{const m=[...((h.new_data?.action||'').matchAll(/: (\d+) per\./g))];croitAzi+=m.reduce((s,x)=>s+parseInt(x[1]),0);});
-  document.getElementById('pc_azi').textContent=croitAzi;
-  const{data:restante}=await sb.from('order_lines').select('id,notes').not('notes','is',null);
-  const restanteReal=(restante||[]).filter(l=>l.notes?.includes('[RESTANȚĂ:'));
-  document.getElementById('pc_restante').textContent=restanteReal.length;
-
-  const deCroit=croitOrders.filter(o=>['aprobat','la_croit','in_productie'].includes(o.status));
-  const croitGata=croitOrders.filter(o=>o.status==='fete_gata_cusut');
-
+  const DONE=['la_cusut','cusut_gata','pregatit_lansat','in_talpuit','gata','pregatit_livrare','finalizat'];
+  const deCroit=(data||[]).filter(o=>{
+    const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
+    return wl.length===0||wl.some(l=>!DONE.includes(l.production_status));
+  });
   _prodIds.croit=deCroit.map(o=>o.id);
   _croitOrdersCache=deCroit.slice();
-  _croitGataCache=croitGata.slice();
-
+  _croitGataCache=[];
   renderCroitFromCache();
+}
+
+async function loadProdCusut(){
+  const laCusut=allOrders.filter(o=>o.status==='la_cusut').sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const EXCL=['la_talpuit','la_impachetat','gata_livrare','finalizat','livrat'];
+  const exclIds=new Set(allOrders.filter(o=>EXCL.includes(o.status)).map(o=>o.id));
+  const DONE=['cusut_gata','pregatit_lansat','in_talpuit','la_talpuit','gata','la_impachetat_talpuit','pregatit_livrare','finalizat'];
+  const activ=laCusut.filter(o=>{
+    if(exclIds.has(o.id))return false;
+    const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
+    return !wl.every(l=>DONE.includes(l.production_status));
+  });
+  _prodIds.cusut_inlucru=activ.map(o=>o.id);
+  _cusutOrdersCache=activ.slice();
+  renderCusutFromCache();
+}
+
+async function loadProdTalpuit(){
+  const EXCL=['la_impachetat','gata_livrare','finalizat','livrat'];
+  const exclIds=new Set(allOrders.filter(o=>EXCL.includes(o.status)).map(o=>o.id));
+  const{data:lines}=await sb.from('order_lines')
+    .select('id,total_pairs,production_status,product_id,free_model,color,order_id,sort_order,ponytage,products(code,name)')
+    .in('production_status',['pregatit_lansat'])
+    .order('sort_order',{ascending:true});
+  const pregatit=(lines||[]).filter(l=>!exclIds.has(l.order_id));
+  _prodIds.pregatit=pregatit.map(x=>x.id);
+  _pregatitLinesCache=pregatit.slice();
+  _receptieLinesCache=[];
+  _talpuitLinesCache=[];
+  renderTalpuitFromCache();
 }
 
 async function loadProdCusut(){
@@ -2282,117 +2281,82 @@ async function moveTalpuit_old(idx,dir){
 var _croitOrdersCache=[], _croitGataCache=[];
 
 function renderCroitFromCache(){
-  var deCroit=_croitOrdersCache;
   var el=document.getElementById('pc_list');
-  var html='';
-  if(deCroit.length){
-    html+=subHeader('De croit ('+deCroit.length+') — prioritizare','#5A3E1B','#FDF6E8');
-    html+=deCroit.map(function(o,i){
-      var cl=o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
-      var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
-      var DONE=['la_cusut','cusut_gata','pregatit_lansat','in_talpuit','gata','pregatit_livrare','finalizat'];
-      var done=wl.filter(function(l){return DONE.includes(l.production_status);});
-      return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'croit',
-        orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,isUrgent:o.priority==='urgent',
-        isRepair:!!o.is_repair,lines:wl.map(makeLineObj),
-        statusLabel:done.length+'/'+wl.length+' croite',
-        statusColor:'#5A3E1B',statusBg:'#F5ECD7',
-        showMoveUp:i>0,showMoveDown:i<deCroit.length-1});
-    }).join('');
-    html+='<button onclick="saveOrdineCroit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#5A3E1B;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea la croit</button>';
-  }
-  if(!deCroit.length) html='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nicio comanda activa la croit</div>';
+  var orders=_croitOrdersCache;
+  if(!orders.length){el.innerHTML='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nicio comanda la croit</div>';return;}
+  var html=orders.map(function(o,i){
+    var cl=o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
+    var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
+    var DONE=['la_cusut','cusut_gata','pregatit_lansat','in_talpuit','gata','pregatit_livrare','finalizat'];
+    var done=wl.filter(function(l){return DONE.includes(l.production_status);}).length;
+    return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'croit',
+      orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,
+      isUrgent:o.priority==='urgent',isRepair:!!o.is_repair,
+      lines:wl.map(makeLineObj),
+      statusLabel:done+'/'+wl.length+' croite',
+      statusColor:'#5A3E1B',statusBg:'#F5ECD7',
+      showMoveUp:i>0,showMoveDown:i<orders.length-1});
+  }).join('');
+  html+='<button onclick="saveOrdineCroit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#5A3E1B;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea</button>';
   el.innerHTML=html;
 }
 
 var _cusutOrdersCache=[];
 function renderCusutFromCache(){
-  var laCusutActiv=_cusutOrdersCache;
-  var atelEl=document.getElementById('pcu_ateliere');
-  if(!laCusutActiv.length){atelEl.innerHTML='<div style="font-size:12px;color:#9E9890;font-style:italic;padding:8px 0">Nicio activitate cusut</div>';return;}
-  var byAtelier={};
-  laCusutActiv.forEach(function(o){
+  var el=document.getElementById('pcu_ateliere');
+  var orders=_cusutOrdersCache;
+  if(!orders.length){el.innerHTML='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nicio comanda la cusut</div>';return;}
+  var wsOrder=['intern','oradea','ceica','altul'];
+  var wsColors={intern:{c:'#1E4A2E',bg:'#EAF0EC'},oradea:{c:'#2F4A63',bg:'#E8EFF6'},ceica:{c:'#5A3E1B',bg:'#F5ECD7'},altul:{c:'#5A5248',bg:'#F4F1EA'}};
+  var byWs={};
+  orders.forEach(function(o){
     var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
     var wsSet=new Set(wl.map(function(l){return (l.workshop||'intern').toLowerCase();}));
     wsSet.forEach(function(ws){
-      if(!byAtelier[ws])byAtelier[ws]=[];
-      if(!byAtelier[ws].find(function(x){return x.id===o.id;}))byAtelier[ws].push(o);
+      if(!byWs[ws])byWs[ws]=[];
+      if(!byWs[ws].find(function(x){return x.id===o.id;}))byWs[ws].push(o);
     });
   });
-  var wsOrder=['intern','oradea','ceica','altul'];
-  var wsKeys=Object.keys(byAtelier).sort(function(a,b){
-    var ai=wsOrder.indexOf(a);var bi=wsOrder.indexOf(b);
-    return (ai===-1?99:ai)-(bi===-1?99:bi);
+  var keys=Object.keys(byWs).sort(function(a,b){
+    return (wsOrder.indexOf(a)===-1?9:wsOrder.indexOf(a))-(wsOrder.indexOf(b)===-1?9:wsOrder.indexOf(b));
   });
-  var wsColors={intern:{c:'#1E4A2E',bg:'#EAF0EC'},oradea:{c:'#2F4A63',bg:'#E8EFF6'},ceica:{c:'#5A3E1B',bg:'#F5ECD7'},altul:{c:'#5A5248',bg:'#F4F1EA'}};
   var html='';
-  wsKeys.forEach(function(ws){
-    var orders=byAtelier[ws];
+  keys.forEach(function(ws){
     var col=wsColors[ws]||wsColors.altul;
-    var wsLabel=ws==='intern'?'Intern':ws.charAt(0).toUpperCase()+ws.slice(1);
-    html+=subHeader(wsLabel+' ('+orders.length+' comenzi) — prioritizare',col.c,col.bg);
-    html+=orders.map(function(o){
-      var idx=laCusutActiv.indexOf(o);
+    var label=ws==='intern'?'Intern':ws.charAt(0).toUpperCase()+ws.slice(1);
+    html+='<div style="font-size:10px;font-weight:700;color:'+col.c+';background:'+col.bg+';padding:4px 10px;border-radius:4px;margin:8px 0 4px;text-transform:uppercase;letter-spacing:1px">'+label+'</div>';
+    html+=byWs[ws].map(function(o){
+      var idx=orders.indexOf(o);
       var cl=o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
       var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
       return makeProdCard({id:o.id,idx:idx,total:o.total_pairs,section:'cusut_inlucru',
         orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,
         isUrgent:o.priority==='urgent',lines:wl.map(makeLineObj),
-        statusLabel:'La cusut — '+wl.length+' art.',
-        statusColor:col.c,statusBg:col.bg,
-        showMoveUp:idx>0,showMoveDown:idx<laCusutActiv.length-1});
+        statusLabel:'La cusut',statusColor:col.c,statusBg:col.bg,
+        showMoveUp:idx>0,showMoveDown:idx<orders.length-1});
     }).join('');
   });
-  html+='<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea la cusut</button>';
-  atelEl.innerHTML=html;
+  html+='<button onclick="saveOrdineCusut()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea</button>';
+  el.innerHTML=html;
 }
 
 var _talpuitLinesCache=[], _receptieLinesCache=[], _pregatitLinesCache=[];
 function renderTalpuitFromCache(){
-  var receptie=_receptieLinesCache;
   var pregatit=_pregatitLinesCache;
-  var laTalpuit=_talpuitLinesCache;
-  var html='';
+  var el=document.getElementById('pt_receptie_list');
   var getO=function(oid){return allOrders.find(function(o){return o.id===oid;});};
-  if(receptie.length){
-    html+=subHeader('De receptionat din cusut ('+receptie.length+')','#2F4A63','#EAF0F8');
-    html+=receptie.map(function(l,i){
-      var o=getO(l.order_id);
-      var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
-      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'receptie',
-        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
-        isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
-        statusLabel:'Cusut — de receptionat',statusColor:'#2F4A63',statusBg:'#E8EFF6',
-        showMoveUp:false,showMoveDown:false});
-    }).join('');
-  }
-  if(pregatit.length){
-    html+=subHeader('Pregatit de lansat ('+pregatit.length+') — prioritizare','#B08D57','#FDF6E0');
-    html+=pregatit.map(function(l,i){
-      var o=getO(l.order_id);
-      var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
-      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'pregatit',
-        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
-        isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
-        statusLabel:'Pregatit de lansat',statusColor:'#B08D57',statusBg:'#FDF6E0',
-        showMoveUp:i>0,showMoveDown:i<pregatit.length-1});
-    }).join('');
-    html+='<button onclick="saveOrdineTalpuit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea la talpuit</button>';
-  }
-  if(laTalpuit.length){
-    html+=subHeader('In talpuit ('+laTalpuit.length+')','#1E4A2E','#EAF3ED');
-    html+=laTalpuit.map(function(l,i){
-      var o=getO(l.order_id);
-      var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
-      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'intalpuit',
-        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
-        isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
-        statusLabel:'In talpuit',statusColor:'#1E4A2E',statusBg:'#D8EEE0',
-        showMoveUp:false,showMoveDown:false});
-    }).join('');
-  }
-  if(!receptie.length&&!pregatit.length&&!laTalpuit.length) html='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nimic la talpuit</div>';
-  document.getElementById('pt_receptie_list').innerHTML=html;
+  if(!pregatit.length){el.innerHTML='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nimic pregatit de lansat</div>';return;}
+  var html=pregatit.map(function(l,i){
+    var o=getO(l.order_id);
+    var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
+    return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'pregatit',
+      orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
+      isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
+      statusLabel:'Pregatit de lansat',statusColor:'#B08D57',statusBg:'#FDF6E0',
+      showMoveUp:i>0,showMoveDown:i<pregatit.length-1});
+  }).join('');
+  html+='<button onclick="saveOrdineTalpuit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea</button>';
+  el.innerHTML=html;
 }
 
 async function saveOrdineCroit(){
@@ -2539,7 +2503,7 @@ function renderAmbalatList(){
   }
   var html='';
   if(laAmbalat.length){
-    html+=subHeader('La ambalat ('+laAmbalat.length+') — prioritizare','#B08D57','#FDF6E0');
+    html+='<div style="font-size:10px;font-weight:700;color:#B08D57;padding:4px 0 4px;text-transform:uppercase;letter-spacing:1px">La ambalat</div>';
     html+=laAmbalat.map(function(o,i){
       var cl=o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
       var isUrgent=o.priority==='urgent';
@@ -2555,7 +2519,7 @@ function renderAmbalatList(){
     html+='<button onclick="saveOrdineAmbalat()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#B08D57;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea la ambalat</button>';
   }
   if(gataLivrare.length){
-    html+=subHeader('Gata livrare ('+gataLivrare.length+')',  '#1E4A2E','#EAF0EC');
+    html+='<div style="font-size:10px;font-weight:700;color:#1E4A2E;padding:8px 0 4px;text-transform:uppercase;letter-spacing:1px">Gata livrare</div>';
     html+=gataLivrare.map(function(o,i){
       var cl=o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
       var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
