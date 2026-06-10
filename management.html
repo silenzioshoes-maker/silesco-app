@@ -2181,7 +2181,6 @@ async function loadProdCroit(){
   _croitGataCache=croitGata.slice();
 
   renderCroitFromCache();
-  document.getElementById('pc_restante_list').innerHTML='';
 }
 
 async function loadProdCusut(){
@@ -2360,7 +2359,7 @@ function renderTalpuitFromCache(){
     html+=receptie.map(function(l,i){
       var o=getO(l.order_id);
       var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
-      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'none',
+      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'receptie',
         orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
         isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
         statusLabel:'Cusut — de receptionat',statusColor:'#2F4A63',statusBg:'#E8EFF6',
@@ -2385,7 +2384,7 @@ function renderTalpuitFromCache(){
     html+=laTalpuit.map(function(l,i){
       var o=getO(l.order_id);
       var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
-      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'none',
+      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'intalpuit',
         orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
         isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
         statusLabel:'In talpuit',statusColor:'#1E4A2E',statusBg:'#D8EEE0',
@@ -2560,7 +2559,7 @@ function renderAmbalatList(){
     html+=gataLivrare.map(function(o,i){
       var cl=o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
       var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
-      return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'none',
+      return makeProdCard({id:o.id,idx:i,total:o.total_pairs,section:'gatalivrare',
         orderNo:o.order_no,client:cl,deliveryDate:o.delivery_date,isUrgent:o.priority==='urgent',
         lines:wl.map(makeLineObj),
         statusLabel:'Gata de livrare',statusColor:'#1E4A2E',statusBg:'#EAF0EC',
