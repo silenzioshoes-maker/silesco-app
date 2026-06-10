@@ -2217,8 +2217,8 @@ async function loadProdTalpuit(){
   _receptieLinesCache=receptie.slice();
   _pregatitLinesCache=pregatit.slice();
   _talpuitLinesCache=inTalpuit.slice();
-  document.getElementById('pt_receptie').textContent=receptie.length;
-  document.getElementById('pt_active').textContent=inTalpuit.length;
+  // pt_receptie removed
+  // pt_active removed
   renderTalpuitFromCache();
 }
 
@@ -2406,8 +2406,8 @@ function showToast(m){const e=document.getElementById('toast');if(!e)return;e.te
 async function loadProdAmbalat(){
   const laAmbalat=allOrders.filter(o=>o.status==='la_impachetat');
   const gataLivrare=allOrders.filter(o=>o.status==='gata_livrare');
-  document.getElementById('pa_gata').textContent=laAmbalat.length;
-  document.getElementById('pa_gata_livrare').textContent=gataLivrare.length;
+  // pa_gata removed
+  // pa_gata_livrare removed
   await loadAmbalatList();
 }
 
