@@ -308,7 +308,7 @@ async function loadMsgs(){
     if(autoSubjects.some(s=>m.subject.startsWith(s))) return false;
     return true;
   });
-  console.log('loadMsgs total:',data?.length,'dupa filtru:',allMsgs.length,error||'');
+
   buildConversations();
 }
 
