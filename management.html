@@ -1503,15 +1503,20 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
       });
       await sb.from('order_lines').update({workshop:atelNume||null}).eq('id',l.id);
     }else if(flux==='extern_extern'){
-      // Croit extern + Cusut extern — la_croit cu workshop, atelierul vede că trebuie croit+cusut
+      // Croit extern + Cusut extern — merge direct la atelier, status la_cusut
       await sb.from('order_lines').update({
-        production_status:'la_croit',
+        production_status:'la_cusut',
         workshop:atelNume||null
       }).eq('id',l.id);
       externLines.push({...l,workshop:atelNume});
     }
   }
   if(lots.length)await sb.from('production_lots').insert(lots);
+  // Dacă toate articolele sunt extern_extern, comanda merge direct la cusut
+  const totalLines=approveLines.length;
+  if(externLines.length===totalLines&&totalLines>0){
+    await sb.from('orders').update({status:'la_cusut',updated_at:new Date().toISOString()}).eq('id',approveOrderId);
+  }
   // Mesaj la atelier extern dacă sunt linii externe
   for(const l of externLines){
     if(l.workshop){
