@@ -2233,7 +2233,7 @@ async function loadProdCusut(){
   if(laCusut.length){
     // Grupează pe atelier
   // Separă comenzile cu toate liniile cusute (la_talpuit) de cele în lucru
-  const CUSUT_DONE=['cusut_gata','la_talpuit','gata','la_impachetat_talpuit'];
+  const CUSUT_DONE=['cusut_gata','pregatit_lansat','in_talpuit','la_talpuit','gata','la_impachetat_talpuit','pregatit_livrare','finalizat'];
   const laCusutActiv=laCusut.filter(function(o){
     var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
     return !wl.every(function(l){return CUSUT_DONE.includes(l.production_status);});
@@ -2244,10 +2244,14 @@ async function loadProdCusut(){
   });
     const byAtelier={};
     laCusutActiv.forEach(function(o){
-      var ws=(o.order_lines&&o.order_lines[0]&&o.order_lines[0].workshop)||'intern';
-      ws=ws.toLowerCase();
-      if(!byAtelier[ws])byAtelier[ws]=[];
-      byAtelier[ws].push(o);
+      var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
+      // Grupează pe workshop-ul articolelor, nu primul articol
+      var wsSet=new Set(wl.map(function(l){return (l.workshop||'intern').toLowerCase();}));
+      wsSet.forEach(function(ws){
+        if(!byAtelier[ws])byAtelier[ws]=[];
+        // Evită duplicate
+        if(!byAtelier[ws].find(function(x){return x.id===o.id;}))byAtelier[ws].push(o);
+      });
     });
     // Stocăm toate comenzile în cache pentru moveProd
     _prodIds.cusut_inlucru=laCusutActiv.map(o=>o.id);
