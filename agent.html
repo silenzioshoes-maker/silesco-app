@@ -693,7 +693,7 @@ async function loadOrders() {
     .select(`
       id, order_no, status, delivery_date, total_pairs, total_value, created_at,
       clients(name, company_name),
-      order_lines(id, color, piele, ponytage, total_pairs, unit_price)
+      order_lines(id, color, ponytage, total_pairs, unit_price, free_model, from_stock, production_status, products(code,name))
     `)
     .eq('agent_id', currentUser.id)
     .order('created_at', { ascending: false });
@@ -726,12 +726,26 @@ function renderOrders(orders) {
   }
 
   const STATUS_CFG = {
-    nou:          { label:'Comandă nouă',       color:'#1B3F6E', bg:'#E6EEF8' },
-    aprobat:      { label:'Aprobat',            color:'#2A6048', bg:'#EAF3ED' },
-    in_productie: { label:'În producție',       color:'#A07010', bg:'#FDF6E0' },
-    finalizat:    { label:'Gata de livrare ✅', color:'#2A6048', bg:'#EAF3ED' },
-    livrat:       { label:'Livrat',             color:'#9A9088', bg:'#F5F2EE' },
-    anulat:       { label:'Anulat',             color:'#A02020', bg:'#FDEAEA' },
+    nou:              { label:'Comandă nouă',         color:'#1B3F6E', bg:'#E6EEF8' },
+    aprobat:          { label:'Aprobat',              color:'#2A6048', bg:'#EAF3ED' },
+    in_productie:     { label:'În producție',         color:'#A07010', bg:'#FDF6E0' },
+    la_croit:         { label:'La croit',             color:'#5A3E1B', bg:'#F5ECD7' },
+    fete_gata_cusut:  { label:'La cusut',             color:'#2F4A63', bg:'#E8EFF6' },
+    la_talpuit:       { label:'La talpuit',           color:'#1E4A2E', bg:'#D8EEE0' },
+    la_impachetat:    { label:'La ambalat',           color:'#8B6914', bg:'#FDF6E0' },
+    gata_livrare:     { label:'Gata de livrare',      color:'#1E4A2E', bg:'#EAF0EC' },
+    finalizat:        { label:'Gata de livrare',      color:'#1E4A2E', bg:'#EAF0EC' },
+    livrat:           { label:'Livrat',               color:'#9A9088', bg:'#F5F2EE' },
+    anulat:           { label:'Anulat',               color:'#A02020', bg:'#FDEAEA' },
+  };
+
+  const ART_STATUS = {
+    la_croit:     { label:'La croit',     color:'#5A3E1B', bg:'#F5ECD7' },
+    croit_gata:   { label:'Croit',        color:'#2F4A63', bg:'#E8EFF6' },
+    la_cusut:     { label:'La cusut',     color:'#2F4A63', bg:'#DCE8F5' },
+    cusut_gata:   { label:'Cusut',        color:'#365A43', bg:'#EAF0EC' },
+    la_talpuit:   { label:'La talpuit',   color:'#1E4A2E', bg:'#D8EEE0' },
+    gata:         { label:'Gata livrare', color:'#1E4A2E', bg:'#C8E6C9' },
   };
 
   list.innerHTML = orders.map(o => {
@@ -749,6 +763,20 @@ function renderOrders(orders) {
       : daysLeft < 0 ? `⚠ +${Math.abs(daysLeft)}z întârziere`
       : `${daysLeft}z rămase`;
 
+    const workLines = (o.order_lines||[]).filter(l=>!l.from_stock);
+    const artHtml = workLines.length ? workLines.map(l=>{
+      const mod = l.products?.code ? 'Art. '+l.products.code : l.free_model||'—';
+      const ps = l.production_status;
+      const ac = ART_STATUS[ps];
+      const badge = ac
+        ? `<span style="font-size:10px;font-weight:700;color:${ac.color};background:${ac.bg};padding:1px 6px;border-radius:3px;flex-shrink:0">${ac.label}</span>`
+        : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid #F0EDE8">
+        <span style="font-size:12px;color:#333333;font-weight:600">${mod} · ${l.color||'—'}</span>
+        ${badge}
+      </div>`;
+    }).join('') : '';
+
     return `<div class="order-card">
       <div class="order-id">${o.order_no || '—'}</div>
       <div class="order-client">${client}</div>
@@ -758,6 +786,7 @@ function renderOrders(orders) {
         <span class="days-left" style="color:${daysColor}">${daysText}</span>
       </div>
       <div style="font-size:11px;color:#C8C0B8;margin-top:5px">Livrare: ${delDate}</div>
+      ${artHtml ? `<div style="margin-top:8px;padding-top:4px">${artHtml}</div>` : ''}
     </div>`;
   }).join('');
 }
