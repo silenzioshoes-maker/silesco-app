@@ -495,7 +495,7 @@ async function loadOrders(){
   const{data:fin}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,updated_at,
       clients!orders_client_id_fkey(name,company_name),
-      order_lines(id,product_id,free_model,color,ponytage,total_pairs,production_status,products(code))`)
+      order_lines(id,product_id,free_model,color,ponytage,total_pairs,production_status,workshop,products(code))`)
     .in('status',['la_cusut','fete_gata_cusut'])
     .order('updated_at',{ascending:false}).limit(20);
   finOrders=fin||[];
@@ -536,7 +536,7 @@ function setTab(t){
 const EXTERN_WORKSHOPS=['oradea','ceica','altul'];
 
 function isExternExtern(l){
-  return EXTERN_WORKSHOPS.includes((l.workshop||'').toLowerCase())&&l.production_status==='la_croit';
+  return EXTERN_WORKSHOPS.includes((l.workshop||'').toLowerCase());
 }
 
 function renderOrders(){
