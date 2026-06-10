@@ -459,26 +459,28 @@ function renderAmbalat(orders){
       <div class="cmd-body" id="amb_${i}">
         ${lines.map(l=>{
           const isDone=l.production_status==='gata';
-          return `<div class="art-row">
+          return `<div class="art-row" id="artrow_${l.id}">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
               <div style="flex:1">
                 <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
                 <div class="art-pairs">${l.total_pairs} perechi</div>
                 <div class="pontaj">${renderPontaj(l.ponytage)}</div>
               </div>
-              <span style="font-size:13px;font-weight:700;padding:3px 8px;border-radius:4px;flex-shrink:0;
-                background:${isDone?'#EAF0EC':'#FDF4F2'};color:${isDone?'#1E4A2E':'#9C3A2B'}">
-                ${isDone?'✓ Gata':'⏳ În lucru'}
-              </span>
+              <button onclick="toggleArtGata('${l.id}','${o.id}')"
+                style="flex-shrink:0;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;
+                  background:${isDone?'#EAF0EC':'#F4F1EA'};color:${isDone?'#1E4A2E':'#5A5248'};
+                  border:1.5px solid ${isDone?'rgba(54,90,67,.3)':'#C8C0B8'}">
+                ${isDone?'✓ Gata livrare':'Marchează gata'}
+              </button>
             </div>
           </div>`;
         }).join('')}
-        <div class="actions-bar">
+        <div class="actions-bar" id="actbar_${o.id}">
           ${allGata
             ?`<button class="btn-gata" onclick="marcheazaGata('${o.id}','${o.order_no||''}')">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Gata de livrare
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Gata de livrare — trimite
               </button>`
-            :`<div style="font-size:14px;color:#8B6914;font-weight:600;padding:2px 0">⏳ Articole în producție</div>`
+            :`<div style="font-size:14px;color:#8B6914;font-weight:600;padding:2px 0">Marchează toate articolele gata pentru a finaliza</div>`
           }
           <button class="btn-etichete" onclick="openEtichete('${o.id}','${o.order_no||''}')">
             <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
@@ -593,6 +595,52 @@ function renderIstoric(orders){
       </div>
     </div>`;
   }).join('');
+}
+
+// ── TOGGLE ARTICOL GATA LIVRARE ───────────────────────────
+async function toggleArtGata(lineId,orderId){
+  const o=ambOrders.find(x=>x.id===orderId);
+  if(!o)return;
+  const l=(o.order_lines||[]).find(x=>x.id===lineId);
+  if(!l)return;
+  const isDone=l.production_status==='gata';
+  const newStatus=isDone?'la_talpuit':'gata';
+  const{error}=await sb.from('order_lines').update({production_status:newStatus}).eq('id',lineId);
+  if(error){showToast('Eroare la salvare!');return;}
+  l.production_status=newStatus;
+  // Actualizează butonul articolului
+  const artEl=document.getElementById('artrow_'+lineId);
+  if(artEl){
+    const btn=artEl.querySelector('button');
+    if(btn){
+      const done=newStatus==='gata';
+      btn.textContent=done?'✓ Gata livrare':'Marchează gata';
+      btn.style.background=done?'#EAF0EC':'#F4F1EA';
+      btn.style.color=done?'#1E4A2E':'#5A5248';
+      btn.style.border=`1.5px solid ${done?'rgba(54,90,67,.3)':'#C8C0B8'}`;
+    }
+  }
+  // Recalculează butonul de finalizare comandă
+  const lines=(o.order_lines||[]).filter(x=>!x.from_stock);
+  const allGata=lines.length>0&&lines.every(x=>x.production_status==='gata');
+  const nrGata=lines.filter(x=>x.production_status==='gata').length;
+  const actBar=document.getElementById('actbar_'+orderId);
+  if(actBar){
+    const orderNo=o.order_no||'';
+    const existing=actBar.firstElementChild;
+    if(allGata&&existing){
+      existing.outerHTML=`<button class="btn-gata" onclick="marcheazaGata('${orderId}','${orderNo}')"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>Gata de livrare — trimite</button>`;
+    } else if(!allGata&&existing){
+      existing.outerHTML=`<div style="font-size:14px;color:#8B6914;font-weight:600;padding:2px 0">Marchează toate articolele gata pentru a finaliza</div>`;
+    }
+  }
+  // Actualizează contorul din headerul cardului
+  const card=actBar?.closest('.cmd-card');
+  if(card){
+    const spans=[...card.querySelectorAll('.cmd-meta span')];
+    const cntSpan=spans.find(s=>s.textContent.includes('art. gata'));
+    if(cntSpan){cntSpan.textContent=`${nrGata}/${lines.length} art. gata`;cntSpan.style.color=allGata?'#1E4A2E':'#8B6914';}
+  }
 }
 
 // ── ACȚIUNI ───────────────────────────────────────────────
