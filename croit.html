@@ -535,13 +535,18 @@ function setTab(t){
 
 const EXTERN_WORKSHOPS=['oradea','ceica','altul'];
 
+function isExternExtern(l){
+  return EXTERN_WORKSHOPS.includes((l.workshop||'').toLowerCase())&&l.production_status==='la_croit';
+}
+
 function renderOrders(){
   const el=document.getElementById('cmdList');
   const empty=document.getElementById('cmdEmpty');
-  // Exclude comenzile unde TOATE articolele sunt extern_extern
+  // Exclude comenzile unde TOATE articolele de lucru sunt extern_extern
   const internOrders=orders.filter(o=>{
     const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
-    return wl.some(l=>!EXTERN_WORKSHOPS.includes((l.workshop||'').toLowerCase())||l.production_status!=='la_croit');
+    if(!wl.length) return true;
+    return wl.some(l=>!isExternExtern(l));
   });
   if(!internOrders.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
@@ -555,7 +560,7 @@ function getModName(l){
 function renderOrderCard(o,i){
   const cl=o.clients?.company_name||o.clients?.name||'STOC';
   const lines=o.order_lines||[];
-  const workLines=lines.filter(l=>!l.from_stock&&!(EXTERN_WORKSHOPS.includes((l.workshop||'').toLowerCase())&&l.production_status==='la_croit'));
+  const workLines=lines.filter(l=>!l.from_stock&&!isExternExtern(l));
   const doneCnt=workLines.filter(l=>artState[l.id]?.done).length;
   const allDone=workLines.length>0&&doneCnt===workLines.length;
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
@@ -631,12 +636,19 @@ function renderArtRow(l,orderId){
     </div>`;
   }).join('');
 
+  const wsLabel=(l.workshop||'intern').toLowerCase();
+  const wsDisplay=wsLabel==='intern'?'Cusut intern':wsLabel.charAt(0).toUpperCase()+wsLabel.slice(1);
+  const wsColor=wsLabel==='intern'?{c:'#1E4A2E',bg:'#EAF0EC'}:wsLabel==='oradea'?{c:'#2F4A63',bg:'#E8EFF6'}:wsLabel==='ceica'?{c:'#5A3E1B',bg:'#F5ECD7'}:{c:'#5A5248',bg:'#F4F1EA'};
+
   return `<div class="art-row${st.done?' done':''}${st.problem&&!st.done?' has-problem':''}" id="art_${l.id}">
     <div class="art-top">
-      <div>
-        <div class="art-name">${modName}${l.from_stock?'<span style="font-size:13px;background:#E8EFF6;color:#23394F;padding:1px 6px;border-radius:3px;margin-left:6px">📦 STOC</span>':isRep?'<span style="font-size:13px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;margin-left:6px;border:1px solid #9C3A2B">🔧 REPARAȚIE</span>':''}</div>
+      <div style="flex:1">
+        <div class="art-name">${modName}${l.from_stock?'<span style="font-size:13px;background:#E8EFF6;color:#23394F;padding:1px 6px;border-radius:3px;margin-left:6px">STOC</span>':isRep?'<span style="font-size:13px;background:#FDF4F2;color:#9C3A2B;padding:1px 6px;border-radius:3px;margin-left:6px;border:1px solid #9C3A2B">REPARATIE</span>':''}</div>
         <div class="art-color">${l.color||'—'}</div>
         <div class="art-planned">${totalPlanificat} per. planificate</div>
+        <div style="margin-top:4px">
+          <span style="font-size:11px;font-weight:700;color:${wsColor.c};background:${wsColor.bg};padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">${wsDisplay}</span>
+        </div>
       </div>
     </div>
     ${notesClean?`<div style="font-size:13px;color:#8B6914;margin-bottom:8px;padding:5px 8px;background:#FAF3E0;border-radius:5px"><strong>Obs:</strong> ${notesClean}</div>`:''}
@@ -669,57 +681,63 @@ function renderFinalizate(){
 
   const wsColors={intern:{c:'#1E4A2E',bg:'#EAF0EC'},oradea:{c:'#2F4A63',bg:'#E8EFF6'},ceica:{c:'#5A3E1B',bg:'#F5ECD7'},altul:{c:'#5A5248',bg:'#F4F1EA'}};
 
-  // Grupează comenzile pe atelier dominant (primul atelier din articole)
-  const byWorkshop={};
-  finOrders.forEach(o=>{
+  el.innerHTML=finOrders.map((o,fi)=>{
     const cl=o.clients?.company_name||o.clients?.name||'STOC';
     const dt=o.updated_at?new Date(o.updated_at).toLocaleDateString('ro-RO'):'—';
-    const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
-    // Grupează articolele comenzii pe atelier
-    const artByWs={};
-    lines.forEach(l=>{
+    const lines=(o.order_lines||[]);
+    const workLines=lines.filter(l=>!l.from_stock);
+    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
+
+    // Preview chips ca în activ
+    const previewChips=workLines.map(l=>{
       const ws=(l.workshop||'intern').toLowerCase();
-      if(!artByWs[ws])artByWs[ws]=[];
-      artByWs[ws].push(l);
-    });
-    Object.entries(artByWs).forEach(([ws,arts])=>{
-      if(!byWorkshop[ws])byWorkshop[ws]=[];
-      byWorkshop[ws].push({o,cl,dt,arts});
-    });
-  });
+      const col=wsColors[ws]||wsColors.altul;
+      const mod=getModName(l);
+      return `<span class="art-chip" style="background:#EAF0EC;border-color:rgba(54,90,67,.3);color:#1E4A2E">
+        ${mod} · ${l.color||'—'}
+        <span style="font-size:10px;font-weight:700;color:${col.c};background:${col.bg};padding:1px 5px;border-radius:2px;margin-left:4px">${ws==='intern'?'intern':ws}</span>
+      </span>`;
+    }).join('');
 
-  const wsKeys=Object.keys(byWorkshop).sort((a,b)=>a==='intern'?-1:b==='intern'?1:a.localeCompare(b));
-
-  el.innerHTML=wsKeys.map(ws=>{
-    const col=wsColors[ws]||wsColors.altul;
-    const wsLabel=ws==='intern'?'Intern — Cusut propriu':ws.charAt(0).toUpperCase()+ws.slice(1);
-    const cmds=byWorkshop[ws];
-    return `<div style="margin-bottom:16px">
-      <div style="font-size:11px;font-weight:700;color:${col.c};background:${col.bg};padding:5px 10px;border-radius:5px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">
-        ${wsLabel} — ${cmds.reduce((s,c)=>s+c.arts.length,0)} art.
+    return `<div class="cmd-card" id="fincmd_${o.id}" style="opacity:.92">
+      <div class="cmd-header" onclick="togFinCmd('${o.id}','finarr_${o.id}')">
+        <div class="cmd-main">
+          <div class="cmd-no">${o.order_no||'—'}</div>
+          <div class="cmd-client">${cl}</div>
+          <div class="cmd-preview">${previewChips}</div>
+          <div class="cmd-meta"><span>Livrare: ${dd}</span><span style="color:#1E4A2E;font-weight:600">Trimis la cusut — ${dt}</span></div>
+        </div>
+        <div class="cmd-progress">
+          <div class="cmd-prog-num" style="color:#1E4A2E">${workLines.length}</div>
+          <div class="cmd-prog-label">art.</div>
+        </div>
+        <svg class="cmd-arrow" id="finarr_${o.id}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      ${cmds.map(({o,cl,dt,arts})=>`
-        <div class="fin-card" style="margin-bottom:6px;padding:0;overflow:hidden">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer"
-            onclick="togFinCard('finbody_${o.id}_${ws}','finarr_${o.id}_${ws}')">
-            <div>
-              <div style="font-size:11px;font-family:monospace;color:#8B6914;margin-bottom:2px">${o.order_no||'—'}</div>
-              <div style="font-size:15px;font-weight:700;color:#111111">${cl}</div>
-              <div style="font-size:12px;color:#5A5248;margin-top:2px">${arts.length} articole · ${dt}</div>
-            </div>
-            <svg id="finarr_${o.id}_${ws}" viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#9E9890;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div id="finbody_${o.id}_${ws}" style="display:none;border-top:1px solid #EDE8DF;padding:8px 14px">
-            ${arts.map(l=>`
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F4F1EA">
-                <div>
-                  <div style="font-size:14px;font-weight:700;color:#111111">${getModName(l)} · ${l.color||'—'}</div>
-                  <div style="font-size:12px;color:#5A5248">${l.total_pairs} perechi</div>
+      <div class="cmd-body" id="finbody_${o.id}">
+        ${workLines.map(l=>{
+          const ws=(l.workshop||'intern').toLowerCase();
+          const wsDisplay=ws==='intern'?'Cusut intern':ws.charAt(0).toUpperCase()+ws.slice(1);
+          const col=wsColors[ws]||wsColors.altul;
+          const mod=getModName(l);
+          const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
+          const pontajStr=entries.map(([s,q])=>`${s}×${q}`).join(' ');
+          return `<div class="art-row done">
+            <div class="art-top">
+              <div style="flex:1">
+                <div class="art-name">${mod}</div>
+                <div class="art-color">${l.color||'—'}</div>
+                <div class="art-planned">${l.total_pairs} per.</div>
+                <div style="margin-top:4px">
+                  <span style="font-size:11px;font-weight:700;color:${col.c};background:${col.bg};padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">${wsDisplay}</span>
                 </div>
-                <span style="font-size:11px;font-weight:700;color:${col.c};background:${col.bg};padding:2px 8px;border-radius:3px">La cusut</span>
-              </div>`).join('')}
-          </div>
-        </div>`).join('')}
+              </div>
+            </div>
+            ${pontajStr?`<div style="font-size:12px;color:#5A5248;margin-top:4px;padding:4px 8px;background:#F4F1EA;border-radius:4px">${pontajStr}</div>`:''}
+            <div class="done-info"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span class="done-info-text">Croit — trimis la cusut</span></div>
+          </div>`;
+        }).join('')}
+        ${lines.filter(l=>l.from_stock).length?`<div style="padding:10px 16px;font-size:14px;color:#23394F;background:#F0F6FF">STOC: ${lines.filter(l=>l.from_stock).map(l=>getModName(l)+' · '+l.color).join(', ')}</div>`:''}
+      </div>
     </div>`;
   }).join('');
 }
@@ -737,10 +755,20 @@ function togFinCard(bodyId,arrowId){
 function togCmd(orderId,arrowId){
   const body=document.getElementById('body_'+orderId);
   const arr=document.getElementById(arrowId);
+  if(!body)return;
   const open=body.style.display==='block';
   body.style.display=open?'none':'block';
   if(arr)arr.style.transform=open?'rotate(0deg)':'rotate(180deg)';
   if(!open)loadOrderMsgs(orderId);
+}
+
+function togFinCmd(orderId,arrowId){
+  const body=document.getElementById('finbody_'+orderId);
+  const arr=document.getElementById(arrowId);
+  if(!body)return;
+  const open=body.style.display==='block';
+  body.style.display=open?'none':'block';
+  if(arr)arr.style.transform=open?'rotate(0deg)':'rotate(180deg)';
 }
 
 // ── PONTAJ AJUSTABIL ──────────────────────────────────────────
