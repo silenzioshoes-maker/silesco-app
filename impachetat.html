@@ -432,10 +432,10 @@ function renderAmbalat(orders){
     const dlText=dl===null?'':dl<0?`⚠ ${Math.abs(dl)}z întârziere`:`${dl}z rămase`;
     const isUrgent=o.priority==='urgent';
     const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
-    const allPregatit=lines.every(l=>l.production_status==='pregatit_livrare'||l.production_status==='finalizat');
-    if(allPregatit) return ''; // comanda e complet pregătită — apare doar în Gata livrare
-    const allGata=lines.every(l=>l.production_status==='gata');
-    const nrGata=lines.filter(l=>l.production_status==='pregatit_livrare'||l.production_status==='finalizat').length;
+    const nrPregatit=lines.filter(l=>l.production_status==='pregatit_livrare'||l.production_status==='finalizat').length;
+    const allPregatit=lines.length>0&&lines.every(l=>l.production_status==='pregatit_livrare'||l.production_status==='finalizat');
+    if(allPregatit) return '';
+    const nrGata=nrPregatit;
 
     return `<div class="cmd-card${isUrgent?' urgent':''}">
       <div class="cmd-header" onclick="togCmd('amb_${i}','ambarr_${i}')">
