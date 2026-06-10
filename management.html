@@ -2248,9 +2248,10 @@ async function loadProdCusut(){
     return wl.length>0&&wl.every(function(l){return CUSUT_DONE.includes(l.production_status);});
   });
     const byAtelier={};
+    console.log('laCusutActiv:',laCusutActiv.length,'comenzi');
     laCusutActiv.forEach(function(o){
       var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
-      // Grupează pe workshop-ul articolelor, nu primul articol
+      console.log(o.order_no,'lines:',wl.length,'workshops:',wl.map(function(l){return l.workshop;}));
       var wsSet=new Set(wl.map(function(l){return (l.workshop||'intern').toLowerCase();}));
       wsSet.forEach(function(ws){
         if(!byAtelier[ws])byAtelier[ws]=[];
