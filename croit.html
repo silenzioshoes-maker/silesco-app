@@ -486,8 +486,8 @@ async function loadOrders(){
   const{data:active}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,total_pairs,notes,is_repair,parent_order_id,
       clients!orders_client_id_fkey(name,company_name),
-      order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,production_status,products(code,name))`)
-    .in('status',['la_croit','in_productie'])
+      order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,products(code,name))`)
+    .in('status',['la_croit','in_productie','la_cusut'])
     .order('sort_order',{ascending:true,nullsFirst:false})
     .order('delivery_date',{ascending:true});
   orders=active||[];
@@ -504,7 +504,8 @@ async function loadOrders(){
   orders.forEach(o=>{
     (o.order_lines||[]).filter(l=>!l.from_stock).forEach(l=>{
       if(!artState[l.id]){
-        const isDone=l.production_status==='croit_gata'||l.production_status==='cusut_gata';
+        const DONE_STATUSES=['la_cusut','cusut_gata','pregatit_lansat','in_talpuit','gata','pregatit_livrare','finalizat'];
+        const isDone=DONE_STATUSES.includes(l.production_status);
         artState[l.id]={done:isDone,ponytage_done:{...l.ponytage},problem:null};
       }
     });
@@ -546,7 +547,7 @@ function getModName(l){
 }
 
 function renderOrderCard(o,i){
-  const cl=o.clients?.company_name||o.clients?.name||'STOC';
+  const cl=o.clients?.company_name||o.clients?.name||'—';
   const lines=o.order_lines||[];
   const workLines=lines.filter(l=>!l.from_stock);
   const doneCnt=workLines.filter(l=>artState[l.id]?.done).length;
@@ -660,7 +661,7 @@ function renderFinalizate(){
   if(!finOrders.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   el.innerHTML=finOrders.map(o=>{
-    const cl=o.clients?.company_name||o.clients?.name||'STOC';
+    const cl=o.clients?.company_name||o.clients?.name||'—';
     const lines=o.order_lines||[];
     const dt=o.updated_at?new Date(o.updated_at).toLocaleDateString('ro-RO'):'—';
     return `<div class="fin-card">
@@ -735,7 +736,7 @@ async function toggleDone(lineId,orderId){
   // Reparațiile merg direct la cusut_gata (intern) când croitul e gata
   const{data:lineData}=await sb.from('order_lines').select('notes,workshop').eq('id',lineId).single();
   const isRepLine=lineData?.notes&&lineData.notes.includes('[REPARAȚIE]');
-  const newStatus=st.done?(isRepLine?'cusut_gata':'croit_gata'):'la_croit';
+  const newStatus=st.done?(isRepLine?'cusut_gata':'la_cusut'):'la_croit';
   const updateData={production_status:newStatus};
   if(isRepLine&&st.done)updateData.workshop='intern';
   await sb.from('order_lines').update(updateData).eq('id',lineId);
@@ -841,7 +842,7 @@ async function finalizeOrder(orderId){
   }
   const croitSummary=summaryParts.join(' | ');
 
-  await sb.from('orders').update({status:'fete_gata_cusut',updated_at:new Date().toISOString()}).eq('id',orderId);
+  await sb.from('orders').update({status:'la_cusut',updated_at:new Date().toISOString()}).eq('id',orderId);
   await sb.from('audit_log').insert({
     table_name:'orders',record_id:orderId,action:'update',
     new_data:{action:'Croit finalizat: '+croitSummary,operator:CP?.full_name||'Croit'},
@@ -890,7 +891,7 @@ async function genFisaProductie(orderId){
     .eq('id',orderId).single();
   hideLov();
   if(!o)return;
-  const cl=o.clients?.company_name||o.clients?.name||'STOC';
+  const cl=o.clients?.company_name||o.clients?.name||'—';
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const azi=new Date().toLocaleDateString('ro-RO');
   const sumar=o.order_lines.map(l=>{
