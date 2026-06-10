@@ -355,7 +355,7 @@ async function loadAll(){
     sb.from('orders').select(`id,order_no,status,priority,delivery_date,total_pairs,notes,created_at,
       clients!orders_client_id_fkey(name,company_name),
       order_lines(id,color,ponytage,total_pairs,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
-      .eq('status','la_impachetat')
+      .in('status',['la_impachetat','gata_livrare'])
       .order('priority',{ascending:false})
       .order('delivery_date',{ascending:true}),
     sb.from('orders').select(`id,order_no,status,delivery_date,total_pairs,
@@ -364,8 +364,12 @@ async function loadAll(){
   ]);
 
   ambOrders=amb||[];
-  // Tab Gata livrare = comenzi care au cel putin un articol pregatit_livrare
-  gataOrders=ambOrders.filter(o=>(o.order_lines||[]).some(l=>l.production_status==='pregatit_livrare'));
+  // Tab Ambalat = comenzi la_impachetat cu articole nemarcate inca
+  // Tab Gata livrare = comenzi cu cel putin un articol pregatit_livrare SAU status gata_livrare
+  gataOrders=(amb||[]).filter(o=>
+    o.status==='gata_livrare'||
+    (o.order_lines||[]).some(l=>l.production_status==='pregatit_livrare')
+  );
 
   const azi=new Date().toISOString().split('T')[0];
   const{data:perechiiAzi}=await sb.from('orders')
@@ -602,8 +606,16 @@ async function marcheazaArtPregatit(lineId,orderId){
   if(error){showToast('Eroare la salvare!');return;}
   // Actualizează local
   const o=ambOrders.find(x=>x.id===orderId);
-  if(o){const l=(o.order_lines||[]).find(x=>x.id===lineId);if(l)l.production_status='pregatit_livrare';}
-  // Reîncarcă pentru a actualiza ambele tab-uri
+  if(o){
+    const l=(o.order_lines||[]).find(x=>x.id===lineId);
+    if(l)l.production_status='pregatit_livrare';
+    // Dacă toate articolele sunt pregatit_livrare → orders.status='gata_livrare'
+    const workLines=(o.order_lines||[]).filter(x=>!x.from_stock);
+    const allPregatit=workLines.length>0&&workLines.every(x=>x.production_status==='pregatit_livrare');
+    if(allPregatit){
+      await sb.from('orders').update({status:'gata_livrare',updated_at:new Date().toISOString()}).eq('id',orderId);
+    }
+  }
   await loadAll();
 }
 
