@@ -2204,52 +2204,24 @@ async function loadProdCusut(){
   if(html) atelEl.innerHTML=html;
 }
 async function loadProdTalpuit(){
+  const EXCL_STATUSES=['la_impachetat','gata_livrare','finalizat','livrat'];
+  const exclOrderIds=new Set(allOrders.filter(o=>EXCL_STATUSES.includes(o.status)).map(o=>o.id));
   const{data:lines}=await sb.from('order_lines')
     .select('id,total_pairs,production_status,product_id,free_model,color,notes,workshop,order_id,sort_order,ponytage,products(code,name)')
-    .in('production_status',['cusut_gata','la_talpuit'])
+    .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit'])
     .order('sort_order',{ascending:true});
-  const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata');
-  const laTalpuit=(lines||[]).filter(l=>l.production_status==='la_talpuit');
+  const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata'&&!exclOrderIds.has(l.order_id));
+  const pregatit=(lines||[]).filter(l=>l.production_status==='pregatit_lansat'&&!exclOrderIds.has(l.order_id));
+  const inTalpuit=(lines||[]).filter(l=>l.production_status==='in_talpuit'&&!exclOrderIds.has(l.order_id));
   _prodIds.receptie=receptie.map(x=>x.id);
-  _prodIds.talpuit=laTalpuit.map(x=>x.id);
-  _talpuitIds=_prodIds.talpuit;
-  _receptieIds=_prodIds.receptie;
-  _talpuitLinesCache=laTalpuit.slice();
+  _prodIds.pregatit=pregatit.map(x=>x.id);
+  _prodIds.talpuit=inTalpuit.map(x=>x.id);
   _receptieLinesCache=receptie.slice();
+  _pregatitLinesCache=pregatit.slice();
+  _talpuitLinesCache=inTalpuit.slice();
   document.getElementById('pt_receptie').textContent=receptie.length;
-  document.getElementById('pt_active').textContent=laTalpuit.length;
-  const getO=oid=>allOrders.find(o=>o.id===oid);
-  var html='';
-  if(receptie.length){
-    html+=subHeader('🔵 De recepționat ('+receptie.length+')','#2F4A63','#EAF0F8');
-    html+=receptie.map((l,i)=>{
-      const o=getO(l.order_id);
-      const cl=o?.clients?.company_name||o?.clients?.name||'—';
-      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'receptie',
-        orderNo:o?.order_no,client:cl,deliveryDate:o?.delivery_date,isUrgent:o?.priority==='urgent',
-        lines:[makeLineObj(l)],
-        statusLabel:'Cusut ✓ — de recepționat',statusColor:'#2F4A63',statusBg:'#E8EFF6',
-        showMoveUp:i>0,showMoveDown:i<receptie.length-1});
-    }).join('');
-  }
-  if(laTalpuit.length){
-    html+=subHeader('👟 La talpuit ('+laTalpuit.length+')','#1E4A2E','#EAF3ED');
-    html+=laTalpuit.map((l,i)=>{
-      const o=getO(l.order_id);
-      const cl=o?.clients?.company_name||o?.clients?.name||'—';
-      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'talpuit',
-        orderNo:o?.order_no,client:cl,deliveryDate:o?.delivery_date,isUrgent:o?.priority==='urgent',
-        lines:[makeLineObj(l)],
-        statusLabel:'La talpuit',statusColor:'#1E4A2E',statusBg:'#D8EEE0',
-        showMoveUp:i>0,showMoveDown:i<laTalpuit.length-1});
-    }).join('');
-  }
-  if(receptie.length||laTalpuit.length){
-    html+='<button onclick="saveOrdineTalpuit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">💾 Salvează ordinea la talpuit</button>';
-  }
-  if(!receptie.length&&!laTalpuit.length) html='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nimic la talpuit momentan</div>';
-  document.getElementById('pt_receptie_list').innerHTML=html;
-  document.getElementById('pt_list').innerHTML='';
+  document.getElementById('pt_active').textContent=inTalpuit.length;
+  renderTalpuitFromCache();
 }
 
 function togProdCard(bodyId,arrowId){
@@ -2446,15 +2418,11 @@ async function saveOrdineCusut(){
 }
 
 async function saveOrdineTalpuit(){
-  var idsT=_prodIds.talpuit||[];
-  var idsR=_prodIds.receptie||[];
-  if(!idsT.length&&!idsR.length){showToast('Nimic de salvat!');return;}
-  showLov('Se salvează ordinea la talpuit...');
-  await Promise.all([
-    ...idsT.map(function(id,i){return sb.from('order_lines').update({sort_order:i}).eq('id',id);}),
-    ...idsR.map(function(id,i){return sb.from('order_lines').update({sort_order:i}).eq('id',id);})
-  ]);
-  hideLov();showToast('✓ Ordinea la talpuit salvată!');
+  var ids=_prodIds.pregatit||[];
+  if(!ids.length){showToast('Nimic de salvat!');return;}
+  showLov('Se salveaza ordinea...');
+  await Promise.all(ids.map(function(id,i){return sb.from('order_lines').update({sort_order:i}).eq('id',id);}));
+  hideLov();showToast('Ordinea la talpuit salvata!');
 }
 
 async function saveOrdineAmbalat(){
