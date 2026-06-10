@@ -164,12 +164,12 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
 async function loadOrders(){
   showLov('Se încarcă comenzile...');
-  const DONE_STATUSES=['cusut_gata','la_talpuit','gata','la_impachetat_talpuit'];
+  const DONE_STATUSES=['cusut_gata','pregatit_lansat','in_talpuit','la_talpuit','gata','la_impachetat_talpuit','pregatit_livrare','finalizat'];
 
   // Pas 1: Găsim comenzile active
   const{data:orders}=await sb.from('orders')
     .select('id,order_no,status,delivery_date,sort_order,clients!orders_client_id_fkey(name,company_name)')
-    .in('status',['la_croit','in_productie','fete_gata_cusut','la_cusut_extern'])
+    .in('status',['la_croit','in_productie','fete_gata_cusut','la_cusut_extern','la_cusut'])
     .order('sort_order',{ascending:true,nullsFirst:false})
     .order('delivery_date',{ascending:true});
   const orderIds=(orders||[]).map(o=>o.id);
@@ -186,7 +186,7 @@ async function loadOrders(){
     .in('order_id',orderIds);
 
   // Atașăm datele comenzii la fiecare linie
-  const EXCLUDE_STATUSES=['cusut_gata','la_talpuit','gata','la_impachetat_talpuit'];
+  const EXCLUDE_STATUSES=['cusut_gata','pregatit_lansat','in_talpuit','la_talpuit','gata','la_impachetat_talpuit','pregatit_livrare','finalizat'];
   const pendingLines=(lines||[]).filter(l=>!EXCLUDE_STATUSES.includes(l.production_status));
   const orderMap={};
   (orders||[]).forEach(o=>orderMap[o.id]=o);
@@ -213,7 +213,8 @@ async function loadOrders(){
     const o=g.order;
     const cl=o.clients?.company_name||o.clients?.name||'Fără client';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
-    const allDone=g.lines.every(l=>l.production_status==='cusut_gata'||l.production_status==='la_talpuit'||l.production_status==='gata');
+    const DONE=['cusut_gata','pregatit_lansat','in_talpuit','la_talpuit','gata','pregatit_livrare','finalizat'];
+    const allDone=g.lines.every(l=>DONE.includes(l.production_status));
     return `<div class="card">
       <div class="card-header">
         <div class="order-no">${o.order_no||'—'}</div>
@@ -223,7 +224,7 @@ async function loadOrders(){
       ${g.lines.map(l=>{
         const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
         const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
-        const isDone=l.production_status==='cusut_gata'||l.production_status==='la_talpuit'||l.production_status==='gata';
+        const isDone=DONE.includes(l.production_status);
         const notesClean=l.notes?l.notes.replace(/\[[^\]]+\]\s*/g,'').replace(/\[Discount:[^\]]+\]\s*/,'').trim():'';
         return `<div class="art-row">
           <div class="art-info">
