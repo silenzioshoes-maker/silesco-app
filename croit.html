@@ -553,7 +553,7 @@ function getModName(l){
 }
 
 function renderOrderCard(o,i){
-  const cl=o.clients?.company_name||o.clients?.name||'—';
+  const cl=o.clients?.company_name||o.clients?.name||'STOC';
   const lines=o.order_lines||[];
   const workLines=lines.filter(l=>!l.from_stock&&!(EXTERN_WORKSHOPS.includes((l.workshop||'').toLowerCase())&&l.production_status==='la_croit'));
   const doneCnt=workLines.filter(l=>artState[l.id]?.done).length;
@@ -667,46 +667,70 @@ function renderFinalizate(){
   if(!finOrders.length){el.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
 
-  // Colectează toate articolele din comenzile finalizate, grupate pe atelier
+  const wsColors={intern:{c:'#1E4A2E',bg:'#EAF0EC'},oradea:{c:'#2F4A63',bg:'#E8EFF6'},ceica:{c:'#5A3E1B',bg:'#F5ECD7'},altul:{c:'#5A5248',bg:'#F4F1EA'}};
+
+  // Grupează comenzile pe atelier dominant (primul atelier din articole)
   const byWorkshop={};
   finOrders.forEach(o=>{
-    const cl=o.clients?.company_name||o.clients?.name||'—';
+    const cl=o.clients?.company_name||o.clients?.name||'STOC';
     const dt=o.updated_at?new Date(o.updated_at).toLocaleDateString('ro-RO'):'—';
     const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
+    // Grupează articolele comenzii pe atelier
+    const artByWs={};
     lines.forEach(l=>{
       const ws=(l.workshop||'intern').toLowerCase();
-      const wsLabel=ws==='intern'?'Intern — Cusut propriu':ws.charAt(0).toUpperCase()+ws.slice(1);
-      if(!byWorkshop[ws])byWorkshop[ws]={label:wsLabel,items:[]};
-      byWorkshop[ws].items.push({l,cl,orderNo:o.order_no,dt});
+      if(!artByWs[ws])artByWs[ws]=[];
+      artByWs[ws].push(l);
+    });
+    Object.entries(artByWs).forEach(([ws,arts])=>{
+      if(!byWorkshop[ws])byWorkshop[ws]=[];
+      byWorkshop[ws].push({o,cl,dt,arts});
     });
   });
 
-  // Ordine: intern primul, apoi externe alfabetic
   const wsKeys=Object.keys(byWorkshop).sort((a,b)=>a==='intern'?-1:b==='intern'?1:a.localeCompare(b));
 
-  const wsColors={intern:{c:'#1E4A2E',bg:'#EAF0EC'},oradea:{c:'#2F4A63',bg:'#E8EFF6'},ceica:{c:'#5A3E1B',bg:'#F5ECD7'},altul:{c:'#5A5248',bg:'#F4F1EA'}};
-
   el.innerHTML=wsKeys.map(ws=>{
-    const grp=byWorkshop[ws];
     const col=wsColors[ws]||wsColors.altul;
+    const wsLabel=ws==='intern'?'Intern — Cusut propriu':ws.charAt(0).toUpperCase()+ws.slice(1);
+    const cmds=byWorkshop[ws];
     return `<div style="margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:${col.c};background:${col.bg};padding:5px 10px;border-radius:5px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">
-        ${grp.label} — ${grp.items.length} art.
+        ${wsLabel} — ${cmds.reduce((s,c)=>s+c.arts.length,0)} art.
       </div>
-      ${grp.items.map(({l,cl,orderNo,dt})=>`
-        <div class="fin-card" style="margin-bottom:6px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      ${cmds.map(({o,cl,dt,arts})=>`
+        <div class="fin-card" style="margin-bottom:6px;padding:0;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer"
+            onclick="togFinCard('finbody_${o.id}_${ws}','finarr_${o.id}_${ws}')">
             <div>
-              <div style="font-size:11px;font-family:monospace;color:#8B6914;margin-bottom:2px">${orderNo||'—'} · ${cl}</div>
-              <div style="font-size:15px;font-weight:700;color:#111111">${getModName(l)} · ${l.color||'—'}</div>
-              <div style="font-size:13px;color:#5A5248;margin-top:2px">${l.total_pairs} perechi</div>
+              <div style="font-size:11px;font-family:monospace;color:#8B6914;margin-bottom:2px">${o.order_no||'—'}</div>
+              <div style="font-size:15px;font-weight:700;color:#111111">${cl}</div>
+              <div style="font-size:12px;color:#5A5248;margin-top:2px">${arts.length} articole · ${dt}</div>
             </div>
-            <div style="font-size:12px;color:#9E9890;white-space:nowrap;margin-left:8px">${dt}</div>
+            <svg id="finarr_${o.id}_${ws}" viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#9E9890;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div style="margin-top:6px;font-size:12px;font-weight:700;color:${col.c}">Trimis la cusut — ${grp.label}</div>
+          <div id="finbody_${o.id}_${ws}" style="display:none;border-top:1px solid #EDE8DF;padding:8px 14px">
+            ${arts.map(l=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F4F1EA">
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#111111">${getModName(l)} · ${l.color||'—'}</div>
+                  <div style="font-size:12px;color:#5A5248">${l.total_pairs} perechi</div>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:${col.c};background:${col.bg};padding:2px 8px;border-radius:3px">La cusut</span>
+              </div>`).join('')}
+          </div>
         </div>`).join('')}
     </div>`;
   }).join('');
+}
+
+function togFinCard(bodyId,arrowId){
+  const b=document.getElementById(bodyId);
+  const a=document.getElementById(arrowId);
+  if(!b)return;
+  const open=b.style.display==='block';
+  b.style.display=open?'none':'block';
+  if(a)a.style.transform=open?'rotate(0deg)':'rotate(180deg)';
 }
 
 // ── TOGGLE EXPAND ─────────────────────────────────────────────
@@ -920,7 +944,7 @@ async function genFisaProductie(orderId){
     .eq('id',orderId).single();
   hideLov();
   if(!o)return;
-  const cl=o.clients?.company_name||o.clients?.name||'—';
+  const cl=o.clients?.company_name||o.clients?.name||'STOC';
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const azi=new Date().toLocaleDateString('ro-RO');
   const sumar=o.order_lines.map(l=>{
