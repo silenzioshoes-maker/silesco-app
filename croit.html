@@ -486,8 +486,8 @@ async function loadOrders(){
   const{data:active}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,total_pairs,notes,is_repair,parent_order_id,
       clients!orders_client_id_fkey(name,company_name),
-      order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,products(code,name))`)
-    .in('status',['la_croit','in_productie','la_cusut'])
+      order_lines(id,product_id,free_model,color,ponytage,total_pairs,unit_price,notes,from_stock,workshop,production_status,products(code,name))`)
+    .in('status',['la_croit','in_productie'])
     .order('sort_order',{ascending:true,nullsFirst:false})
     .order('delivery_date',{ascending:true});
   orders=active||[];
@@ -495,8 +495,8 @@ async function loadOrders(){
   const{data:fin}=await sb.from('orders')
     .select(`id,order_no,status,delivery_date,updated_at,
       clients!orders_client_id_fkey(name,company_name),
-      order_lines(id,product_id,free_model,color,ponytage,total_pairs,products(code))`)
-    .eq('status','fete_gata_cusut')
+      order_lines(id,product_id,free_model,color,ponytage,total_pairs,production_status,products(code))`)
+    .in('status',['la_cusut','fete_gata_cusut'])
     .order('updated_at',{ascending:false}).limit(20);
   finOrders=fin||[];
 
@@ -675,7 +675,7 @@ function renderFinalizate(){
         </div>
         <div style="font-size:13px;color:#444444;white-space:nowrap;margin-left:8px">${dt}</div>
       </div>
-      <div style="margin-top:8px;font-size:13px;color:#1E4A2E;font-weight:600">✓ Fețe gata — la cusut</div>
+      <div style="margin-top:8px;font-size:13px;color:#1E4A2E;font-weight:600">Trimis la cusut</div>
     </div>`;
   }).join('');
 }
