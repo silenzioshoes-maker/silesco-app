@@ -1899,6 +1899,8 @@ async function loadStoc(){
     </div>`;
   }).join('');}
 }
+
+function setStocTab(tab){
   _stocTab=tab;
   const isProd=tab==='productie';
   document.getElementById('stocProductieView').style.display=isProd?'':'none';
@@ -1906,6 +1908,9 @@ async function loadStoc(){
   document.getElementById('stocTabProd').style.cssText='flex:1;padding:9px;border-radius:7px;cursor:pointer;font-family:Inter,sans-serif;font-size:12px;font-weight:700;border:1.5px solid '+(isProd?'#B08D57':'#C8C0B8')+';background:'+(isProd?'#F6F0E5':'#fff')+';color:'+(isProd?'#8B6914':'#3A3530');
   document.getElementById('stocTabFinit').style.cssText='flex:1;padding:9px;border-radius:7px;cursor:pointer;font-family:Inter,sans-serif;font-size:12px;font-weight:700;border:1.5px solid '+(isProd?'#C8C0B8':'#B08D57')+';background:'+(isProd?'#fff':'#F6F0E5')+';color:'+(isProd?'#3A3530':'#8B6914');
 }
+
+let _stocTab='productie';
+let _rezervareData=null;
 
 async function loadStoc(){
   // Stoc Productie
