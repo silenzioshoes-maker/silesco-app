@@ -467,7 +467,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
     </div>
   </div>
 
-
+  <!-- STOC -->
+  <div id="vStoc" style="display:none">
+    <div class="wrap">
+      <div class="sec-label">Baxuri gata</div><div id="stBax"></div>
+      <div class="sec-label" style="margin-top:16px">FEȚE disponibile</div><div id="stFete"></div>
+    </div>
+  </div>
 
   <!-- MESAJE AGENT - redirect la pagina dedicată -->
   <div id="vMesaje" style="display:none"></div>
@@ -498,8 +504,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
   <!-- MODAL REZERVARE -->
   <div id="rezervareModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
     <div style="background:#FAF8F4;border-radius:12px;padding:24px;width:90%;max-width:380px">
-      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Rezerva serie</div>
-      <div id="rezervareInfo" style="font-size:13px;color:#5A5248;margin-bottom:16px"></div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Rezerva</div>
+      <div id="rezervareInfo" style="font-size:13px;color:#5A5248;margin-bottom:12px"></div>
+      <div id="rezervareNrBaxWrap" style="display:none;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Numar baxuri</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button onclick="adjRezBax(-1)" style="width:36px;height:36px;border-radius:6px;border:1px solid #DDD7CE;background:#fff;font-size:18px;cursor:pointer">−</button>
+          <span id="rezervareNrBax" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#111;min-width:30px;text-align:center">1</span>
+          <button onclick="adjRezBax(1)" style="width:36px;height:36px;border-radius:6px;border:1px solid #DDD7CE;background:#fff;font-size:18px;cursor:pointer">+</button>
+          <span id="rezervareBaxInfo" style="font-size:11px;color:#1E4A2E;font-weight:600"></span>
+        </div>
+      </div>
       <div style="margin-bottom:12px">
         <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Client</div>
         <input id="rezervareClient" type="text" placeholder="Numele clientului..."
@@ -1770,7 +1785,7 @@ async function loadAgentMsgBadge(){
 async function loadStoc(){
   // Stoc Productie
   const{data:stocOrders}=await sb.from('orders')
-    .select(`id,order_no,status,total_pairs,titlu_stoc,
+    .select(`id,order_no,status,total_pairs,titlu_stoc,nr_baxuri,pontaj_bax,
       order_lines(id,color,ponytage,total_pairs,product_id,free_model,production_status,from_stock,products(code,name)),
       stock_allocations(id,total_pairs)`)
     .eq('is_stock',true)
@@ -1783,8 +1798,11 @@ async function loadStoc(){
   } else {
     prodEl.innerHTML=(stocOrders||[]).map(o=>{
       const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
-      const allocated=(o.stock_allocations||[]).reduce((s,a)=>s+(a.total_pairs||0),0);
-      const disponibil=o.total_pairs-allocated;
+      const nrBaxTotal=o.nr_baxuri||1;
+      const allocated=(o.stock_allocations||[]).reduce((s,a)=>s+(a.nr_baxuri||1),0);
+      const nrBaxDisp=Math.max(0,nrBaxTotal-allocated);
+      const pontajBax=o.pontaj_bax||{};
+      const perBax=Object.values(pontajBax).reduce((s,q)=>s+(parseInt(q)||0),0);
       const titlu=o.titlu_stoc||o.order_no||'—';
       return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
         <div style="padding:14px">
@@ -1794,23 +1812,24 @@ async function loadStoc(){
               <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111;margin-top:2px">${titlu}</div>
             </div>
             <div style="text-align:right">
-              <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1E4A2E">${disponibil}</div>
-              <div style="font-size:9px;color:#5A5248;font-weight:700;text-transform:uppercase">disponibile</div>
+              <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1E4A2E">${nrBaxDisp}</div>
+              <div style="font-size:9px;color:#5A5248;font-weight:700;text-transform:uppercase">baxuri disponibile</div>
+              <div style="font-size:9px;color:#9A9088">${nrBaxTotal} total</div>
             </div>
           </div>
           ${lines.map(l=>{
             const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
-            const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
-            const pontaj=entries.map(([s,q])=>s+'×'+q).join('  ');
+            const entries=Object.entries(pontajBax).filter(([,q])=>q>0);
+            const pontaj=entries.length?entries.map(([s,q])=>s+'×'+q).join('  '):(l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0).map(([s,q])=>s+'×'+q).join('  '):'—');
             return `<div style="border-top:1px solid #F4F1EA;padding:10px 0">
               <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#111">${mod}</div>
               <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${l.color||'—'}</div>
               <div style="font-size:11px;color:#3A3530;margin-top:4px;font-family:monospace">${pontaj}</div>
-              <div style="font-size:12px;color:#1E4A2E;font-weight:700;margin-top:2px">${l.total_pairs} per.</div>
-              <button onclick="openRezervare('productie','${l.id}','${o.id}','${titlu} — ${mod} · ${(l.color||'').replace(/'/g,"\\'")}',null)"
+              <div style="font-size:12px;color:#1E4A2E;font-weight:700;margin-top:2px">${perBax||l.total_pairs} per./bax</div>
+              ${nrBaxDisp>0?`<button onclick="openRezervare('productie','${l.id}','${o.id}','${titlu} — ${mod} · ${(l.color||'').replace(/'/g,"\\'")}',${nrBaxDisp},${perBax||l.total_pairs})"
                 style="width:100%;margin-top:10px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
-                Rezerva seria
-              </button>
+                Rezerva baxuri
+              </button>`:`<div style="margin-top:10px;padding:10px;background:#F4F1EA;border-radius:8px;font-size:12px;color:#9A9088;text-align:center;font-weight:600">Toate baxurile rezervate</div>`}
             </div>`;
           }).join('')}
         </div>
@@ -2033,11 +2052,24 @@ async function loadStoc(){
   }).join('');}
 }
 
-function openRezervare(tip,itemId,orderId,label){
-  _rezervareData={tip,itemId,orderId,label};
+function adjRezBax(d){
+  const el=document.getElementById('rezervareNrBax');
+  const max=_rezervareData?.nrBaxuriDisp||99;
+  let v=parseInt(el.textContent)||1;
+  v=Math.max(1,Math.min(max,v+d));
+  el.textContent=v;
+  const perBax=_rezervareData?.perBax||0;
+  document.getElementById('rezervareBaxInfo').textContent=perBax?'= '+(v*perBax)+' per.':'';
+}
+
+function openRezervare(tip,itemId,orderId,label,nrBaxuriDisp,perBax){
+  _rezervareData={tip,itemId,orderId,label,nrBaxuriDisp:parseInt(nrBaxuriDisp)||1,perBax:parseInt(perBax)||0};
   document.getElementById('rezervareInfo').textContent=label;
   document.getElementById('rezervareClient').value='';
   document.getElementById('rezervareNote').value='';
+  document.getElementById('rezervareNrBax').textContent='1';
+  document.getElementById('rezervareBaxInfo').textContent=perBax?'= '+perBax+' per.':'';
+  document.getElementById('rezervareNrBaxWrap').style.display=tip==='productie'?'block':'none';
   document.getElementById('rezervareModal').style.display='flex';
 }
 
@@ -2051,15 +2083,16 @@ async function salveazaRezervare(){
   const client=document.getElementById('rezervareClient').value.trim();
   if(!client){showToast('Introdu numele clientului!');return;}
   const note=document.getElementById('rezervareNote').value.trim();
+  const nrBax=parseInt(document.getElementById('rezervareNrBax').textContent)||1;
   showLov('Se salveaza...');
-  const{tip,itemId,orderId}=_rezervareData;
+  const{tip,itemId,orderId,perBax}=_rezervareData;
   if(tip==='productie'){
-    const{data:line}=await sb.from('order_lines').select('total_pairs,ponytage').eq('id',itemId).single();
+    const totalPer=nrBax*(perBax||0);
     await sb.from('stock_allocations').insert({
       stock_order_id:orderId,stock_line_id:itemId,
-      client_name:client,ponytage:line?.ponytage||{},
-      total_pairs:line?.total_pairs||0,status:'rezervat',
-      notes:note||null,allocated_by:CU?.id||null
+      client_name:client,ponytage:_rezervareData.pontajBax||{},
+      total_pairs:totalPer,nr_baxuri:nrBax,
+      status:'rezervat',notes:note||null,allocated_by:CU?.id||null
     });
   } else {
     await sb.from('stock_marfa_finita').update({
@@ -2067,7 +2100,7 @@ async function salveazaRezervare(){
     }).eq('id',itemId);
   }
   hideLov();closeRezervare();
-  showToast('Rezervat pentru '+client+'!');
+  showToast('Rezervat '+nrBax+' bax pentru '+client+'!');
   await loadStoc();
 }
 
