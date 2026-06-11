@@ -364,6 +364,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div id="omStockNote" style="display:none;background:#E8EFF6;border-left:3px solid #2F4A63;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#23394F;line-height:1.5">
       Comandă pentru stoc — fără client. Când e gata sau chiar în lucru, o poți aloca unui client din lista de comenzi.
     </div>
+    <div class="fld" id="omTitluStocWrap" style="display:none">
+      <label>Titlu lot stoc <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(ex: SNK Toamna 2025, Loafers Vara)</span></label>
+      <input type="text" id="omTitluStoc" placeholder="Denumire lot pentru identificare..."/>
+    </div>
 
     <!-- CAMP LABEL POZITIE MANUALA - ascuns implicit -->
     <div class="fld" id="omManualLabelWrap" style="display:none">
@@ -1018,7 +1022,7 @@ async function loadAteliere(){
 
 async function loadOrders(){
   const{data,error}=await sb.from('orders')
-    .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
+    .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,titlu_stoc,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       user_profiles!orders_agent_id_fkey(full_name),
       order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,talpa_id,brant_id,siret_id,cutie_id,products(id,code,name,default_sole_id))`)
@@ -1111,7 +1115,7 @@ function _buildOrdersHTML(orders,prefix='ord'){
     const idx=prefix+'_'+i;
     const cfg=SC[o.status]||SC.nou;
     const isStock=o.is_stock;
-    const cl=isStock?(o.allocated_to_client&&o.clients?(o.clients.company_name||o.clients.name):'STOC'):(o.clients?.company_name||o.clients?.name||'—');
+    const cl=isStock?(o.allocated_to_client&&o.clients?(o.clients.company_name||o.clients.name):(o.titlu_stoc||'STOC')):(o.clients?.company_name||o.clients?.name||'—');
     const agent=o.user_profiles?.full_name||'—';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
     const dl=o.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
@@ -1660,6 +1664,7 @@ async function openEditOrder(id,e){e.stopPropagation();showLov('Se încarcă...'
   document.getElementById('omPlata').value=o.plata||'30 zile';
   document.getElementById('omPriority').value=o.priority||'normal';
   document.getElementById('omNotes').value=o.notes||'';
+  if(document.getElementById('omTitluStoc')) document.getElementById('omTitluStoc').value=o.titlu_stoc||'';
   omArts=(o.order_lines||[]).map(l=>({product_id:l.product_id,free_model:l.free_model||null,code:l.products?.code||l.free_model||(l.color?'['+l.color+']':'—'),color:l.color||'',ponytage:l.ponytage||{},total_pairs:l.total_pairs||0,unit_price:l.unit_price||0}));
   document.getElementById('omAddArtBtn').textContent='+ Adaugă articol';
   ['omModInput','omModId','omColor','omPret'].forEach(x=>document.getElementById(x).value='');
@@ -1692,6 +1697,7 @@ function setOrderType(t){omOrderType=t;
   document.getElementById('omTabStock').style.cssText=t==='stock'?'flex:1;padding:9px;border-radius:7px;border:1.5px solid #2F4A63;background:#E8EFF6;color:#23394F;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif':'flex:1;padding:9px;border-radius:7px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
   document.getElementById('omClientWrap').style.display=t==='client'?'block':'none';
   document.getElementById('omStockNote').style.display=t==='stock'?'block':'none';
+  document.getElementById('omTitluStocWrap').style.display=t==='stock'?'block':'none';
 }
 function filterColors(q){const d=document.getElementById('omColorDrop');const f=q.trim()?CULORI.filter(c=>c.toLowerCase().includes(q.toLowerCase())):CULORI;
   if(!f.length){d.style.display='none';return;}d.style.display='block';
@@ -1821,12 +1827,12 @@ async function saveOrder(){
   };
   showLov('Se salvează...');
   if(omEditId){
-    await sb.from('orders').update({client_id:isStock?null:clientId,is_stock:isStock,delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv,updated_at:new Date().toISOString()}).eq('id',omEditId);
+    await sb.from('orders').update({client_id:isStock?null:clientId,is_stock:isStock,delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv,titlu_stoc:isStock?(document.getElementById('omTitluStoc')?.value.trim()||null):null,updated_at:new Date().toISOString()}).eq('id',omEditId);
     await sb.from('order_lines').delete().eq('order_id',omEditId);
     await sb.from('order_lines').insert(omArts.map(a=>({order_id:omEditId,...lineRows(a)})));
     await sb.from('audit_log').insert({table_name:'orders',record_id:omEditId,action:'update',new_data:{action:'Editat de management',operator:CP?.full_name||'Management'},done_by:CU.id});
   }else{
-    const{data:ord,error:ordErr}=await sb.from('orders').insert({client_id:isStock?null:clientId,is_stock:isStock,agent_id:CU.id,status:'nou',delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv}).select().single();
+    const{data:ord,error:ordErr}=await sb.from('orders').insert({client_id:isStock?null:clientId,is_stock:isStock,agent_id:CU.id,status:'nou',delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv,titlu_stoc:isStock?(document.getElementById('omTitluStoc')?.value.trim()||null):null}).select().single();
     if(ordErr||!ord){hideLov();showToast('Eroare la salvare: '+(ordErr?.message||'necunoscut'));return;}
     await sb.from('order_lines').insert(omArts.map(a=>({order_id:ord.id,...lineRows(a)})));
   }
