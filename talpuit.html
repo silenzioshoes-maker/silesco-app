@@ -181,7 +181,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     </div>
     <div id="pregatitList" style="margin-top:8px"></div>
     <div class="empty" id="pregatitEmpty" style="display:none">
-      <div style="font-size:13px;font-weight:600">Niciun articol pregatit de lansat</div>
+      <div style="font-size:13px;font-weight:600">Niciun articol pregătit de lansat</div>
     </div>
   </div>
 
@@ -332,7 +332,7 @@ async function loadAll(){
   (lines||[]).forEach(l=>l.orders=ordersMap[l.order_id]||null);
 
   const cusutGata=(lines||[]).filter(l=>l.production_status==='cusut_gata');
-  const pregatitLansat=(lines||[]).filter(l=>l.production_status==='pregatit_lansat');
+  const pregatit=(lines||[]).filter(l=>l.production_status==='pregatit_lansat');
   const lansat=(lines||[]).filter(l=>l.production_status==='in_talpuit');
   const gata=(lines||[]).filter(l=>l.production_status==='gata');
 
@@ -342,7 +342,7 @@ async function loadAll(){
   document.getElementById('stGata').textContent=gata.reduce((s,l)=>s+(l.total_pairs||0),0);
 
   renderReceptie(cusutGata);
-  renderPregatitLansat(pregatitLansat);
+  renderPregatit(pregatit);
   renderLansat(lansat);
   hideLov();
 }
@@ -379,48 +379,6 @@ function renderReceptie(lines){
       </div>
     </div>`;
   }).join('');
-}
-
-function renderPregatitLansat(lines){
-  const el=document.getElementById('pregatitList');
-  const empty=document.getElementById('pregatitEmpty');
-  if(!el)return;
-  if(!lines.length){el.innerHTML='';if(empty)empty.style.display='block';return;}
-  if(empty)empty.style.display='none';
-  el.innerHTML=groupByOrder(lines).map((g,gi)=>{
-    const o=g.order||{};
-    const cl=o.clients?.company_name||o.clients?.name||'—';
-    const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
-    return `<div class="cmd-card">
-      <div class="cmd-header" onclick="togCmd('preg_${gi}','pregarr_${gi}')">
-        <div style="flex:1;min-width:0">
-          <div class="cmd-no">${o.order_no||'—'}</div>
-          <div class="cmd-client">${cl}</div>
-          <div class="cmd-meta">Livrare: ${dd}</div>
-        </div>
-        <div class="cmd-progress"><div class="cmd-prog-num" style="color:#1E4A2E">${g.lines.length}</div><div class="cmd-prog-label">art.</div></div>
-        <svg class="cmd-arrow" id="pregarr_${gi}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="cmd-body" id="preg_${gi}">
-        ${g.lines.map(l=>`
-          <div class="art-row" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-            <div style="flex:1">
-              <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
-              <div class="art-pairs">${l.total_pairs} per.</div>
-              <div class="pontaj">${renderPontaj(l.ponytage)}</div>
-            </div>
-            <button class="btn-receptie" style="background:#1E4A2E" onclick="markLansat('${l.id}')">Lanseaza</button>
-          </div>`).join('')}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function markLansat(lineId){
-  showLov('Se lanseaza...');
-  await sb.from('order_lines').update({production_status:'in_talpuit'}).eq('id',lineId);
-  hideLov();showToast('Lansat in talpuit!');
-  await loadAll();
 }
 
 function renderLansat(lines){
@@ -682,6 +640,49 @@ async function markReceptionat(lineId){
   showLov('Se recepționează...');
   await sb.from('order_lines').update({production_status:'pregatit_lansat'}).eq('id',lineId);
   hideLov();showToast('Receptionat — pregatit de lansat!');
+  await loadAll();
+}
+
+function renderPregatit(lines){
+  const el=document.getElementById('pregatitList');
+  const empty=document.getElementById('pregatitEmpty');
+  if(!lines.length){el.innerHTML='';if(empty)empty.style.display='block';return;}
+  if(empty)empty.style.display='none';
+  el.innerHTML=lines.map(l=>{
+    const o=l.orders||{};
+    const cl=o.clients?.company_name||o.clients?.name||'STOC';
+    const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
+    const pontajHtml=entries.map(([s,q])=>`<div class="pchip">${s}×${q}</div>`).join('');
+    const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+    return `<div class="card">
+      <div class="card-header">
+        <div class="order-no">${o.order_no||'—'}</div>
+        <div class="client">${cl}</div>
+      </div>
+      <div class="art-row">
+        <div class="art-info">
+          <div class="art-name">${mod}</div>
+          <div class="art-color">${l.color||'—'}</div>
+          <div class="art-total">${l.total_pairs} perechi</div>
+          <div class="pontaj">${pontajHtml}</div>
+        </div>
+        <button class="btn-done" onclick="markLansat('${l.id}','${l.order_id}')">Lanseaza in talpuit</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function markLansat(lineId,orderId){
+  showLov('Se lansează...');
+  await sb.from('order_lines').update({production_status:'in_talpuit'}).eq('id',lineId);
+  // Verifică dacă toate articolele comenzii sunt lansate
+  const{data:remaining}=await sb.from('order_lines')
+    .select('id,production_status').eq('order_id',orderId).neq('from_stock',true);
+  const allLansat=(remaining||[]).every(l=>['in_talpuit','gata','pregatit_livrare','finalizat'].includes(l.production_status)||l.id===lineId);
+  if(allLansat){
+    await sb.from('orders').update({status:'la_talpuit'}).eq('id',orderId);
+  }
+  hideLov();showToast('Lansat in talpuit!');
   await loadAll();
 }
 
