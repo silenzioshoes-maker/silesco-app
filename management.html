@@ -404,6 +404,11 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         <div class="ac-drop" id="omColorDrop"></div>
       </div>
       <div class="fld" style="margin-bottom:10px"><label>Preț / pereche <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(opțional)</span></label><input type="number" id="omPret" placeholder="Lasă gol dacă nu e stabilit" min="0"/></div>
+      <div class="fld" id="omNrBaxArtWrap" style="display:none;margin-bottom:10px">
+        <label>Nr. baxuri <span style="color:#9E9890;font-weight:400;text-transform:none;letter-spacing:0">(pentru acest articol/culoare)</span></label>
+        <input type="number" id="omNrBaxArt" min="1" max="999" placeholder="ex: 3" value="1" oninput="calcTotalBaxArt()"/>
+        <div id="omTotalBaxArtInfo" style="margin-top:4px;font-size:11px;color:#1E4A2E;font-weight:600"></div>
+      </div>
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <label style="font-size:10px;font-weight:700;color:#3A3530;text-transform:uppercase;letter-spacing:1px">Mărimi</label>
@@ -1704,7 +1709,7 @@ function setOrderType(t){omOrderType=t;
   document.getElementById('omClientWrap').style.display=t==='client'?'block':'none';
   document.getElementById('omStockNote').style.display=t==='stock'?'block':'none';
   document.getElementById('omTitluStocWrap').style.display=t==='stock'?'block':'none';
-  document.getElementById('omNrBaxuriWrap').style.display=t==='stock'?'block':'none';
+  document.getElementById('omNrBaxArtWrap').style.display=t==='stock'?'block':'none';
 }
 function filterColors(q){const d=document.getElementById('omColorDrop');const f=q.trim()?CULORI.filter(c=>c.toLowerCase().includes(q.toLowerCase())):CULORI;
   if(!f.length){d.style.display='none';return;}d.style.display='block';
@@ -1732,7 +1737,10 @@ function setStdSizes(){omSizeList=[...SZ];omSzV={'39':1,'40':2,'41':3,'42':3,'43
 // Articole
 function renderOmArts(){const div=document.getElementById('omArtList');
   if(!omArts.length){div.innerHTML='<div style="font-size:12px;color:#5A5248;padding:6px 0">Niciun articol adăugat.</div>';calcTotalBaxuri();return;}
-  div.innerHTML=omArts.map((a,i)=>`<div class="art-card"><div style="flex:1"><div style="font-size:13px;font-weight:700;color:#111111">Art. ${a.code} · ${a.color}</div><div style="font-size:11px;color:#3A3530;margin-top:2px;font-weight:500">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div><div style="font-size:10px;color:#4A4540;margin-top:2px;font-family:monospace">${Object.entries(a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button onclick="editOmArt(${i})" style="background:#F6F0E5;border:1px solid #B08D57;border-radius:5px;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px;font-family:'Inter',sans-serif">Editează</button><button onclick="remOmArt(${i})" style="background:#F5EAE8;border:1px solid #9C3A2B;border-radius:5px;color:#7A2418;font-size:14px;cursor:pointer;padding:3px 9px;font-family:'Inter',sans-serif">×</button></div></div>`).join('');
+  div.innerHTML=omArts.map((a,i)=>{
+    const baxInfo=a.nr_baxuri&&a.nr_baxuri>1?` · <span style="color:#8B6914;font-weight:700">${a.nr_baxuri} baxuri</span>`:'';
+    return `<div class="art-card"><div style="flex:1"><div style="font-size:13px;font-weight:700;color:#111111">Art. ${a.code} · ${a.color}${baxInfo}</div><div style="font-size:11px;color:#3A3530;margin-top:2px;font-weight:500">${a.total_pairs} per. ${a.unit_price?'· '+a.unit_price+' RON/per.':''}</div><div style="font-size:10px;color:#4A4540;margin-top:2px;font-family:monospace">${Object.entries(a.pontaj_bax||a.ponytage).map(([s,q])=>s+'×'+q).join('  ')}${a.nr_baxuri>1?' (per bax)':''}</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button onclick="editOmArt(${i})" style="background:#F6F0E5;border:1px solid #B08D57;border-radius:5px;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px;font-family:'Inter',sans-serif">Editează</button><button onclick="remOmArt(${i})" style="background:#F5EAE8;border:1px solid #9C3A2B;border-radius:5px;color:#7A2418;font-size:14px;cursor:pointer;padding:3px 9px;font-family:'Inter',sans-serif">×</button></div></div>`;
+  }).join('');
   calcTotalBaxuri();
 }function remOmArt(i){omArts.splice(i,1);renderOmArts();}
 function editOmArt(i){const a=omArts[i];omEditingArtIdx=i;
@@ -1762,8 +1770,12 @@ async function addArtToOrder(){
       freeModel=modText;mid=null;code=modText;
     }
   }else{const prod=prods.find(p=>p.id===mid);code=prod?.code||modText;}
-  omArts.push({product_id:mid,free_model:freeModel,code,color:col,ponytage:pt,total_pairs:tot,unit_price:pr});
+  const nrBaxArt=omOrderType==='stock'?(parseInt(document.getElementById('omNrBaxArt')?.value)||1):1;
+  const pontajBax={...pt}; // pontajul unui singur bax
+  const totalPairs=omOrderType==='stock'?nrBaxArt*tot:tot;
+  omArts.push({product_id:mid,free_model:freeModel,code,color:col,ponytage:omOrderType==='stock'?buildBulkPontaj(pt,nrBaxArt):pt,total_pairs:totalPairs,unit_price:pr,nr_baxuri:nrBaxArt,pontaj_bax:pontajBax});
   ['omModInput','omModId','omColor','omPret'].forEach(x=>document.getElementById(x).value='');
+  if(document.getElementById('omNrBaxArt'))document.getElementById('omNrBaxArt').value='1';
   document.getElementById('omModNewOpts').style.display='none';omModMode=null;
   omSizeList=[...SZ];omSzV={};SZ.forEach(s=>omSzV[s]=0);renderOmSizes();renderOmArts();
   document.getElementById('omAddArtBtn').textContent='+ Adaugă articol';omEditingArtIdx=null;showToast('Articol adăugat!');}
@@ -1811,10 +1823,7 @@ async function saveOrder(){
   const plata=document.getElementById('omPlata').value;
   const priority=document.getElementById('omPriority').value;
   const notes=document.getElementById('omNotes').value.trim();
-  const nrBaxuri=isStock?parseInt(document.getElementById('omNrBaxuri')?.value)||1:1;
-  const pontajBax=isStock&&omArts.length?omArts[0].ponytage||{}:{};
-  const perPerBax=omArts.reduce((s,a)=>s+a.total_pairs,0);
-  const tp=isStock?nrBaxuri*perPerBax:omArts.reduce((s,a)=>s+a.total_pairs,0);
+  const tp=omArts.reduce((s,a)=>s+a.total_pairs,0);
   const tv=omArts.reduce((s,a)=>s+(a.unit_price||0)*a.total_pairs,0);
   // Încarcă asocierile model→materiale
   const{data:asoc}=await sb.from('model_materiale').select('*');
@@ -1829,6 +1838,8 @@ async function saveOrder(){
       ponytage:a.ponytage,
       total_pairs:a.total_pairs,
       unit_price:a.unit_price||null,
+      nr_baxuri:isStock?(a.nr_baxuri||1):null,
+      pontaj_bax:isStock?(a.pontaj_bax||null):null,
       talpa_id:mat.talpa_id||null,
       brant_id:mat.brant_id||null,
       siret_id:mat.siret_id||null,
@@ -1837,12 +1848,12 @@ async function saveOrder(){
   };
   showLov('Se salvează...');
   if(omEditId){
-    await sb.from('orders').update({client_id:isStock?null:clientId,is_stock:isStock,delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv,titlu_stoc:isStock?(document.getElementById('omTitluStoc')?.value.trim()||null):null,nr_baxuri:isStock?nrBaxuri:null,pontaj_bax:isStock?pontajBax:null,updated_at:new Date().toISOString()}).eq('id',omEditId);
+    await sb.from('orders').update({client_id:isStock?null:clientId,is_stock:isStock,delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv,titlu_stoc:isStock?(document.getElementById('omTitluStoc')?.value.trim()||null):null,updated_at:new Date().toISOString()}).eq('id',omEditId);
     await sb.from('order_lines').delete().eq('order_id',omEditId);
     await sb.from('order_lines').insert(omArts.map(a=>({order_id:omEditId,...lineRows(a)})));
     await sb.from('audit_log').insert({table_name:'orders',record_id:omEditId,action:'update',new_data:{action:'Editat de management',operator:CP?.full_name||'Management'},done_by:CU.id});
   }else{
-    const{data:ord,error:ordErr}=await sb.from('orders').insert({client_id:isStock?null:clientId,is_stock:isStock,agent_id:CU.id,status:'nou',delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv,titlu_stoc:isStock?(document.getElementById('omTitluStoc')?.value.trim()||null):null,nr_baxuri:isStock?nrBaxuri:null,pontaj_bax:isStock?pontajBax:null}).select().single();
+    const{data:ord,error:ordErr}=await sb.from('orders').insert({client_id:isStock?null:clientId,is_stock:isStock,agent_id:CU.id,status:'nou',delivery_preset:termen,delivery_date:calcDD(termen),plata,priority,notes,total_pairs:tp,total_value:tv,titlu_stoc:isStock?(document.getElementById('omTitluStoc')?.value.trim()||null):null}).select().single();
     if(ordErr||!ord){hideLov();showToast('Eroare la salvare: '+(ordErr?.message||'necunoscut'));return;}
     await sb.from('order_lines').insert(omArts.map(a=>({order_id:ord.id,...lineRows(a)})));
   }
@@ -1871,6 +1882,19 @@ async function saveMgmtNewClient(){
   closeModal('newClientModal');
   showToast('Client salvat!');
   await loadClients();
+}
+
+function buildBulkPontaj(pontajBax,nr){
+  const bulk={};
+  Object.entries(pontajBax).forEach(([s,q])=>{bulk[s]=(parseInt(q)||0)*nr;});
+  return bulk;
+}
+
+function calcTotalBaxArt(){
+  const nr=parseInt(document.getElementById('omNrBaxArt')?.value)||1;
+  const perBax=omSizeList.reduce((s,sz)=>s+(omSzV[sz]||0),0);
+  if(!perBax){document.getElementById('omTotalBaxArtInfo').textContent='';return;}
+  document.getElementById('omTotalBaxArtInfo').textContent=nr+' baxuri × '+perBax+' per./bax = '+(nr*perBax)+' per. total';
 }
 
 function calcTotalBaxuri(){
