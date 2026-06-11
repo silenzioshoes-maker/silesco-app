@@ -316,10 +316,16 @@ function groupByOrder(lines){
 
 async function loadAll(){
   showLov('Se încarcă...');
-  const{data:lines}=await sb.from('order_lines')
-    .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,sort_order,talpa_id,brant_id,products(code,name)')
-    .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit','gata'])
-    .order('sort_order',{ascending:true});
+  const[{data:lines},{data:manual}]=await Promise.all([
+    sb.from('order_lines')
+      .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,sort_order,talpa_id,brant_id,products(code,name)')
+      .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit','gata'])
+      .order('sort_order',{ascending:true}),
+    sb.from('productie_manual')
+      .select('id,free_model,color,ponytage,total_pairs,production_status,notes,created_at')
+      .in('production_status',['pregatit_lansat','in_talpuit'])
+      .order('created_at',{ascending:true})
+  ]);
 
   const orderIds=[...new Set((lines||[]).map(l=>l.order_id).filter(Boolean))];
   let ordersMap={};
@@ -330,10 +336,17 @@ async function loadAll(){
     (orders||[]).forEach(o=>ordersMap[o.id]=o);
   }
   (lines||[]).forEach(l=>l.orders=ordersMap[l.order_id]||null);
+  (manual||[]).forEach(m=>{m._manual=true;m.orders={order_no:'Manual',clients:null};});
 
   const cusutGata=(lines||[]).filter(l=>l.production_status==='cusut_gata');
-  const pregatit=(lines||[]).filter(l=>l.production_status==='pregatit_lansat');
-  const lansat=(lines||[]).filter(l=>l.production_status==='in_talpuit');
+  const pregatit=[
+    ...(lines||[]).filter(l=>l.production_status==='pregatit_lansat'),
+    ...(manual||[]).filter(m=>m.production_status==='pregatit_lansat')
+  ];
+  const lansat=[
+    ...(lines||[]).filter(l=>l.production_status==='in_talpuit'),
+    ...(manual||[]).filter(m=>m.production_status==='in_talpuit')
+  ];
   const gata=(lines||[]).filter(l=>l.production_status==='gata');
 
   document.getElementById('hdrBadge').textContent=lansat.length+' in talpuit';
@@ -666,21 +679,23 @@ function renderPregatit(lines){
           <div class="art-total">${l.total_pairs} perechi</div>
           <div class="pontaj">${pontajHtml}</div>
         </div>
-        <button class="btn-done" onclick="markLansat('${l.id}','${l.order_id}')">Lanseaza in talpuit</button>
+        <button class="btn-done" onclick="markLansat('${l.id}','${l.order_id||''}','${l._manual?'1':'0'}')">Lanseaza in talpuit</button>
       </div>
     </div>`;
   }).join('');
 }
 
-async function markLansat(lineId,orderId){
+async function markLansat(lineId,orderId,isManual){
   showLov('Se lansează...');
-  await sb.from('order_lines').update({production_status:'in_talpuit'}).eq('id',lineId);
-  // Verifică dacă toate articolele comenzii sunt lansate
-  const{data:remaining}=await sb.from('order_lines')
-    .select('id,production_status').eq('order_id',orderId).neq('from_stock',true);
-  const allLansat=(remaining||[]).every(l=>['in_talpuit','gata','pregatit_livrare','finalizat'].includes(l.production_status)||l.id===lineId);
-  if(allLansat){
-    await sb.from('orders').update({status:'la_talpuit'}).eq('id',orderId);
+  const table=isManual==='1'?'productie_manual':'order_lines';
+  await sb.from(table).update({production_status:'in_talpuit'}).eq('id',lineId);
+  if(isManual!=='1'&&orderId){
+    const{data:remaining}=await sb.from('order_lines')
+      .select('id,production_status').eq('order_id',orderId).neq('from_stock',true);
+    const allLansat=(remaining||[]).every(l=>['in_talpuit','gata','pregatit_livrare','finalizat'].includes(l.production_status)||l.id===lineId);
+    if(allLansat){
+      await sb.from('orders').update({status:'la_talpuit'}).eq('id',orderId);
+    }
   }
   hideLov();showToast('Lansat in talpuit!');
   await loadAll();
