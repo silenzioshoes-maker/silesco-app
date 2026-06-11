@@ -2407,8 +2407,8 @@ function showToast(m){const e=document.getElementById('toast');if(!e)return;e.te
 async function loadProdAmbalat(){
   const laAmbalat=allOrders.filter(o=>o.status==='la_impachetat');
   const gataLivrare=allOrders.filter(o=>o.status==='gata_livrare');
-  document.getElementById('pa_gata').textContent=laAmbalat.length;
-  document.getElementById('pa_gata_livrare').textContent=gataLivrare.length;
+// pa_gata removed
+// pa_gata_livrare removed
   await loadAmbalatList();
 }
 
