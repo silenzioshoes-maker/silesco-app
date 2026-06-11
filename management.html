@@ -1071,8 +1071,7 @@ const SC={
   modificat_pending:{l:'Modificare pending',  c:'#7A5A00',b:'#FFF3CD'},
   la_croit:         {l:'La croit',            c:'#5A3E1B',b:'#F5ECD7'},
   in_productie:     {l:'În producție',        c:'#8B6914',b:'#FAF3E0'},
-  fete_gata_cusut:  {l:'La cusut',            c:'#2F4A63',b:'#E8EFF6'},
-  la_cusut:         {l:'La cusut',            c:'#2F4A63',b:'#E8EFF6'},
+  fete_gata_cusut:  {l:'Fețe gata — la cusut',c:'#2F4A63',b:'#E8EFF6'},
   la_cusut_extern:  {l:'La cusut extern',     c:'#2F4A63',b:'#E8EFF6'},
   cusut_extern_finalizat:{l:'Cusut fin.',     c:'#365A43',b:'#EAF0EC'},
   receptie_fete:    {l:'Recepție fețe',       c:'#365A43',b:'#EAF0EC'},
@@ -2218,8 +2217,6 @@ async function loadProdTalpuit(){
   _receptieLinesCache=receptie.slice();
   _pregatitLinesCache=pregatit.slice();
   _talpuitLinesCache=inTalpuit.slice();
-  document.getElementById('pt_receptie').textContent=receptie.length;
-  document.getElementById('pt_active').textContent=inTalpuit.length;
   renderTalpuitFromCache();
 }
 
@@ -2343,20 +2340,59 @@ function renderCusutFromCache(){
 
 var _talpuitLinesCache=[], _receptieLinesCache=[], _pregatitLinesCache=[];
 function renderTalpuitFromCache(){
+  var receptie=_receptieLinesCache;
   var pregatit=_pregatitLinesCache;
+  var inTalpuit=_talpuitLinesCache;
   var el=document.getElementById('pt_receptie_list');
   var getO=function(oid){return allOrders.find(function(o){return o.id===oid;});};
-  if(!pregatit.length){el.innerHTML='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nimic pregatit de lansat</div>';return;}
-  var html=pregatit.map(function(l,i){
-    var o=getO(l.order_id);
-    var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
-    return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'pregatit',
-      orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
-      isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
-      statusLabel:'Pregatit de lansat',statusColor:'#B08D57',statusBg:'#FDF6E0',
-      showMoveUp:i>0,showMoveDown:i<pregatit.length-1});
-  }).join('');
-  html+='<button onclick="saveOrdineTalpuit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea</button>';
+  var html='';
+
+  // De receptionat — informativ
+  if(receptie.length){
+    html+='<div style="font-size:10px;font-weight:700;color:#2F4A63;padding:4px 0 6px;text-transform:uppercase;letter-spacing:1px">De receptionat ('+receptie.length+')</div>';
+    html+=receptie.map(function(l,i){
+      var o=getO(l.order_id);
+      var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
+      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'receptie',
+        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
+        isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
+        statusLabel:'De receptionat',statusColor:'#2F4A63',statusBg:'#E8EFF6',
+        showMoveUp:false,showMoveDown:false});
+    }).join('');
+  }
+
+  // Pregatit de lansat — cu prioritizare
+  if(pregatit.length){
+    html+='<div style="font-size:10px;font-weight:700;color:#B08D57;padding:8px 0 6px;text-transform:uppercase;letter-spacing:1px">Pregatit de lansat ('+pregatit.length+')</div>';
+    html+=pregatit.map(function(l,i){
+      var o=getO(l.order_id);
+      var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
+      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'pregatit',
+        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
+        isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
+        statusLabel:'Pregatit de lansat',statusColor:'#B08D57',statusBg:'#FDF6E0',
+        showMoveUp:i>0,showMoveDown:i<pregatit.length-1});
+    }).join('');
+    html+='<button onclick="saveOrdineTalpuit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea</button>';
+  }
+
+  // In talpuit — informativ
+  if(inTalpuit.length){
+    html+='<div style="font-size:10px;font-weight:700;color:#1E4A2E;padding:8px 0 6px;text-transform:uppercase;letter-spacing:1px">In talpuit ('+inTalpuit.length+')</div>';
+    html+=inTalpuit.map(function(l,i){
+      var o=getO(l.order_id);
+      var cl=o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
+      return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'intalpuit',
+        orderNo:o?o.order_no:'—',client:cl,deliveryDate:o?o.delivery_date:null,
+        isUrgent:o?o.priority==='urgent':false,lines:[makeLineObj(l)],
+        statusLabel:'In talpuit',statusColor:'#1E4A2E',statusBg:'#D8EEE0',
+        showMoveUp:false,showMoveDown:false});
+    }).join('');
+  }
+
+  if(!receptie.length&&!pregatit.length&&!inTalpuit.length){
+    html='<div style="font-size:12px;color:#9E9890;padding:8px 0;font-style:italic">Nimic la talpuit</div>';
+  }
   el.innerHTML=html;
 }
 
@@ -2407,8 +2443,8 @@ function showToast(m){const e=document.getElementById('toast');if(!e)return;e.te
 async function loadProdAmbalat(){
   const laAmbalat=allOrders.filter(o=>o.status==='la_impachetat');
   const gataLivrare=allOrders.filter(o=>o.status==='gata_livrare');
-// pa_gata removed
-// pa_gata_livrare removed
+  document.getElementById('pa_gata').textContent=laAmbalat.length;
+  document.getElementById('pa_gata_livrare').textContent=gataLivrare.length;
   await loadAmbalatList();
 }
 
