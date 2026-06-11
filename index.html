@@ -481,11 +481,59 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
   <!-- STOC AGENT -->
   <div id="vStoc" style="display:none">
     <div class="wrap">
-      <div class="sec-label">Baxuri disponibile</div>
-      <div style="font-size:11px;color:#5A5248;margin-bottom:12px;line-height:1.5">Selectează un articol din stoc pentru a-l adăuga rapid la o comandă nouă.</div>
-      <div id="stBaxList"></div>
-      <div class="sec-label" style="margin-top:20px">FEȚE disponibile</div>
-      <div id="stFeteList"></div>
+      <!-- Tab-uri -->
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button id="stocTabProd" onclick="setStocTab('productie')"
+          style="flex:1;padding:9px;border-radius:7px;border:1.5px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+          In productie
+        </button>
+        <button id="stocTabFinit" onclick="setStocTab('finit')"
+          style="flex:1;padding:9px;border-radius:7px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+          Marfa finita
+        </button>
+        <button id="stocTabVechi" onclick="setStocTab('vechi')"
+          style="flex:1;padding:9px;border-radius:7px;border:1.5px solid #C8C0B8;background:#fff;color:#3A3530;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+          Stoc vechi
+        </button>
+      </div>
+      <!-- Stoc Productie -->
+      <div id="stocProductieView">
+        <div id="stocProductieList"></div>
+      </div>
+      <!-- Marfa Finita -->
+      <div id="stocFinitView" style="display:none">
+        <div id="stocFinitList"></div>
+      </div>
+      <!-- Stoc Vechi (baxuri + fete) -->
+      <div id="stocVechiView" style="display:none">
+        <div class="sec-label">Baxuri disponibile</div>
+        <div style="font-size:11px;color:#5A5248;margin-bottom:12px;line-height:1.5">Selectează un articol din stoc pentru a-l adăuga rapid la o comandă nouă.</div>
+        <div id="stBaxList"></div>
+        <div class="sec-label" style="margin-top:20px">FEȚE disponibile</div>
+        <div id="stFeteList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL REZERVARE -->
+  <div id="rezervareModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:#FAF8F4;border-radius:12px;padding:24px;width:90%;max-width:380px">
+      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Rezerva serie</div>
+      <div id="rezervareInfo" style="font-size:13px;color:#5A5248;margin-bottom:16px"></div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Client</div>
+        <input id="rezervareClient" type="text" placeholder="Numele clientului..."
+          style="width:100%;padding:10px;border:1px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;background:#fff">
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Note (optional)</div>
+        <input id="rezervareNote" type="text" placeholder="observatii..."
+          style="width:100%;padding:10px;border:1px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;background:#fff">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="closeRezervare()" style="flex:1;padding:11px;border-radius:7px;border:1px solid #DDD7CE;background:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;color:#5A5248">Anuleaza</button>
+        <button onclick="salveazaRezervare()" style="flex:1;padding:11px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Rezerva</button>
+      </div>
     </div>
   </div>
 
@@ -1739,7 +1787,102 @@ async function loadAgentMsgBadge(){
 }
 
 // ── STOC ──────────────────────────────────────────────────────
+let _stocTab='productie';
+let _rezervareData=null;
+
+function setStocTab(tab){
+  _stocTab=tab;
+  ['productie','finit','vechi'].forEach(t=>{
+    const isProd=t===tab;
+    const view=document.getElementById('stoc'+t.charAt(0).toUpperCase()+t.slice(1)+'View')||
+                document.getElementById('stocVechiView'+(t==='vechi'?'':'_x'));
+    const btn=document.getElementById('stocTab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(document.getElementById('stoc'+t.charAt(0).toUpperCase()+t.slice(1)+'View'))
+      document.getElementById('stoc'+t.charAt(0).toUpperCase()+t.slice(1)+'View').style.display=isProd?'':'none';
+    if(btn){btn.style.background=isProd?'#F6F0E5':'#fff';btn.style.borderColor=isProd?'#B08D57':'#C8C0B8';btn.style.color=isProd?'#8B6914':'#3A3530';}
+  });
+}
+
 async function loadStoc(){
+  // Stoc Productie
+  const{data:stocOrders}=await sb.from('orders')
+    .select(`id,order_no,status,total_pairs,
+      order_lines(id,color,ponytage,total_pairs,product_id,free_model,production_status,from_stock,products(code,name)),
+      stock_allocations(id,total_pairs)`)
+    .eq('is_stock',true)
+    .not('status','in','(finalizat,livrat,anulat)')
+    .order('created_at',{ascending:false});
+
+  const prodEl=document.getElementById('stocProductieList');
+  if(!stocOrders?.length){
+    prodEl.innerHTML='<div style="text-align:center;padding:32px 0;color:#9E9890;font-size:13px;font-weight:500">Nicio comanda in stoc productie.</div>';
+  } else {
+    prodEl.innerHTML=(stocOrders||[]).map(o=>{
+      const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
+      const allocated=(o.stock_allocations||[]).reduce((s,a)=>s+(a.total_pairs||0),0);
+      const disponibil=o.total_pairs-allocated;
+      return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
+        <div style="padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <div style="font-size:11px;font-family:monospace;color:#8B6914">${o.order_no||'—'}</div>
+              <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#111;margin-top:2px">${o.total_pairs} per. total</div>
+            </div>
+            <span style="font-size:22px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif">${disponibil}</span>
+          </div>
+          <div style="font-size:10px;color:#1E4A2E;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">disponibile</div>
+          ${lines.map(l=>{
+            const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+            const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
+            const pontaj=entries.map(([s,q])=>s+'×'+q).join('  ');
+            const pontajStr=JSON.stringify(l.ponytage||'{}').replace(/"/g,"'");
+            return `<div style="border-top:1px solid #F4F1EA;padding:10px 0">
+              <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#111">${mod}</div>
+              <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${l.color||'—'}</div>
+              <div style="font-size:11px;color:#3A3530;margin-top:4px;font-family:monospace">${pontaj}</div>
+              <div style="font-size:12px;color:#1E4A2E;font-weight:700;margin-top:2px">${l.total_pairs} per.</div>
+              <button onclick="openRezervare('productie','${l.id}','${o.id}','${mod} · ${(l.color||'').replace(/'/g,"\\'")}',null)"
+                style="width:100%;margin-top:10px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+                Rezerva seria
+              </button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Marfa Finita
+  const{data:finit}=await sb.from('stock_marfa_finita')
+    .select('id,free_model,color,ponytage,total_pairs,status,notes,products(code,name)')
+    .eq('status','disponibil')
+    .order('created_at',{ascending:false});
+
+  const finitEl=document.getElementById('stocFinitList');
+  if(!finit?.length){
+    finitEl.innerHTML='<div style="text-align:center;padding:32px 0;color:#9E9890;font-size:13px;font-weight:500">Niciun produs in stoc marfa finita.</div>';
+  } else {
+    finitEl.innerHTML=(finit||[]).map(item=>{
+      const mod=item.products?.code?'Art. '+item.products.code:item.free_model||'—';
+      const entries=item.ponytage?Object.entries(item.ponytage).filter(([,q])=>q>0):[];
+      const pontajStr=entries.map(([s,q])=>s+'×'+q).join('  ');
+      return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
+        <div style="padding:14px">
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111">${mod}</div>
+          <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${item.color||'—'}</div>
+          <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
+          <div style="margin-top:8px"><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#1E4A2E">${item.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per.</span></div>
+          ${item.notes?`<div style="font-size:11px;color:#5A5248;font-style:italic;margin-top:4px">${item.notes}</div>`:''}
+          <button onclick="openRezervare('finit','${item.id}',null,'${mod} · ${(item.color||'').replace(/'/g,"\\'")}',null)"
+            style="width:100%;margin-top:12px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+            Rezerva
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Stoc vechi (baxuri + fete) - pastram functionalitatea existenta
   const[{data:baxuri},{data:fete}]=await Promise.all([
     sb.from('stock_baxuri').select('*,products(code,name)').order('created_at',{ascending:false}),
     sb.from('stock_fete').select('*').order('created_at',{ascending:false}),
@@ -1785,6 +1928,44 @@ async function loadStoc(){
       </div>
     </div>`;
   }).join('');}
+}
+
+function openRezervare(tip,itemId,orderId,label){
+  _rezervareData={tip,itemId,orderId,label};
+  document.getElementById('rezervareInfo').textContent=label;
+  document.getElementById('rezervareClient').value='';
+  document.getElementById('rezervareNote').value='';
+  document.getElementById('rezervareModal').style.display='flex';
+}
+
+function closeRezervare(){
+  document.getElementById('rezervareModal').style.display='none';
+  _rezervareData=null;
+}
+
+async function salveazaRezervare(){
+  if(!_rezervareData)return;
+  const client=document.getElementById('rezervareClient').value.trim();
+  if(!client){showToast('Introdu numele clientului!');return;}
+  const note=document.getElementById('rezervareNote').value.trim();
+  showLov('Se salveaza...');
+  const{tip,itemId,orderId}=_rezervareData;
+  if(tip==='productie'){
+    const{data:line}=await sb.from('order_lines').select('total_pairs,ponytage').eq('id',itemId).single();
+    await sb.from('stock_allocations').insert({
+      stock_order_id:orderId,stock_line_id:itemId,
+      client_name:client,ponytage:line?.ponytage||{},
+      total_pairs:line?.total_pairs||0,status:'rezervat',
+      notes:note||null,allocated_by:CU?.id||null
+    });
+  } else {
+    await sb.from('stock_marfa_finita').update({
+      status:'rezervat',notes:(note?note+' — ':'')+client
+    }).eq('id',itemId);
+  }
+  hideLov();closeRezervare();
+  showToast('Rezervat pentru '+client+'!');
+  await loadStoc();
 }
 
 function addFromStock(stockId,model,color,price,pontaj){
