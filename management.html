@@ -365,6 +365,12 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       Comandă pentru stoc — fără client. Când e gata sau chiar în lucru, o poți aloca unui client din lista de comenzi.
     </div>
 
+    <!-- CAMP LABEL POZITIE MANUALA - ascuns implicit -->
+    <div class="fld" id="omManualLabelWrap" style="display:none">
+      <label>Referinta (ex: STOC, nume client...)</label>
+      <input type="text" id="omManualLabel" placeholder="ex: STOC, Roca, Comanda X..."/>
+    </div>
+
     <!-- ARTICOLE -->
     <div class="detail-label" style="margin-top:6px">Articole</div>
     <div id="omArtList"></div>
@@ -2443,8 +2449,10 @@ function closeModal(id){
   if(el)el.classList.remove('show');
   if(id==='orderModal'&&omManualTalpuit){
     omManualTalpuit=false;omManualEditId=null;
-    const cw=document.getElementById('omClientWrap');if(cw)cw.style.display='';
-    const lw=document.getElementById('omManualLabelWrap');if(lw)lw.style.display='none';
+    document.getElementById('omClientWrap').style.display='';
+    document.getElementById('omManualLabelWrap').style.display='none';
+    document.getElementById('omTabClient').style.display='';
+    document.getElementById('omTabStock').style.display='';
     document.getElementById('orderModalTitle').textContent='Comandă nouă';
     document.getElementById('orderModalSub').textContent='Completează detaliile comenzii';
   }
@@ -2610,24 +2618,17 @@ function openManualTalpuit(editId,editData){
   omEditId=null;omArts=[];omEditingArtIdx=null;
   omSizeList=[...SZ];SZ.forEach(s=>omSzV[s]=0);
   omOrderType='stock';omModMode=null;
-  document.getElementById('orderModalTitle').textContent='Pozitie manuala — Talpuit';
-  document.getElementById('orderModalSub').textContent='Articolele adaugate merg direct in productie';
+  document.getElementById('orderModalTitle').textContent=editId?'Editeaza pozitie — Talpuit':'Pozitie manuala — Talpuit';
+  document.getElementById('orderModalSub').textContent='Articolele merg direct in productie';
+  // Ascunde campuri inutile
   document.getElementById('omClientWrap').style.display='none';
   document.getElementById('omStockNote').style.display='none';
-  // Adaug camp label daca nu exista
-  if(!document.getElementById('omManualLabel')){
-    const labelDiv=document.createElement('div');
-    labelDiv.className='fld';
-    labelDiv.id='omManualLabelWrap';
-    labelDiv.innerHTML='<label>Referinta (ex: STOC, nume client...)</label><input type="text" id="omManualLabel" placeholder="ex: STOC, Roca, Comanda X..." style="width:100%;padding:8px 10px;border:1px solid #DDD7CE;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;background:#fff">';
-    const modalBox=document.querySelector('#orderModal .modal-box');
-    modalBox.insertBefore(labelDiv,modalBox.querySelector('.detail-label'));
-  }
+  document.getElementById('omTabClient').style.display='none';
+  document.getElementById('omTabStock').style.display='none';
+  // Arata campul label
+  document.getElementById('omManualLabelWrap').style.display='';
   document.getElementById('omManualLabel').value=editData?.label||'';
-  // Precompletare la editare
-  if(editData){
-    document.getElementById('omNotes').value=editData.notes||'';
-  }
+  document.getElementById('omNotes').value=editData?.notes||'';
   renderOmSizes();renderOmArts();
   document.getElementById('orderModal').classList.add('show');
 }
