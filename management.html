@@ -1071,7 +1071,8 @@ const SC={
   modificat_pending:{l:'Modificare pending',  c:'#7A5A00',b:'#FFF3CD'},
   la_croit:         {l:'La croit',            c:'#5A3E1B',b:'#F5ECD7'},
   in_productie:     {l:'În producție',        c:'#8B6914',b:'#FAF3E0'},
-  fete_gata_cusut:  {l:'Fețe gata — la cusut',c:'#2F4A63',b:'#E8EFF6'},
+  fete_gata_cusut:  {l:'La cusut',            c:'#2F4A63',b:'#E8EFF6'},
+  la_cusut:         {l:'La cusut',            c:'#2F4A63',b:'#E8EFF6'},
   la_cusut_extern:  {l:'La cusut extern',     c:'#2F4A63',b:'#E8EFF6'},
   cusut_extern_finalizat:{l:'Cusut fin.',     c:'#365A43',b:'#EAF0EC'},
   receptie_fete:    {l:'Recepție fețe',       c:'#365A43',b:'#EAF0EC'},
@@ -2217,8 +2218,8 @@ async function loadProdTalpuit(){
   _receptieLinesCache=receptie.slice();
   _pregatitLinesCache=pregatit.slice();
   _talpuitLinesCache=inTalpuit.slice();
-  // pt_receptie removed
-  // pt_active removed
+  document.getElementById('pt_receptie').textContent=receptie.length;
+  document.getElementById('pt_active').textContent=inTalpuit.length;
   renderTalpuitFromCache();
 }
 
@@ -2406,8 +2407,8 @@ function showToast(m){const e=document.getElementById('toast');if(!e)return;e.te
 async function loadProdAmbalat(){
   const laAmbalat=allOrders.filter(o=>o.status==='la_impachetat');
   const gataLivrare=allOrders.filter(o=>o.status==='gata_livrare');
-  // pa_gata removed
-  // pa_gata_livrare removed
+  document.getElementById('pa_gata').textContent=laAmbalat.length;
+  document.getElementById('pa_gata_livrare').textContent=gataLivrare.length;
   await loadAmbalatList();
 }
 
