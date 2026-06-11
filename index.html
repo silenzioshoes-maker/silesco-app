@@ -467,6 +467,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
     </div>
   </div>
 
+  <!-- STOC -->
+  <div id="vStoc" style="display:none">
+    <div class="wrap">
+      <div class="sec-label">Baxuri gata</div><div id="stBax"></div>
+      <div class="sec-label" style="margin-top:16px">FEȚE disponibile</div><div id="stFete"></div>
+    </div>
+  </div>
 
   <!-- MESAJE AGENT - redirect la pagina dedicată -->
   <div id="vMesaje" style="display:none"></div>
@@ -1053,11 +1060,22 @@ function renderOrders(orders,alocari){
               <span class="status-dot" style="background:${statusColor}"></span>${statusLabel}
             </span>
             <span style="font-size:11px;color:#4A4540">${a.nr_baxuri||1} bax · ${a.total_pairs||0} per.</span>
+            <button onclick="stergeAlocare('${a.id}')" style="font-size:10px;color:#9C3A2B;background:#FDF4F2;border:1px solid #9C3A2B;border-radius:4px;padding:2px 8px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">Sterge</button>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+async function stergeAlocare(id){
+  if(!confirm('Stergi aceasta alocare?'))return;
+  showLov('Se sterge...');
+  await sb.from('stock_allocations').delete().eq('id',id);
+  hideLov();
+  showToast('Alocare stearsa!');
+  await loadOrders();
+  await loadStoc();
 }
 
 async function loadOrderMsgs(orderId){
@@ -1960,158 +1978,6 @@ function setStocTab(tab){
 let _stocTab='productie';
 let _rezervareData=null;
 
-async function loadStoc(){
-  // Stoc Productie
-  const{data:stocOrders}=await sb.from('orders')
-    .select(`id,order_no,status,total_pairs,
-      order_lines(id,color,ponytage,total_pairs,product_id,free_model,production_status,from_stock,products(code,name)),
-      stock_allocations(id,total_pairs)`)
-    .eq('is_stock',true)
-    .not('status','in','(finalizat,livrat,anulat)')
-    .order('created_at',{ascending:false});
-
-  const prodEl=document.getElementById('stocProductieList');
-  if(!stocOrders?.length){
-    prodEl.innerHTML='<div style="text-align:center;padding:32px 0;color:#9E9890;font-size:13px;font-weight:500">Nicio comanda in stoc productie.</div>';
-  } else {
-    prodEl.innerHTML=(stocOrders||[]).map(o=>{
-      const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
-      const allocated=(o.stock_allocations||[]).reduce((s,a)=>s+(a.total_pairs||0),0);
-      const disponibil=o.total_pairs-allocated;
-      return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
-        <div style="padding:14px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-            <div>
-              <div style="font-size:11px;font-family:monospace;color:#8B6914">${o.order_no||'—'}</div>
-              <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#111;margin-top:2px">${o.total_pairs} per. total</div>
-            </div>
-            <span style="font-size:22px;font-weight:700;color:#1E4A2E;font-family:'Playfair Display',serif">${disponibil}</span>
-          </div>
-          <div style="font-size:10px;color:#1E4A2E;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">disponibile</div>
-          ${lines.map(l=>{
-            const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
-            const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
-            const pontaj=entries.map(([s,q])=>s+'×'+q).join('  ');
-            const pontajStr=JSON.stringify(l.ponytage||'{}').replace(/"/g,"'");
-            return `<div style="border-top:1px solid #F4F1EA;padding:10px 0">
-              <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#111">${mod}</div>
-              <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${l.color||'—'}</div>
-              <div style="font-size:11px;color:#3A3530;margin-top:4px;font-family:monospace">${pontaj}</div>
-              <div style="font-size:12px;color:#1E4A2E;font-weight:700;margin-top:2px">${l.total_pairs} per.</div>
-              <button onclick="openRezervare('productie','${l.id}','${o.id}','${mod} · ${(l.color||'').replace(/'/g,"\\'")}',null)"
-                style="width:100%;margin-top:10px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
-                Rezerva seria
-              </button>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // Marfa Finita
-  const{data:finit}=await sb.from('stock_marfa_finita')
-    .select('id,free_model,color,ponytage,total_pairs,status,notes,products(code,name)')
-    .eq('status','disponibil')
-    .order('created_at',{ascending:false});
-
-  const finitEl=document.getElementById('stocFinitList');
-  if(!finit?.length){
-    finitEl.innerHTML='<div style="text-align:center;padding:32px 0;color:#9E9890;font-size:13px;font-weight:500">Niciun produs in stoc marfa finita.</div>';
-  } else {
-    finitEl.innerHTML=(finit||[]).map(item=>{
-      const mod=item.products?.code?'Art. '+item.products.code:item.free_model||'—';
-      const entries=item.ponytage?Object.entries(item.ponytage).filter(([,q])=>q>0):[];
-      const pontajStr=entries.map(([s,q])=>s+'×'+q).join('  ');
-      return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
-        <div style="padding:14px">
-          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111">${mod}</div>
-          <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${item.color||'—'}</div>
-          <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
-          <div style="margin-top:8px"><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#1E4A2E">${item.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per.</span></div>
-          ${item.notes?`<div style="font-size:11px;color:#5A5248;font-style:italic;margin-top:4px">${item.notes}</div>`:''}
-          <button onclick="openRezervare('finit','${item.id}',null,'${mod} · ${(item.color||'').replace(/'/g,"\\'")}',null)"
-            style="width:100%;margin-top:12px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
-            Rezerva
-          </button>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // Stoc vechi (baxuri + fete) - pastram functionalitatea existenta
-  const[{data:baxuri},{data:fete}]=await Promise.all([
-    sb.from('stock_baxuri').select('*,products(code,name)').order('created_at',{ascending:false}),
-    sb.from('stock_fete').select('*').order('created_at',{ascending:false}),
-  ]);
-  const baxEl=document.getElementById('stBaxList');
-  if(!baxuri?.length){baxEl.innerHTML='<div style="text-align:center;padding:20px;color:#9E9890;font-size:13px;font-weight:500">Niciun bax în stoc.</div>';}
-  else{baxEl.innerHTML=(baxuri||[]).map(b=>{
-    const model=b.products?.code?'Art. '+b.products.code:b.free_model||'—';
-    const entries=b.ponytage?Object.entries(b.ponytage).filter(([,q])=>q>0):[];
-    const pontajStr=entries.map(([s,q])=>s+'×'+q).join('  ');
-    const pontajJSON=JSON.stringify(b.ponytage||{});
-    return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
-      ${b.photo_url?`<img src="${b.photo_url}" style="width:100%;height:160px;object-fit:cover" onerror="this.style.display='none'"/>`:''}
-      <div style="padding:14px">
-        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111111">${model}</div>
-        <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${b.color||'—'}</div>
-        <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-          <div><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#1E4A2E">${b.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per.</span></div>
-          ${b.price_per_pair?`<span style="font-size:14px;font-weight:700;color:#8B6914">${b.price_per_pair} RON/per.</span>`:''}
-        </div>
-        ${b.notes?`<div style="font-size:11px;color:#5A5248;font-style:italic;margin-top:4px">${b.notes}</div>`:''}
-        <button onclick='addFromStock("${b.id}","${model.replace(/"/g,"&quot;")}","${b.color||''}",${b.price_per_pair||0},${pontajJSON})' style="width:100%;margin-top:12px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
-          + Adaugă la comandă
-        </button>
-      </div>
-    </div>`;
-  }).join('');}
-  const feteEl=document.getElementById('stFeteList');
-  if(!fete?.length){feteEl.innerHTML='<div style="text-align:center;padding:20px;color:#9E9890;font-size:13px;font-weight:500">Nicio FEȚE în stoc.</div>';}
-  else{feteEl.innerHTML=(fete||[]).map(f=>{
-    const entries=f.ponytage?Object.entries(f.ponytage).filter(([,q])=>q>0):[];
-    const pontajStr=entries.map(([s,q])=>s+'×'+q).join('  ');
-    return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
-      ${f.photo_url?`<img src="${f.photo_url}" style="width:100%;height:160px;object-fit:cover" onerror="this.style.display='none'"/>`:''}
-      <div style="padding:14px">
-        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#111111">${f.model_name}</div>
-        <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${f.color||'—'}</div>
-        <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
-        <div style="margin-top:10px"><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#2F4A63">${f.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per. FEȚE</span></div>
-        ${f.notes?`<div style="font-size:11px;color:#5A5248;font-style:italic;margin-top:4px">${f.notes}</div>`:''}
-        <div style="margin-top:10px;padding:8px 10px;background:#E8EFF6;border-radius:6px;font-size:11px;color:#23394F;font-weight:500">FEȚE — discută cu clientul și plasează comanda manual.</div>
-      </div>
-    </div>`;
-  }).join('');}
-}
-
-function adjRezBax(d){
-  const el=document.getElementById('rezervareNrBax');
-  const max=_rezervareData?.nrBaxuriDisp||99;
-  let v=parseInt(el.textContent)||1;
-  v=Math.max(1,Math.min(max,v+d));
-  el.textContent=v;
-  const perBax=_rezervareData?.perBax||0;
-  document.getElementById('rezervareBaxInfo').textContent=perBax?'= '+(v*perBax)+' per.':'';
-}
-
-function openRezervare(tip,itemId,orderId,label,nrBaxuriDisp,perBax){
-  _rezervareData={tip,itemId,orderId,label,nrBaxuriDisp:parseInt(nrBaxuriDisp)||1,perBax:parseInt(perBax)||0};
-  document.getElementById('rezervareInfo').textContent=label;
-  document.getElementById('rezervareClient').value='';
-  document.getElementById('rezervareNote').value='';
-  document.getElementById('rezervareNrBax').textContent='1';
-  document.getElementById('rezervareBaxInfo').textContent=perBax?'= '+perBax+' per.':'';
-  document.getElementById('rezervareNrBaxWrap').style.display=tip==='productie'?'block':'none';
-  document.getElementById('rezervareModal').style.display='flex';
-}
-
-function closeRezervare(){
-  document.getElementById('rezervareModal').style.display='none';
-  _rezervareData=null;
-}
 
 async function salveazaRezervare(){
   if(!_rezervareData)return;
