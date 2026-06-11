@@ -694,6 +694,7 @@ let prods=[],clientsList=[],ateliere=[];
 let omArts=[],omEditId=null,omEditingArtIdx=null;
 let omOrderType='client'; // 'client' | 'stock'
 let omManualTalpuit=false;
+let omManualEditId=null;
 let omModMode=null; // null | 'existing' | 'save' | 'once'
 const SZ=['39','40','41','42','43','44'];
 let omSizeList=[...SZ]; // listă mărimi pentru articolul curent (poate fi extinsă)
@@ -1751,22 +1752,32 @@ async function saveOrder(){
   // Mod pozitie manuala talpuit
   if(omManualTalpuit){
     if(!omArts.length){showToast('Adaugă cel puțin un articol!');return;}
+    const labelVal=(document.getElementById('omManualLabel')?.value||'').trim()||null;
+    const notesVal=document.getElementById('omNotes').value.trim()||null;
     showLov('Se salvează...');
-    const rows=omArts.map(a=>({
-      free_model:a.free_model||(a.product_id?null:null)||null,
-      product_id:a.product_id||null,
-      color:a.color||null,
-      ponytage:a.ponytage,
-      total_pairs:a.total_pairs,
-      production_status:'pregatit_lansat',
-      notes:document.getElementById('omNotes').value.trim()||null
-    }));
-    const{error}=await sb.from('productie_manual').insert(rows);
-    hideLov();
-    if(error){showToast('Eroare: '+error.message);return;}
+    if(omManualEditId){
+      const a=omArts[0];
+      const{error}=await sb.from('productie_manual').update({
+        free_model:a.free_model||null,product_id:a.product_id||null,
+        color:a.color||null,ponytage:a.ponytage,total_pairs:a.total_pairs,
+        label:labelVal,notes:notesVal
+      }).eq('id',omManualEditId);
+      hideLov();
+      if(error){showToast('Eroare: '+error.message);return;}
+      showToast('Pozitie actualizata!');
+    } else {
+      const rows=omArts.map(a=>({
+        free_model:a.free_model||null,product_id:a.product_id||null,
+        color:a.color||null,ponytage:a.ponytage,total_pairs:a.total_pairs,
+        production_status:'pregatit_lansat',label:labelVal,notes:notesVal
+      }));
+      const{error}=await sb.from('productie_manual').insert(rows);
+      hideLov();
+      if(error){showToast('Eroare: '+error.message);return;}
+      showToast('Pozitie adaugata!');
+    }
     closeModal('orderModal');
-    omManualTalpuit=false;
-    showToast('Pozitie adaugata la talpuit!');
+    omManualTalpuit=false;omManualEditId=null;
     await loadProdTalpuit();
     return;
   }
@@ -2358,13 +2369,14 @@ function renderTalpuitFromCache(){
     html+='<div style="font-size:10px;font-weight:700;color:#B08D57;padding:8px 0 6px;text-transform:uppercase;letter-spacing:1px">Pregatit de lansat ('+pregatit.length+')</div>';
     html+=pregatit.map(function(l,i){
       var o=l._manual?null:getO(l.order_id);
-      var cl=l._manual?'Manual':o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
-      var orderNo=l._manual?'Manual':o?o.order_no:'—';
+      var cl=l._manual?(l.label||'Manual'):o&&o.clients&&(o.clients.company_name||o.clients.name)||'STOC';
+      var orderNo=l._manual?(l.label||'Manual'):o?o.order_no:'—';
       return makeProdCard({id:l.id,idx:i,total:l.total_pairs,section:'pregatit',
         orderNo:orderNo,client:cl,deliveryDate:o?o.delivery_date:null,
         isUrgent:false,lines:[makeLineObj(l)],
         statusLabel:'Pregatit de lansat',statusColor:'#B08D57',statusBg:'#FDF6E0',
-        showMoveUp:i>0,showMoveDown:i<pregatit.length-1});
+        showMoveUp:i>0,showMoveDown:i<pregatit.length-1,
+        extraBtns:l._manual?`<button onclick="editManualTalpuit('${l.id}')" style="font-size:11px;color:#2F4A63;background:#E8EFF6;border:1px solid #2F4A63;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;margin-top:6px">Editeaza</button><button onclick="deleteManualTalpuit('${l.id}')" style="font-size:11px;color:#9C3A2B;background:#FDF4F2;border:1px solid #9C3A2B;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;margin-top:6px;margin-left:6px">Sterge</button>`:''});
     }).join('');
     html+='<button onclick="saveOrdineTalpuit()" style="width:100%;margin-top:6px;padding:8px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Salveaza ordinea</button>';
   }
@@ -2430,14 +2442,9 @@ function closeModal(id){
   const el=document.getElementById(id);
   if(el)el.classList.remove('show');
   if(id==='orderModal'&&omManualTalpuit){
-    omManualTalpuit=false;
-    // Restaurează câmpurile ascunse
-    const cw=document.getElementById('omClientWrap');
-    if(cw)cw.style.display='';
-    const ternEl=document.querySelector('#orderModal .fld:has(#omTermen)');
-    if(ternEl)ternEl.style.display='';
-    const plataEl=document.querySelector('#orderModal .fld:has(#omPlata)');
-    if(plataEl)plataEl.style.display='';
+    omManualTalpuit=false;omManualEditId=null;
+    const cw=document.getElementById('omClientWrap');if(cw)cw.style.display='';
+    const lw=document.getElementById('omManualLabelWrap');if(lw)lw.style.display='none';
     document.getElementById('orderModalTitle').textContent='Comandă nouă';
     document.getElementById('orderModalSub').textContent='Completează detaliile comenzii';
   }
@@ -2521,7 +2528,7 @@ function makeProdCard(opts){
     +'</div>'
     +'<svg id="'+togAr+'" style="width:13px;height:13px;stroke:#9A9088;fill:none;stroke-width:1.5;flex-shrink:0;transition:transform .2s;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>'
     +'</div>'
-    +'<div id="'+togId+'" style="display:none;border-top:1px solid #EDE8DF;">'+linesHtml+'</div>'
+    +'<div id="'+togId+'" style="display:none;border-top:1px solid #EDE8DF;">'+linesHtml+(opts.extraBtns?'<div style="padding:8px 10px;">'+opts.extraBtns+'</div>':'')+'</div>'
     +'</div>';
 }
 
@@ -2597,20 +2604,46 @@ async function setAmbPriority(id,priority){
   showToast(priority==='urgent'?'⚡ Marcat urgent!':'Prioritate normală');
 }
 
-function openManualTalpuit(){
+function openManualTalpuit(editId,editData){
   omManualTalpuit=true;
+  omManualEditId=editId||null;
   omEditId=null;omArts=[];omEditingArtIdx=null;
   omSizeList=[...SZ];SZ.forEach(s=>omSzV[s]=0);
   omOrderType='stock';omModMode=null;
   document.getElementById('orderModalTitle').textContent='Pozitie manuala — Talpuit';
   document.getElementById('orderModalSub').textContent='Articolele adaugate merg direct in productie';
-  // Ascunde campurile inutile pentru pozitie manuala
   document.getElementById('omClientWrap').style.display='none';
   document.getElementById('omStockNote').style.display='none';
-  document.querySelector('#orderModal .fld:has(#omTermen)').style.display='none';
-  document.querySelector('#orderModal .fld:has(#omPlata)').style.display='none';
+  // Adaug camp label daca nu exista
+  if(!document.getElementById('omManualLabel')){
+    const labelDiv=document.createElement('div');
+    labelDiv.className='fld';
+    labelDiv.id='omManualLabelWrap';
+    labelDiv.innerHTML='<label>Referinta (ex: STOC, nume client...)</label><input type="text" id="omManualLabel" placeholder="ex: STOC, Roca, Comanda X..." style="width:100%;padding:8px 10px;border:1px solid #DDD7CE;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;background:#fff">';
+    const modalBox=document.querySelector('#orderModal .modal-box');
+    modalBox.insertBefore(labelDiv,modalBox.querySelector('.detail-label'));
+  }
+  document.getElementById('omManualLabel').value=editData?.label||'';
+  // Precompletare la editare
+  if(editData){
+    document.getElementById('omNotes').value=editData.notes||'';
+  }
   renderOmSizes();renderOmArts();
   document.getElementById('orderModal').classList.add('show');
+}
+
+async function editManualTalpuit(id){
+  const m=_pregatitLinesCache.find(x=>x.id===id&&x._manual)||_talpuitLinesCache.find(x=>x.id===id&&x._manual);
+  if(!m)return;
+  openManualTalpuit(id,m);
+}
+
+async function deleteManualTalpuit(id){
+  if(!confirm('Stergi aceasta pozitie?'))return;
+  showLov('Se sterge...');
+  await sb.from('productie_manual').delete().eq('id',id);
+  hideLov();showToast('Pozitie stearsa!');
+  await loadProdTalpuit();
 }
 
 async function loadProdTalpuit(){
@@ -2622,7 +2655,7 @@ async function loadProdTalpuit(){
       .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit'])
       .order('sort_order',{ascending:true}),
     sb.from('productie_manual')
-      .select('id,free_model,color,ponytage,total_pairs,production_status,notes,created_at,product_id,products(code,name)')
+      .select('id,free_model,color,ponytage,total_pairs,production_status,notes,label,created_at,product_id,products(code,name)')
       .in('production_status',['pregatit_lansat','in_talpuit'])
       .order('created_at',{ascending:true})
   ]);
