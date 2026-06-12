@@ -1035,7 +1035,8 @@ async function loadOrders(){
     .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,titlu_stoc,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       user_profiles!orders_agent_id_fkey(full_name),
-      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,talpa_id,brant_id,siret_id,cutie_id,products(id,code,name,default_sole_id))`)
+      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,talpa_id,brant_id,siret_id,cutie_id,nr_baxuri,pontaj_bax,products(id,code,name,default_sole_id)),
+      stock_allocations(id,client_name,nr_baxuri,total_pairs,status,stock_line_id)`)
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
   allOrders=data||[];
@@ -1232,6 +1233,25 @@ function _buildOrdersHTML(orders,prefix='ord'){
           <div>
             
             <div class="detail-section" style="margin-bottom:12px"><div class="detail-label">Articole (${lines.length})</div>${linesHTML||'<div style="font-size:12px;color:#5A5248">Niciun articol.</div>'}</div>
+            ${isStock&&(o.stock_allocations||[]).length?`
+            <div class="detail-section" style="margin-bottom:12px">
+              <div class="detail-label">Rezervari (${(o.stock_allocations||[]).filter(a=>a.status!=='anulat').length})</div>
+              ${(o.stock_allocations||[]).filter(a=>a.status!=='anulat').map(a=>{
+                const line=lines.find(l=>l.id===a.stock_line_id);
+                const mod=line?(line.products?.code?'Art. '+line.products.code:line.free_model||'—'):'—';
+                const col=line?.color||'—';
+                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F4F1EA">
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:#111">${a.client_name||'—'}</div>
+                    <div style="font-size:11px;color:#5A5248">${mod} · ${col}</div>
+                  </div>
+                  <div style="text-align:right">
+                    <div style="font-size:12px;font-weight:700;color:#1E4A2E">${a.nr_baxuri||1} bax</div>
+                    <div style="font-size:11px;color:#5A5248">${a.total_pairs||0} per.</div>
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>`:''}
             <!-- Mesaje + Audit încărcate dinamic -->
             <div id="mgmt_omsg_${o.id}"></div>
             <div id="mgmt_ohist_${o.id}"></div>
@@ -2313,6 +2333,10 @@ async function moveProd(section,idx,dir){
     renderCusutFromCache();
   }else if(section==='talpuit'||section==='receptie'){
     var tt=_talpuitLinesCache[idx];_talpuitLinesCache[idx]=_talpuitLinesCache[newIdx];_talpuitLinesCache[newIdx]=tt;
+    renderTalpuitFromCache();
+  }else if(section==='pregatit'){
+    var tp=_pregatitLinesCache[idx];_pregatitLinesCache[idx]=_pregatitLinesCache[newIdx];_pregatitLinesCache[newIdx]=tp;
+    _prodIds.pregatit=_pregatitLinesCache.map(x=>x.id);
     renderTalpuitFromCache();
   }else if(section==='ambalat'){
     var t2=ambOrders[idx];ambOrders[idx]=ambOrders[newIdx];ambOrders[newIdx]=t2;
