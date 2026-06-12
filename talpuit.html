@@ -179,18 +179,16 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="empty" id="receptieEmpty" style="display:none">
       <div style="font-size:13px;font-weight:600">Nicio recepție în așteptare</div>
     </div>
-    <div id="pregatitList" style="margin-top:8px"></div>
-    <div class="empty" id="pregatitEmpty" style="display:none">
-      <div style="font-size:13px;font-weight:600">Niciun articol pregătit de lansat</div>
-    </div>
   </div>
 
   <!-- LANSAT -->
   <div id="viewLansat" style="display:none">
-    <div id="lansatList"></div>
-    <div class="empty" id="lansatEmpty" style="display:none">
-      <div style="font-size:13px;font-weight:600">Niciun articol lansat</div>
+    <div id="pregatitList"></div>
+    <div class="empty" id="pregatitEmpty" style="display:none">
+      <div style="font-size:13px;font-weight:600">Niciun articol de lansat</div>
     </div>
+    <div id="lansatInfoLabel" style="display:none;font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;padding:12px 0 6px">In talpuit</div>
+    <div id="lansatList"></div>
   </div>
 
   <!-- STOC MATERIALE -->
@@ -396,9 +394,9 @@ function renderReceptie(lines){
 
 function renderLansat(lines){
   const el=document.getElementById('lansatList');
-  const empty=document.getElementById('lansatEmpty');
-  if(!lines.length){el.innerHTML='';empty.style.display='block';return;}
-  empty.style.display='none';
+  const label=document.getElementById('lansatInfoLabel');
+  if(!lines.length){el.innerHTML='';if(label)label.style.display='none';return;}
+  if(label)label.style.display='block';
   el.innerHTML=groupByOrder(lines).map((g,gi)=>{
     const o=g.order||{};
     const cl=o.clients?.company_name||o.clients?.name||'—';
