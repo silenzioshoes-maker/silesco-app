@@ -787,6 +787,8 @@ async function registerPush(userId,dept,sbc){
     }
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUB)});
     const subJson=sub.toJSON();
+    // Curata subscriptiile vechi ale aceluiasi user pe acest departament (alt endpoint = device vechi/reinstalat)
+    if(userId){await sbc.from('push_subscriptions').delete().eq('user_id',userId).eq('department',dept).neq('endpoint',subJson.endpoint);}
     const{error}=await sbc.from('push_subscriptions').upsert({user_id:userId,department:dept,subscription:subJson,endpoint:subJson.endpoint},{onConflict:'endpoint'});
     if(error){console.warn('Push DB:',error);return false;}
     return true;
