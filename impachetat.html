@@ -169,7 +169,9 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   </div>
   <div class="hdr-right">
     <div class="hdr-badge" id="hdrBadge">—</div>
-    
+    <button id="notifBtn" onclick="activateNotifications()" title="Activeaza notificari" style="background:rgba(176,141,87,.15);border:1px solid rgba(176,141,87,.3);border-radius:8px;padding:6px 10px;color:#B08D57;cursor:pointer;display:flex;align-items:center">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
   </div>
 </div>
 
@@ -831,6 +833,38 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+const VAPID_PUB='BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g';
+function urlBase64ToUint8Array(b){const p='='.repeat((4-b.length%4)%4);const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from([...atob(s)].map(c=>c.charCodeAt(0)));}
+async function registerPush(userId,dept,sbc){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window))return false;
+  try{
+    await navigator.serviceWorker.register('/sw.js');
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(sub){
+      const ek=new Uint8Array(sub.options.applicationServerKey||[]);
+      const wk=urlBase64ToUint8Array(VAPID_PUB);
+      let same=ek.length===wk.length;
+      if(same){for(let i=0;i<wk.length;i++){if(ek[i]!==wk[i]){same=false;break;}}}
+      if(!same){await sub.unsubscribe();sub=null;}
+    }
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUB)});
+    const subJson=sub.toJSON();
+    const{error}=await sbc.from('push_subscriptions').upsert({user_id:userId,department:dept,subscription:subJson,endpoint:subJson.endpoint},{onConflict:'endpoint'});
+    if(error){console.warn('Push DB:',error);return false;}
+    return true;
+  }catch(e){console.warn('Push:',e);return false;}
+}
+async function activateNotifications(){
+  if(!('Notification' in window)){showToast('Browserul nu suporta notificari!');return;}
+  if(!('serviceWorker' in navigator)){showToast('Adauga aplicatia pe ecranul principal mai intai!');return;}
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){showToast('Permisiunea a fost refuzata!');return;}
+  const ok=await registerPush(CU.id,'impachetat',sb);
+  if(ok){const b=document.getElementById('notifBtn');if(b){b.style.background='#1E4A2E';b.style.color='#fff';}showToast('Notificari activate!');}
+  else showToast('Eroare la activare. Reincearca.');
+}
+if('Notification' in window && Notification.permission==='granted'){setTimeout(()=>{if(typeof CU!=='undefined'&&CU?.id)registerPush(CU.id,'impachetat',sb);},2000);}
 </script>
 </body>
 </html>
