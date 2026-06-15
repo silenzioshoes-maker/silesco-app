@@ -288,6 +288,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <div class="hdr-badge" id="hBadge">0 active</div>
+      <button id="notifBtn" onclick="activateNotifications()" title="Activeaza notificari" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 8px;color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
       <button onclick="doLogout()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 10px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif">Ieși</button>
     </div>
   </div>
@@ -467,6 +470,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
     </div>
   </div>
 
+  <!-- STOC -->
+  <div id="vStoc" style="display:none">
+    <div class="wrap">
+      <div class="sec-label">Baxuri gata</div><div id="stBax"></div>
+      <div class="sec-label" style="margin-top:16px">FEȚE disponibile</div><div id="stFete"></div>
+    </div>
+  </div>
+
   <!-- MESAJE AGENT - redirect la pagina dedicată -->
   <div id="vMesaje" style="display:none"></div>
 
@@ -603,6 +614,7 @@ async function initAgent(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('agentScreen').style.display='block';
   showV('orders');
+  if('Notification' in window && Notification.permission==='granted' && CU?.id){registerPush(CU.id,'agent',sb);}
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
@@ -2041,6 +2053,36 @@ function addFromStock(stockId,model,color,price,pontaj){
 function showLov(t){document.getElementById('lov-text').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
+const VAPID_PUB='BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g';
+function urlBase64ToUint8Array(b){const p='='.repeat((4-b.length%4)%4);const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from([...atob(s)].map(c=>c.charCodeAt(0)));}
+async function registerPush(userId,dept,sbc){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window))return false;
+  try{
+    await navigator.serviceWorker.register('/sw.js');
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(sub){
+      const ek=new Uint8Array(sub.options.applicationServerKey||[]);
+      const wk=urlBase64ToUint8Array(VAPID_PUB);
+      let same=ek.length===wk.length;
+      if(same){for(let i=0;i<wk.length;i++){if(ek[i]!==wk[i]){same=false;break;}}}
+      if(!same){await sub.unsubscribe();sub=null;}
+    }
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUB)});
+    const{error}=await sbc.from('push_subscriptions').upsert({user_id:userId,department:dept,subscription:sub.toJSON()},{onConflict:'user_id,department'});
+    if(error){console.warn('Push DB:',error);return false;}
+    return true;
+  }catch(e){console.warn('Push:',e);return false;}
+}
+async function activateNotifications(){
+  if(!('Notification' in window)){showToast('Browserul nu suporta notificari!');return;}
+  if(!('serviceWorker' in navigator)){showToast('Adauga aplicatia pe ecranul principal mai intai!');return;}
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){showToast('Permisiunea a fost refuzata!');return;}
+  const ok=await registerPush(CU.id,'agent',sb);
+  if(ok){const b=document.getElementById('notifBtn');if(b){b.style.background='rgba(255,255,255,.25)';b.style.color='#fff';}showToast('Notificari activate!');}
+  else showToast('Eroare la activare. Reincearca.');
+}
 </script>
 </body>
 </html>
