@@ -437,8 +437,8 @@ async function openOrderConv(orderId){
   const allThread=[...(root||[]),...replies].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
   hideLov();
   // Marchează ca citite
-  const unreadIds=(root||[]).filter(m=>!m.is_read&&m.from_user_id!==CU.id).map(m=>m.id);
-  if(unreadIds.length)await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).in('id',unreadIds);
+  // Marcheaza citite TOATE mesajele comenzii (root + reply-uri copil), nu doar root, ca bulina sa ajunga la 0
+  await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('order_id',orderId).eq('is_read',false).neq('from_user_id',CU.id);
   // Header
   const conv=conversations.find(c=>c.orderId===orderId);
   document.getElementById('chatOrderNo').textContent=conv?.orderNo||'—';
@@ -465,8 +465,8 @@ async function openGeneralMsg(id){
     .eq('parent_id',id).order('created_at',{ascending:true});
   const allThread=[root,...(replies||[])];
   hideLov();
-  if(!root.is_read&&root.from_user_id!==CU.id)
-    await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('id',id);
+  // Marcheaza citit mesajul + reply-urile lui (nu doar root), ca bulina sa ajunga la 0
+  await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).or(`id.eq.${id},parent_id.eq.${id}`).eq('is_read',false).neq('from_user_id',CU.id);
   document.getElementById('chatOrderNo').textContent='';
   document.getElementById('chatClient').textContent=root.subject||root.message.slice(0,50);
   document.getElementById('chatDept').textContent='Mesaj general → '+(DEPT[root.to_department]||root.to_department);
