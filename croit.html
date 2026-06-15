@@ -400,7 +400,6 @@ window.addEventListener('DOMContentLoaded',async()=>{
   const{data:p}=await sb.from('user_profiles').select('full_name,role').eq('id',CU.id).single();
   CP=p;
   await loadAll();
-  loadAnnouncements('croit');
 });
 
 
@@ -967,7 +966,7 @@ async function loadOrderMsgs(orderId){
         ${m.reply?`<div class="msg-reply"><strong>Răspuns:</strong> ${m.reply}</div>`:''}
       </div>`;
     }).join('')}
-    <a href="/agent-messages.html" style="font-size:13px;color:#B08D57;font-weight:700;text-decoration:none">Vezi toate →</a>`;
+    <a href="#" onclick="setTab('mesaje');return false;" style="font-size:13px;color:#B08D57;font-weight:700;text-decoration:none">Vezi toate →</a>`;
 }
 
 // ── FIȘĂ PRODUCȚIE ────────────────────────────────────────────
@@ -1032,8 +1031,8 @@ async function loadMsgs(){
     .is('parent_id',null)
     .order('created_at',{ascending:false}).limit(30);
   const msgs=data||[];
-  const unreadIds=msgs.filter(m=>!m.is_read&&m.from_user_id!==CU.id).map(m=>m.id);
-  if(unreadIds.length)await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).in('id',unreadIds);
+  // Marcheaza citite TOATE mesajele catre croit (root + reply-uri copil), ca bulina sa ajunga la 0
+  await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('to_department','croit').eq('is_read',false);
   await loadMsgBadge();
   const el=document.getElementById('msgList');
   const empty=document.getElementById('msgEmpty');
@@ -1225,46 +1224,6 @@ async function saveCompleteRestanta(){
   await loadAll();
 }
 
-// ── ANUNTURI STICKY (centru de comanda management) ──
-const ANN_TYPE_STYLE={
-  informare:{bg:'#EAF1F7',border:'#3A6EA5',label:'INFORMARE',color:'#1E4A6E'},
-  atentionare:{bg:'#FBF3E0',border:'#B08D57',label:'ATENTIONARE',color:'#7A5C28'},
-  urgent:{bg:'#FBE9E7',border:'#9C3A2B',label:'URGENT',color:'#7A2418'}
-};
-function annHiddenSet(){try{return new Set(JSON.parse(localStorage.getItem('annHidden')||'[]'));}catch(e){return new Set();}}
-function annHide(id){const s=annHiddenSet();s.add(id);localStorage.setItem('annHidden',JSON.stringify([...s]));renderAnnouncements(window._annCache||[]);}
-async function loadAnnouncements(dept){
-  try{
-    const now=new Date().toISOString();
-    const{data}=await sb.from('announcements').select('*').eq('active',true).contains('departments',[dept]).order('created_at',{ascending:false});
-    const list=(data||[]).filter(a=>!a.expires_at||a.expires_at>now);
-    window._annCache=list;
-    renderAnnouncements(list);
-  }catch(e){console.warn('Announcements:',e);}
-}
-function renderAnnouncements(list){
-  let box=document.getElementById('annBox');
-  if(!box){
-    box=document.createElement('div');box.id='annBox';
-    box.style.cssText='position:sticky;top:0;z-index:90;display:flex;flex-direction:column;gap:0';
-    const hdr=document.querySelector('.hdr');
-    if(hdr&&hdr.parentNode)hdr.parentNode.insertBefore(box,hdr.nextSibling);
-    else document.body.insertBefore(box,document.body.firstChild);
-  }
-  const hidden=annHiddenSet();
-  const visible=list.filter(a=>!hidden.has(a.id));
-  box.innerHTML=visible.map(a=>{
-    const st=ANN_TYPE_STYLE[a.type]||ANN_TYPE_STYLE.informare;
-    return '<div style="background:'+st.bg+';border-left:4px solid '+st.border+';padding:10px 14px;display:flex;align-items:flex-start;gap:10px;font-family:Inter,sans-serif">'
-      +'<div style="flex:1">'
-      +'<div style="font-size:10px;font-weight:800;letter-spacing:1px;color:'+st.color+';margin-bottom:2px">'+st.label+'</div>'
-      +'<div style="font-size:14px;color:#2A2620;line-height:1.35">'+(a.message||'').replace(/</g,'&lt;')+'</div>'
-      +'</div>'
-      +'<button onclick="annHide(\''+a.id+'\')" style="background:none;border:none;color:'+st.color+';font-size:18px;cursor:pointer;line-height:1;padding:0 2px" title="Ascunde">×</button>'
-      +'</div>';
-  }).join('');
-}
-
 const VAPID_PUB='BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g';
 function urlBase64ToUint8Array(b){const p='='.repeat((4-b.length%4)%4);const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from([...atob(s)].map(c=>c.charCodeAt(0)));}
 async function registerPush(userId,dept,sbc){
@@ -1281,7 +1240,7 @@ async function registerPush(userId,dept,sbc){
       if(!same){await sub.unsubscribe();sub=null;}
     }
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUB)});
-    const subJson=sub.toJSON();if(userId){await sbc.from('push_subscriptions').delete().eq('user_id',userId).eq('department',dept).neq('endpoint',subJson.endpoint);}const{error}=await sbc.from('push_subscriptions').upsert({user_id:userId,department:dept,subscription:subJson,endpoint:subJson.endpoint},{onConflict:'endpoint'});
+    const subJson=sub.toJSON();const{error}=await sbc.from('push_subscriptions').upsert({user_id:userId,department:dept,subscription:subJson,endpoint:subJson.endpoint},{onConflict:'endpoint'});
     if(error){console.warn('Push DB:',error);return false;}
     return true;
   }catch(e){console.warn('Push:',e);return false;}
