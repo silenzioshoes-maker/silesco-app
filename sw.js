@@ -9,10 +9,10 @@ self.addEventListener('push', function(event) {
   }
   const options = {
     body: data.body || '',
-    icon: '/icon.png',
-    badge: '/icon.png',
     tag: data.tag || 'silesco',
     renotify: true,
+    requireInteraction: false,
+    vibrate: [200, 100, 200],
     data: { url: data.url || '/' }
   };
   event.waitUntil(
