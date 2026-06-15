@@ -274,9 +274,8 @@ async function openConv(c){
     let replies=[];
     if(rootIds.length){const{data:rep}=await sb.from('internal_messages').select(`id,from_user_id,message,created_at,parent_id,user_profiles!internal_messages_from_user_id_fkey(full_name,role)`).in('parent_id',rootIds).order('created_at',{ascending:true});replies=rep||[];}
     allThread=[...(root||[]),...replies].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-    // Marchează citite
-    const unreadIds=(root||[]).filter(m=>!m.is_read&&m.from_user_id!==CU.id).map(m=>m.id);
-    if(unreadIds.length)await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).in('id',unreadIds);
+    // Marchează citite root-uri + reply-uri copil, ca bulina sa ajunga la 0
+    await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('order_id',c.orderId).eq('is_read',false).neq('from_user_id',CU.id);
     document.getElementById('chatOrderNo').textContent=c.orderNo;
     document.getElementById('chatTitle').textContent=c.client;
     document.getElementById('chatSub').textContent='Conversație cu Management';
@@ -284,7 +283,8 @@ async function openConv(c){
     const{data:root}=await sb.from('internal_messages').select(`id,from_user_id,message,subject,is_read,created_at,user_profiles!internal_messages_from_user_id_fkey(full_name,role)`).eq('id',c.id).single();
     const{data:replies}=await sb.from('internal_messages').select(`id,from_user_id,message,created_at,parent_id,user_profiles!internal_messages_from_user_id_fkey(full_name,role)`).eq('parent_id',c.id).order('created_at',{ascending:true});
     allThread=[root,...(replies||[])];
-    if(!root.is_read&&root.from_user_id!==CU.id)await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('id',c.id);
+    // Marchează citit mesajul + reply-urile lui, ca bulina sa ajunga la 0
+    await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).or(`id.eq.${c.id},parent_id.eq.${c.id}`).eq('is_read',false).neq('from_user_id',CU.id);
     document.getElementById('chatOrderNo').textContent='';
     document.getElementById('chatTitle').textContent=root.subject||root.message.slice(0,50);
     document.getElementById('chatSub').textContent=c.isMine?'Trimis la Management':'De la Management';
