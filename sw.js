@@ -25,9 +25,11 @@ self.addEventListener('notificationclick', function(event) {
   const url = event.notification.data?.url || '/';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      // Daca exista deja o fereastra deschisa a aplicatiei, focuseaz-o (pastreaza sesiunea/token-ul)
       for (const client of clientList) {
-        if (client.url.includes(url) && 'focus' in client) return client.focus();
+        if ('focus' in client) return client.focus();
       }
+      // Altfel deschide pagina ceruta
       if (clients.openWindow) return clients.openWindow(url);
     })
   );
