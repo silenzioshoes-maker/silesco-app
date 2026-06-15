@@ -1,7 +1,12 @@
 // SILESCO Service Worker — Push Notifications
 self.addEventListener('push', function(event) {
   if (!event.data) return;
-  const data = event.data.json();
+  let data;
+  try {
+    data = event.data.json();
+  } catch(e) {
+    data = { title: 'SILESCO', body: event.data.text() };
+  }
   const options = {
     body: data.body || '',
     icon: '/icon.png',
