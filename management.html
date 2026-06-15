@@ -741,8 +741,10 @@ window.addEventListener('DOMContentLoaded',async()=>{
     });
   });
   await loadAll();
-  // Inregistrare push notifications
-  registerPush(CU.id, 'management', sb);
+  // Reinregistrare automata DOAR daca permisiunea e deja acordata
+  if('Notification' in window && Notification.permission==='granted'){
+    registerPush(CU.id,'management',sb);
+  }
 });
 async function doLogout(){await sb.auth.signOut();}
 
@@ -2773,28 +2775,42 @@ async function loadProdAmbalat(){
 }
 async function activateNotifications(){
   if(!('Notification' in window)){showToast('Browserul nu suporta notificari!');return;}
+  if(!('serviceWorker' in navigator)){showToast('Adauga aplicatia pe ecranul principal mai intai!');return;}
   const perm=await Notification.requestPermission();
-  if(perm==='granted'){
-    await registerPush(CU.id,'management',sb);
-    document.getElementById('notifBtn').style.background='#EAF0EC';
-    document.getElementById('notifBtn').style.borderColor='#1E4A2E';
-    document.getElementById('notifBtn').style.color='#1E4A2E';
+  if(perm!=='granted'){showToast('Permisiunea a fost refuzata!');return;}
+  const ok=await registerPush(CU.id,'management',sb);
+  if(ok){
+    const b=document.getElementById('notifBtn');
+    if(b){b.style.background='#EAF0EC';b.style.borderColor='#1E4A2E';b.style.color='#1E4A2E';}
     showToast('Notificari activate!');
   } else {
-    showToast('Permisiunea a fost refuzata!');
+    showToast('Eroare la activare. Reincearca.');
   }
 }
 
+const VAPID_PUB='BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g';
 function urlBase64ToUint8Array(b){const p='='.repeat((4-b.length%4)%4);const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from([...atob(s)].map(c=>c.charCodeAt(0)));}
 async function registerPush(userId,dept,sbc){
-  if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){console.warn('Push nesuportat');return false;}
   try{
-    const reg=await navigator.serviceWorker.register('/sw.js');
-    const perm=await Notification.requestPermission();
-    if(perm!=='granted')return;
-    const sub=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array('BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g')});
-    await sbc.from('push_subscriptions').upsert({user_id:userId,department:dept,subscription:sub.toJSON()},{onConflict:'user_id,department'});
-  }catch(e){console.warn('Push:',e);}
+    await navigator.serviceWorker.register('/sw.js');
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    // Verifica daca subscriptia existenta are cheia corecta; daca nu, o reface
+    if(sub){
+      const existingKey=new Uint8Array(sub.options.applicationServerKey||[]);
+      const wantedKey=urlBase64ToUint8Array(VAPID_PUB);
+      let same=existingKey.length===wantedKey.length;
+      if(same){for(let i=0;i<wantedKey.length;i++){if(existingKey[i]!==wantedKey[i]){same=false;break;}}}
+      if(!same){await sub.unsubscribe();sub=null;}
+    }
+    if(!sub){
+      sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUB)});
+    }
+    const{error}=await sbc.from('push_subscriptions').upsert({user_id:userId,department:dept,subscription:sub.toJSON()},{onConflict:'user_id,department'});
+    if(error){console.warn('Push DB:',error);return false;}
+    return true;
+  }catch(e){console.warn('Push:',e);return false;}
 }
 async function sendPushNotification(department,event_type,title,body,url){
   try{
