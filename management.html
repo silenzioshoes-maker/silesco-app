@@ -738,6 +738,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     });
   });
   await loadAll();
+  // Inregistrare push notifications
+  registerPush(CU.id, 'management', sb);
 });
 async function doLogout(){await sb.auth.signOut();}
 
@@ -2765,6 +2767,26 @@ async function loadProdTalpuit(){
 
 async function loadProdAmbalat(){
   await loadAmbalatList();
+}
+function urlBase64ToUint8Array(b){const p='='.repeat((4-b.length%4)%4);const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from([...atob(s)].map(c=>c.charCodeAt(0)));}
+async function registerPush(userId,dept,sbc){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
+  try{
+    const reg=await navigator.serviceWorker.register('/sw.js');
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted')return;
+    const sub=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array('BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g')});
+    await sbc.from('push_subscriptions').upsert({user_id:userId,department:dept,subscription:sub.toJSON()},{onConflict:'user_id,department'});
+  }catch(e){console.warn('Push:',e);}
+}
+async function sendPushNotification(department,event_type,title,body,url){
+  try{
+    await fetch('https://nprpwaxijtbjkxdhdxmq.supabase.co/functions/v1/push-notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+( await sb.auth.getSession()).data.session?.access_token},
+      body:JSON.stringify({department,event_type,title,body,url})
+    });
+  }catch(e){console.warn('Push send:',e);}
 }
 </script>
 </body>
