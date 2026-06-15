@@ -536,6 +536,8 @@ function setTab(t){
 const EXTERN_WORKSHOPS=['oradea','ceica','altul'];
 
 function isExternExtern(l){
+  // Daca articolul e la_croit, trebuie croit intern indiferent de workshop
+  if(l.production_status==='la_croit') return false;
   return EXTERN_WORKSHOPS.includes((l.workshop||'').toLowerCase());
 }
 
