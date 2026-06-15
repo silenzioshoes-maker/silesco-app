@@ -567,7 +567,8 @@ function renderOrderCard(o,i){
   const lines=o.order_lines||[];
   const workLines=lines.filter(l=>!l.from_stock&&!isExternExtern(l));
   const doneCnt=workLines.filter(l=>artState[l.id]?.done).length;
-  const allDone=workLines.length>0&&doneCnt===workLines.length;
+  // daca toate liniile sunt din stoc (workLines gol), comanda e automat gata — nu e nimic de croit
+  const allDone=workLines.length===0||doneCnt===workLines.length;
   const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
   const dl=o.delivery_date?Math.ceil((new Date(o.delivery_date)-new Date())/86400000):null;
   const dc=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=3?'#B0892B':'#5A5248';
@@ -903,7 +904,8 @@ async function finalizeOrder(orderId){
   const o=orders.find(x=>x.id===orderId);
   if(!o)return;
   const workLines=(o.order_lines||[]).filter(l=>!l.from_stock).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  if(!workLines.every(l=>artState[l.id]?.done)){showToast('Bifează toate articolele!');return;}
+  // daca nu exista linii de lucru (toate din stoc), se poate finaliza direct
+  if(workLines.length>0&&!workLines.every(l=>artState[l.id]?.done)){showToast('Bifează toate articolele!');return;}
   showLov('Se finalizează...');
   const diffs=[];
   // Salvează restanțe și construiește summary
