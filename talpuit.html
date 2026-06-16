@@ -320,7 +320,7 @@ async function loadAll(){
       .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit','gata'])
       .order('sort_order',{ascending:true}),
     sb.from('productie_manual')
-      .select('id,free_model,color,ponytage,total_pairs,production_status,notes,label,talpa_id,brant_id,created_at')
+      .select('id,free_model,color,ponytage,total_pairs,production_status,notes,label,created_at')
       .in('production_status',['pregatit_lansat','in_talpuit'])
       .order('created_at',{ascending:true})
   ]);
@@ -341,20 +341,15 @@ async function loadAll(){
     ...(lines||[]).filter(l=>l.production_status==='pregatit_lansat'),
     ...(manual||[]).filter(m=>m.production_status==='pregatit_lansat')
   ];
-  const lansat=[
-    ...(lines||[]).filter(l=>l.production_status==='in_talpuit'),
-    ...(manual||[]).filter(m=>m.production_status==='in_talpuit')
-  ];
   const gata=(lines||[]).filter(l=>l.production_status==='gata');
 
-  document.getElementById('hdrBadge').textContent=lansat.length+' in talpuit';
+  document.getElementById('hdrBadge').textContent=pregatit.length+' de lansat';
   document.getElementById('stReceptie').textContent=cusutGata.length;
-  document.getElementById('stLansat').textContent=lansat.length;
+  document.getElementById('stLansat').textContent=pregatit.length;
   document.getElementById('stGata').textContent=gata.reduce((s,l)=>s+(l.total_pairs||0),0);
 
   renderReceptie(cusutGata);
   renderPregatit(pregatit);
-  renderLansat(lansat);
   hideLov();
 }
 
@@ -687,8 +682,35 @@ function renderPregatit(lines){
 async function markLansat(lineId,orderId,isManual){
   showLov('Se lansează...');
   const table=isManual==='1'?'productie_manual':'order_lines';
-  await sb.from(table).update({production_status:'in_talpuit'}).eq('id',lineId);
+  // 1. Marcheaza gata -> articolul apare direct in ambalat
+  await sb.from(table).update({production_status:'gata'}).eq('id',lineId);
+  // 2. Scade stoc talpi/branturi consumate (doar linii reale de comanda)
+  if(isManual!=='1'){
+    const{data:line}=await sb.from('order_lines').select('talpa_id,brant_id,ponytage').eq('id',lineId).single();
+    if(line){
+      const pony=line.ponytage||{};
+      if(line.talpa_id){
+        const talpa=allTalpi.find(t=>t.id===line.talpa_id);
+        if(talpa&&talpa.stoc){
+          const stocNou={...talpa.stoc};
+          Object.keys(pony).forEach(sz=>{const c=parseInt(pony[sz])||0;if(stocNou[sz]!==undefined)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-c);});
+          await sb.from('talpi').update({stoc:stocNou}).eq('id',line.talpa_id);
+          talpa.stoc=stocNou;
+        }
+      }
+      if(line.brant_id){
+        const brant=allBranturi.find(t=>t.id===line.brant_id);
+        if(brant&&brant.stoc){
+          const stocNou={...brant.stoc};
+          Object.keys(pony).forEach(sz=>{const c=parseInt(pony[sz])||0;if(stocNou[sz]!==undefined)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-c);});
+          await sb.from('branturi').update({stoc:stocNou}).eq('id',line.brant_id);
+          brant.stoc=stocNou;
+        }
+      }
+    }
+  }
   hideLov();showToast('Lansat in talpuit!');
+  await loadMateriale();
   await loadAll();
 }
 
