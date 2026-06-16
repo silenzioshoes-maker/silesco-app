@@ -688,14 +688,9 @@ async function markLansat(lineId,orderId,isManual){
   showLov('Se lansează...');
   const table=isManual==='1'?'productie_manual':'order_lines';
   await sb.from(table).update({production_status:'in_talpuit'}).eq('id',lineId);
+  // Seteaza la_impachetat imediat la primul articol lansat, ca ambalatul sa vada comanda
   if(isManual!=='1'&&orderId){
-    const{data:remaining}=await sb.from('order_lines')
-      .select('id,production_status').eq('order_id',orderId).neq('from_stock',true);
-    const allLansat=(remaining||[]).every(l=>['in_talpuit','gata','pregatit_livrare','finalizat'].includes(l.production_status)||l.id===lineId);
-    if(allLansat){
-      // la_impachetat ca ambalatul sa vada comanda imediat dupa lansare in talpuit
-      await sb.from('orders').update({status:'la_impachetat'}).eq('id',orderId);
-    }
+    await sb.from('orders').update({status:'la_impachetat'}).eq('id',orderId);
   }
   hideLov();showToast('Lansat in talpuit!');
   await loadAll();
