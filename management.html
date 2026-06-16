@@ -1162,7 +1162,7 @@ function _buildOrdersHTML(orders,prefix='ord'){
     const ORDER_PS_LABEL={la_croit:'La croit',la_cusut:'La cusut',la_cusut_extern:'La cusut',cusut_extern_finalizat:'La cusut',cusut_gata:'La cusut',pregatit_lansat:'La talpuit',in_talpuit:'La talpuit',gata:'La talpuit',pregatit_livrare:'Gata livrare',finalizat:'Finalizat'};
     const ORDER_PS_RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
     let cfg;
-    if(workLines.length>0&&o.status!=='nou'&&o.status!=='aprobat'&&o.status!=='modificat_pending'&&o.status!=='anulat'&&o.status!=='livrat'){
+    if(workLines.length>0&&o.status!=='anulat'&&o.status!=='livrat'){
       // Gasim statusurile unice active (nesarite) din linii
       const activeStatuses=[...new Set(workLines.map(l=>l.production_status).filter(ps=>ORDER_PS_LABEL[ps]))];
       if(activeStatuses.length===0){
