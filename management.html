@@ -1049,7 +1049,28 @@ async function loadOrders(){
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
   allOrders=data||[];
+  await syncOrderStatuses();
   renderKPIs();applyFilter();updateAlerts();
+}
+
+// Auto-corecteaza orders.status din statusul liniilor (stadiul celei mai putin avansate linii active).
+// Astfel o comanda partiala ramane vizibila in departamentul corect, iar badge-ul din lista e corect.
+async function syncOrderStatuses(){
+  const RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,receptie_fete:2,cusut_gata:2,pregatit_lansat:2,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
+  const BY_RANK={1:'la_croit',2:'la_cusut',3:'la_talpuit',4:'gata_livrare',5:'finalizat'};
+  const PROC=['la_croit','la_cusut','la_talpuit','la_impachetat'];
+  for(const o of allOrders){
+    if(!PROC.includes(o.status))continue;
+    const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
+    if(!wl.length)continue;
+    const ranks=wl.map(l=>RANK[l.production_status]).filter(r=>r);
+    if(!ranks.length)continue;
+    const want=BY_RANK[Math.min(...ranks)];
+    if(want&&want!==o.status){
+      await sb.from('orders').update({status:want}).eq('id',o.id);
+      o.status=want;
+    }
+  }
 }
 
 async function loadLots(){
@@ -2290,17 +2311,16 @@ async function loadProdCusut(){
 
 
 async function loadProdCusut(){
-  const laCusut=allOrders.filter(o=>o.status==='la_cusut')
-    .sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   const atelEl=document.getElementById('pcu_ateliere');
-  const CUSUT_DONE=['cusut_gata','pregatit_lansat','in_talpuit','la_talpuit','gata','la_impachetat_talpuit','pregatit_livrare','finalizat'];
-  const EXCL_CUSUT=['la_talpuit','la_impachetat','gata_livrare','finalizat','livrat'];
-  const exclCusutIds=new Set(allOrders.filter(o=>EXCL_CUSUT.includes(o.status)).map(o=>o.id));
-  const laCusutActiv=laCusut.filter(function(o){
-    if(exclCusutIds.has(o.id)) return false;
+  // Bazat pe LINII, nu pe orders.status: arata orice comanda cu cel putin o linie activa la cusut
+  // (asa apar corect si comenzile partiale, indiferent ca orders.status e blocat/stale)
+  const CUSUT_ACTIVE=['la_cusut','la_cusut_extern','cusut_extern_finalizat'];
+  const SKIP_ORDER=['nou','anulat','livrat'];
+  const laCusutActiv=allOrders.filter(function(o){
+    if(SKIP_ORDER.includes(o.status))return false;
     var wl=(o.order_lines||[]).filter(function(l){return !l.from_stock;});
-    return !wl.every(function(l){return CUSUT_DONE.includes(l.production_status);});
-  });
+    return wl.some(function(l){return CUSUT_ACTIVE.includes(l.production_status);});
+  }).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   _prodIds.cusut_inlucru=laCusutActiv.map(o=>o.id);
   _cusutOrdersCache=laCusutActiv.slice();
   renderCusutFromCache();
