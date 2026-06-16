@@ -320,7 +320,7 @@ async function loadAll(){
       .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit','gata'])
       .order('sort_order',{ascending:true}),
     sb.from('productie_manual')
-      .select('id,free_model,color,ponytage,total_pairs,production_status,notes,created_at')
+      .select('id,free_model,color,ponytage,total_pairs,production_status,notes,label,talpa_id,brant_id,created_at')
       .in('production_status',['pregatit_lansat','in_talpuit'])
       .order('created_at',{ascending:true})
   ]);
@@ -334,7 +334,7 @@ async function loadAll(){
     (orders||[]).forEach(o=>ordersMap[o.id]=o);
   }
   (lines||[]).forEach(l=>l.orders=ordersMap[l.order_id]||null);
-  (manual||[]).forEach(m=>{m._manual=true;m.orders={order_no:'Manual',clients:null};});
+  (manual||[]).forEach(m=>{m._manual=true;m.orders={order_no:m.label||'Producție internă',clients:{company_name:'Producție internă',name:''}};});
 
   const cusutGata=(lines||[]).filter(l=>l.production_status==='cusut_gata');
   const pregatit=[
