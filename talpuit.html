@@ -688,10 +688,6 @@ async function markLansat(lineId,orderId,isManual){
   showLov('Se lansează...');
   const table=isManual==='1'?'productie_manual':'order_lines';
   await sb.from(table).update({production_status:'in_talpuit'}).eq('id',lineId);
-  // Seteaza la_impachetat imediat la primul articol lansat, ca ambalatul sa vada comanda
-  if(isManual!=='1'&&orderId){
-    await sb.from('orders').update({status:'la_impachetat'}).eq('id',orderId);
-  }
   hideLov();showToast('Lansat in talpuit!');
   await loadAll();
 }
