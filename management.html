@@ -1094,16 +1094,19 @@ async function loadLots(){
 // KPIs
 function renderKPIs(){
   const nou=allOrders.filter(o=>o.status==='nou').length;
-  const prod=allOrders.filter(o=>o.status==='in_productie').length;
-  const gata=allOrders.filter(o=>o.status==='finalizat').length;
-  const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
+  // Productie = comenzi cu cel putin o linie activa in productie (bazat pe linii, nu orders.status)
+  const PS_PROD=['la_croit','la_cusut','la_cusut_extern','cusut_extern_finalizat','cusut_gata','pregatit_lansat','in_talpuit','gata'];
+  const prod=allOrders.filter(o=>!['finalizat','livrat','anulat'].includes(o.status)&&(o.order_lines||[]).some(l=>PS_PROD.includes(l.production_status))).length;
+  // Gata livrare = comenzi cu status gata_livrare (de livrat, nu finalizate)
+  const gata=allOrders.filter(o=>o.status==='gata_livrare').length;
+  const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat','finalizat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
   if(nou>0){document.getElementById('newBadge').style.display='inline';document.getElementById('newBadge').textContent=nou;}
   else document.getElementById('newBadge').style.display='none';
   document.getElementById('kpiGrid').innerHTML=[
     {icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',val:nou,label:'Comenzi noi',cls:'accent',onclick:"showSection('orders',document.getElementById('nav_orders'));setFilter('nou',document.querySelector('.filter-btn'))"},
     {icon:'<path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>',val:prod,label:'În producție',cls:'',onclick:"showSection('orders',document.getElementById('nav_orders'));setFilter('in_productie',document.querySelector('.filter-btn'))"},
     {icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>',val:intarz,label:'Întârziate',cls:'red',onclick:"showSection('orders',document.getElementById('nav_orders'));setFilter('intarziate',document.querySelector('.filter-btn'))"},
-    {icon:'<polyline points="20 6 9 17 4 12"/>',val:gata,label:'Gata livrare',cls:'green',onclick:"showSection('orders',document.getElementById('nav_orders'));setFilter('finalizat',document.querySelector('.filter-btn'))"},
+    {icon:'<polyline points="20 6 9 17 4 12"/>',val:gata,label:'Gata livrare',cls:'green',onclick:"showSection('orders',document.getElementById('nav_orders'));setFilter('gata_livrare',document.querySelector('.filter-btn[onclick*=gata_livrare]'))"},
   ].map(k=>`<div class="kpi-card ${k.cls}" onclick="${k.onclick}" style="cursor:pointer;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.10)'" onmouseout="this.style.boxShadow='none'"><div class="kpi-icon"><svg viewBox="0 0 24 24">${k.icon}</svg></div><div><div class="kpi-val">${k.val}</div><div class="kpi-label">${k.label}</div></div></div>`).join('');
 }
 
