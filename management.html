@@ -903,38 +903,48 @@ async function loadDailyReports(){
   const rc1=document.getElementById('rCroitAzi');if(rc1)rc1.textContent=croitAzi||0;
   const rc2=document.getElementById('rCroitSapt');if(rc2)rc2.textContent=croitSapt||0;
 
-  // Cusut per atelier — fără updated_at
+  // Cusut per atelier — linii ajunse la cusut_gata azi/saptamana (cu updated_at)
   const{data:cusutLines}=await sb.from('order_lines')
-    .select('workshop,total_pairs')
-    .eq('production_status','cusut_gata');
+    .select('workshop,total_pairs,updated_at')
+    .eq('production_status','cusut_gata')
+    .gte('updated_at',saptStart);
   const atelierStats={};
+  let cusutAzi=0,cusutSapt=0;
   (cusutLines||[]).forEach(l=>{
     const ws=l.workshop||'intern';
-    if(!atelierStats[ws])atelierStats[ws]={total:0};
-    atelierStats[ws].total+=(l.total_pairs||0);
+    if(!atelierStats[ws])atelierStats[ws]={azi:0,sapt:0};
+    atelierStats[ws].sapt+=(l.total_pairs||0);
+    cusutSapt+=(l.total_pairs||0);
+    if(l.updated_at>=aziStart){
+      atelierStats[ws].azi+=(l.total_pairs||0);
+      cusutAzi+=(l.total_pairs||0);
+    }
   });
   const atelEl=document.getElementById('rCusutAteliere');
   if(atelEl){
     if(Object.keys(atelierStats).length){
       atelEl.innerHTML=Object.entries(atelierStats).map(([ws,s])=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#F4F1EA;border-radius:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#F4F1EA;border-radius:6px;margin-bottom:4px">
           <span style="font-size:11px;font-weight:700;color:#2F4A63;text-transform:capitalize">${ws}</span>
-          <span style="font-size:11px;color:#3A3530"><strong>${s.total}</strong> per. cusute</span>
+          <span style="font-size:11px;color:#3A3530"><strong>${s.azi}</strong> azi · <strong>${s.sapt}</strong> săpt.</span>
         </div>`).join('');
     }else{
       atelEl.innerHTML='<div style="font-size:11px;color:#9E9890;font-style:italic">Nicio activitate</div>';
     }
   }
-  const notifEl=document.getElementById('rCusutNotif');
-  if(notifEl)notifEl.innerHTML='';
 
-  // Talpuit — fără updated_at
+  // Talpuit — linii ajunse la in_talpuit azi/saptamana (cu updated_at)
   const{data:talpLines}=await sb.from('order_lines')
-    .select('total_pairs')
-    .eq('production_status','gata');
-  const talpTotal=(talpLines||[]).reduce((s,l)=>s+(l.total_pairs||0),0);
-  const rt1=document.getElementById('rTalpuitAzi');if(rt1)rt1.textContent=0;
-  const rt2=document.getElementById('rTalpuitSapt');if(rt2)rt2.textContent=talpTotal||0;
+    .select('total_pairs,updated_at')
+    .eq('production_status','in_talpuit')
+    .gte('updated_at',saptStart);
+  let talpAzi=0,talpSapt=0;
+  (talpLines||[]).forEach(l=>{
+    talpSapt+=(l.total_pairs||0);
+    if(l.updated_at>=aziStart)talpAzi+=(l.total_pairs||0);
+  });
+  const rt1=document.getElementById('rTalpuitAzi');if(rt1)rt1.textContent=talpAzi||0;
+  const rt2=document.getElementById('rTalpuitSapt');if(rt2)rt2.textContent=talpSapt||0;
 }
 
 async function loadProdStats(){
