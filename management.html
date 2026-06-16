@@ -983,14 +983,14 @@ async function loadProdAlerts(){
   }
   // Verifică solicitări etichete de la împachetat (independent de finalizate)
   {
-    const{data:etiMsg}=await sb.from('internal_messages').select('id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
-    if(etiMsg?.length>0){
-      // Luăm order_id-urile din mesaje pentru a deschide etichete direct
-      const{data:etiMsgFull}=await sb.from('internal_messages').select('id,order_id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
-      const etiOrderIds=(etiMsgFull||[]).map(m=>m.order_id).filter(Boolean);
+    const{data:etiMsgFull}=await sb.from('internal_messages').select('id,order_id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
+    if(etiMsgFull?.length>0){
+      // Numara comenzi UNICE (nu mesaje — acelasi buton poate fi apasat de 2 ori)
+      const etiOrderIds=[...new Set((etiMsgFull||[]).map(m=>m.order_id).filter(Boolean))];
+      const nr=etiOrderIds.length;
       const etiUrl='etichete.html?orders='+etiOrderIds.join(',');
-      alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de printat`,onclick:`window.open('${etiUrl}','_blank')`});
-      document.getElementById('impBadge').textContent=etiMsg.length;document.getElementById('impBadge').style.display='inline-block';
+      alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${nr} solicitare${nr>1?'i':''}</strong> etichete de printat`,onclick:`window.open('${etiUrl}','_blank')`});
+      document.getElementById('impBadge').textContent=nr;document.getElementById('impBadge').style.display='inline-block';
     }
   }
   const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
