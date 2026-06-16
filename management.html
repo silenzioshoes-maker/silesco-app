@@ -978,9 +978,9 @@ async function loadProdAlerts(){
   if(cusutGata?.length){
     alerts.push({color:'#23394F',bg:'#E8EFF6',border:'#2F4A63',icon:'🧵',text:`<strong>${cusutGata.length} articole</strong> cusute — de recepționat la talpuit`,onclick:`showSection('productie',document.getElementById('nav_productie'));`});
   }
-  const finalizate=allOrders.filter(o=>o.status==='finalizat').length;
-  if(finalizate>0){
-    alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${finalizate} comenzi</strong> gata — de ambalat și livrat`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('finalizat',document.querySelector('.filter-btn'));`});
+  const gataLivrare=allOrders.filter(o=>o.status==='gata_livrare').length;
+  if(gataLivrare>0){
+    alerts.push({color:'#1E4A2E',bg:'#EAF0EC',border:'#365A43',icon:'📦',text:`<strong>${gataLivrare} comenzi</strong> gata de livrat`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('gata_livrare',document.querySelector('.filter-btn[onclick*=gata_livrare]'));`});
   }
   // Verifică solicitări etichete de la împachetat (independent de finalizate)
   {
