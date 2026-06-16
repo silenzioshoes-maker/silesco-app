@@ -341,10 +341,10 @@ async function loadAll(){
     ...(lines||[]).filter(l=>l.production_status==='pregatit_lansat'),
     ...(manual||[]).filter(m=>m.production_status==='pregatit_lansat')
   ];
-  // Lista de jos = articolele lansate (gata) - informativ
+  // Lista de jos = articolele lansate in talpuit (in_talpuit, + gata legacy) - informativ
   const lansat=[
-    ...(lines||[]).filter(l=>l.production_status==='gata'),
-    ...(manual||[]).filter(m=>m.production_status==='gata')
+    ...(lines||[]).filter(l=>l.production_status==='in_talpuit'||l.production_status==='gata'),
+    ...(manual||[]).filter(m=>m.production_status==='in_talpuit'||m.production_status==='gata')
   ];
 
   document.getElementById('hdrBadge').textContent=pregatit.length+' de lansat';
@@ -666,8 +666,8 @@ function renderPregatit(lines){
 async function markLansat(lineId,orderId,isManual){
   showLov('Se lansează...');
   const table=isManual==='1'?'productie_manual':'order_lines';
-  // 1. Marcheaza gata -> articolul apare direct in ambalat
-  await sb.from(table).update({production_status:'gata'}).eq('id',lineId);
+  // 1. Lansare in talpuit -> status in_talpuit (apare in Productie 'in talpuit' + ambalat)
+  await sb.from(table).update({production_status:'in_talpuit'}).eq('id',lineId);
   // 2. Scade stoc talpi/branturi consumate (doar linii reale de comanda)
   if(isManual!=='1'){
     const{data:line}=await sb.from('order_lines').select('talpa_id,brant_id,ponytage').eq('id',lineId).single();
