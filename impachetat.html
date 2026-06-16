@@ -354,7 +354,7 @@ async function loadAll(){
   // Pas 1: gasim order_id-urile care au cel putin un articol relevant pentru ambalat
   // (lansat in talpuit / pregatit livrare). Vizibilitatea e pe ARTICOL, nu pe orders.status.
   const{data:relLines}=await sb.from('order_lines')
-    .select('order_id').in('production_status',['in_talpuit','pregatit_livrare']);
+    .select('order_id').in('production_status',['in_talpuit','gata','pregatit_livrare']);
   const relOrderIds=[...new Set((relLines||[]).map(l=>l.order_id).filter(Boolean))];
 
   const ambQuery = relOrderIds.length
@@ -374,7 +374,7 @@ async function loadAll(){
   ]);
 
   // Tab Ambalat = comenzi cu cel putin un articol in_talpuit (lansat, nemarcat inca)
-  ambOrders=(amb||[]).filter(o=>(o.order_lines||[]).some(l=>l.production_status==='in_talpuit'));
+  ambOrders=(amb||[]).filter(o=>(o.order_lines||[]).some(l=>['in_talpuit','gata'].includes(l.production_status)));
   // Tab Gata livrare = comenzi cu cel putin un articol pregatit_livrare
   gataOrders=(amb||[]).filter(o=>(o.order_lines||[]).some(l=>l.production_status==='pregatit_livrare'));
 
@@ -442,8 +442,8 @@ function renderAmbalat(orders){
     const dlColor=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=2?'#8B6914':'#1E4A2E';
     const dlText=dl===null?'':dl<0?`⚠ ${Math.abs(dl)}z întârziere`:`${dl}z rămase`;
     const isUrgent=o.priority==='urgent';
-    // Doar articolele lansate in talpuit (in_talpuit) apar in tabul Ambalat
-    const lines=(o.order_lines||[]).filter(l=>!l.from_stock&&l.production_status==='in_talpuit');
+    // Doar articolele lansate (in_talpuit / gata = talpuit facut) apar in tabul Ambalat
+    const lines=(o.order_lines||[]).filter(l=>!l.from_stock&&['in_talpuit','gata'].includes(l.production_status));
     if(!lines.length) return '';
     const nrGata=0;
 
