@@ -2747,11 +2747,11 @@ async function loadProdTalpuit(){
   const[{data:lines},{data:manual}]=await Promise.all([
     sb.from('order_lines')
       .select('id,total_pairs,production_status,product_id,free_model,color,notes,workshop,order_id,sort_order,ponytage,products(code,name)')
-      .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit'])
+      .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit','gata'])
       .order('sort_order',{ascending:true}),
     sb.from('productie_manual')
       .select('id,free_model,color,ponytage,total_pairs,production_status,notes,label,created_at,product_id,products(code,name)')
-      .in('production_status',['pregatit_lansat','in_talpuit'])
+      .in('production_status',['pregatit_lansat','in_talpuit','gata'])
       .order('created_at',{ascending:true})
   ]);
   const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata'&&!exclOrderIds.has(l.order_id));
@@ -2760,8 +2760,8 @@ async function loadProdTalpuit(){
     ...(manual||[]).filter(m=>m.production_status==='pregatit_lansat').map(m=>({...m,_manual:true,order_id:null}))
   ];
   const inTalpuit=[
-    ...(lines||[]).filter(l=>l.production_status==='in_talpuit'&&!exclOrderIds.has(l.order_id)),
-    ...(manual||[]).filter(m=>m.production_status==='in_talpuit').map(m=>({...m,_manual:true,order_id:null}))
+    ...(lines||[]).filter(l=>(l.production_status==='in_talpuit'||l.production_status==='gata')&&!exclOrderIds.has(l.order_id)),
+    ...(manual||[]).filter(m=>m.production_status==='in_talpuit'||m.production_status==='gata').map(m=>({...m,_manual:true,order_id:null}))
   ];
   _prodIds.receptie=receptie.map(x=>x.id);
   _prodIds.pregatit=pregatit.map(x=>x.id);
