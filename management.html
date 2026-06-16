@@ -884,9 +884,12 @@ function scrollToOrder(orderId){
 
 async function loadDailyReports(){
   const now=new Date();
-  const aziStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
-  const day=now.getDay()||7;
-  const saptStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day+1).toISOString();
+  // UTC — Supabase stocheaza in UTC, comparam in UTC (Romania e UTC+3, local 00:00 ≠ UTC 00:00)
+  const aziStart=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())).toISOString();
+  const dayUTC=now.getUTCDay()||7;
+  const saptStart=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-dayUTC+1)).toISOString();
+  const aziStartMs=new Date(aziStart).getTime();
+  const saptStartMs=new Date(saptStart).getTime();
 
   // Croit — din audit_log
   const{data:auditCroit}=await sb.from('audit_log')
@@ -894,8 +897,6 @@ async function loadDailyReports(){
     .like('new_data->>action','Croit finalizat%')
     .gte('created_at',saptStart);
   let croitAzi=0,croitSapt=0;
-  const aziStartMs=new Date(aziStart).getTime();
-  const saptStartMs=new Date(saptStart).getTime();
   (auditCroit||[]).forEach(h=>{
     const matches=[...((h.new_data?.action||'').matchAll(/: (\d+) per\./g))];
     const total=matches.reduce((s,m)=>s+parseInt(m[1]),0);
