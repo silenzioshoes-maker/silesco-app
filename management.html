@@ -894,11 +894,14 @@ async function loadDailyReports(){
     .like('new_data->>action','Croit finalizat%')
     .gte('created_at',saptStart);
   let croitAzi=0,croitSapt=0;
+  const aziStartMs=new Date(aziStart).getTime();
+  const saptStartMs=new Date(saptStart).getTime();
   (auditCroit||[]).forEach(h=>{
     const matches=[...((h.new_data?.action||'').matchAll(/: (\d+) per\./g))];
     const total=matches.reduce((s,m)=>s+parseInt(m[1]),0);
-    if(h.created_at>=aziStart)croitAzi+=total;
-    croitSapt+=total;
+    const hMs=new Date(h.created_at).getTime();
+    if(hMs>=saptStartMs)croitSapt+=total;
+    if(hMs>=aziStartMs)croitAzi+=total;
   });
   const rc1=document.getElementById('rCroitAzi');if(rc1)rc1.textContent=croitAzi||0;
   const rc2=document.getElementById('rCroitSapt');if(rc2)rc2.textContent=croitSapt||0;
@@ -911,11 +914,14 @@ async function loadDailyReports(){
   const atelierStats={};
   let cusutAzi=0,cusutSapt=0;
   (cusutLines||[]).forEach(l=>{
+    const lMs=new Date(l.updated_at).getTime();
     const ws=l.workshop||'intern';
     if(!atelierStats[ws])atelierStats[ws]={azi:0,sapt:0};
-    atelierStats[ws].sapt+=(l.total_pairs||0);
-    cusutSapt+=(l.total_pairs||0);
-    if(l.updated_at>=aziStart){
+    if(lMs>=saptStartMs){
+      atelierStats[ws].sapt+=(l.total_pairs||0);
+      cusutSapt+=(l.total_pairs||0);
+    }
+    if(lMs>=aziStartMs){
       atelierStats[ws].azi+=(l.total_pairs||0);
       cusutAzi+=(l.total_pairs||0);
     }
@@ -940,8 +946,9 @@ async function loadDailyReports(){
     .gte('updated_at',saptStart);
   let talpAzi=0,talpSapt=0;
   (talpLines||[]).forEach(l=>{
-    talpSapt+=(l.total_pairs||0);
-    if(l.updated_at>=aziStart)talpAzi+=(l.total_pairs||0);
+    const lMs=new Date(l.updated_at).getTime();
+    if(lMs>=saptStartMs)talpSapt+=(l.total_pairs||0);
+    if(lMs>=aziStartMs)talpAzi+=(l.total_pairs||0);
   });
   const rt1=document.getElementById('rTalpuitAzi');if(rt1)rt1.textContent=talpAzi||0;
   const rt2=document.getElementById('rTalpuitSapt');if(rt2)rt2.textContent=talpSapt||0;
