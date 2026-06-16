@@ -1058,13 +1058,16 @@ async function loadOrders(){
 async function syncOrderStatuses(){
   const RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,receptie_fete:2,cusut_gata:2,pregatit_lansat:2,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
   const BY_RANK={1:'la_croit',2:'la_cusut',3:'la_talpuit',4:'gata_livrare',5:'finalizat'};
-  const PROC=['la_croit','la_cusut','la_talpuit','la_impachetat'];
+  const ALWAYS=['la_croit','la_cusut','la_talpuit','la_impachetat'];
+  const IF_ADVANCED=['nou','aprobat']; // corecteaza doar daca productia a inceput real (linie >= cusut)
   for(const o of allOrders){
-    if(!PROC.includes(o.status))continue;
+    if(!ALWAYS.includes(o.status)&&!IF_ADVANCED.includes(o.status))continue;
     const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
     if(!wl.length)continue;
     const ranks=wl.map(l=>RANK[l.production_status]).filter(r=>r);
     if(!ranks.length)continue;
+    // Comenzile nou/aprobat se avanseaza doar daca o linie a trecut de croit (a inceput productia)
+    if(IF_ADVANCED.includes(o.status)&&Math.max(...ranks)<2)continue;
     const want=BY_RANK[Math.min(...ranks)];
     if(want&&want!==o.status){
       await sb.from('orders').update({status:want}).eq('id',o.id);
