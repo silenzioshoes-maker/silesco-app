@@ -167,6 +167,9 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;ba
       <button onclick="addOrderData()" style="padding:9px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap">+ Adaugă</button>
     </div>
 
+    <!-- Banner comenzi solicitate (apare doar din alerta management) -->
+    <div id="solicitariBanner" style="display:none;padding:12px 22px;background:#E8EFF6;border-bottom:2px solid #2F4A63"></div>
+
     <!-- Settings row -->
     <div class="left-top">
       <div class="settings-row">
@@ -752,20 +755,42 @@ async function loadOrderData(){
 (async()=>{
   await loadOrders();
   const params=new URLSearchParams(window.location.search);
-  // ?orders=id1,id2,... (din alerta management) sau ?order=id (legacy)
   const oids=(params.get('orders')||params.get('order')||'').split(',').filter(Boolean);
-  if(oids.length){
-    // Selecteaza si incarca prima comanda solicitata
-    document.getElementById('orderSelect').value=oids[0];
-    await loadOrderData();
-    // Adauga automat si restul comenzilor solicitate
-    for(let i=1;i<oids.length;i++){
-      document.getElementById('orderSelect').value=oids[i];
-      await addOrderData();
-    }
-    document.getElementById('orderSelect').value='';
+  if(!oids.length) return;
+
+  // Aduce detaliile comenzilor solicitate (order_no + client)
+  const{data:solOrders}=await sb.from('orders')
+    .select('id,order_no,clients!orders_client_id_fkey(name,company_name)')
+    .in('id',oids);
+
+  // Afiseaza bannerul cu comenzile solicitate
+  const banner=document.getElementById('solicitariBanner');
+  if(banner&&solOrders?.length){
+    banner.style.display='block';
+    banner.innerHTML=`
+      <div style="font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:#2F4A63;font-weight:700;margin-bottom:8px">Solicitari etichete de la ambalat:</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${solOrders.map(o=>{
+          const cl=o.clients?.company_name||o.clients?.name||'—';
+          return `<div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #2F4A63;border-radius:4px;padding:7px 12px">
+            <div>
+              <span style="font-size:0.85rem;font-weight:700;color:#111;font-family:monospace">${o.order_no}</span>
+              <span style="font-size:0.85rem;color:#333;margin-left:8px">${cl}</span>
+            </div>
+            <button onclick="loadAndAdd('${o.id}','${o.order_no}')" style="padding:5px 12px;background:#2F4A63;color:#fff;border:none;border-radius:3px;cursor:pointer;font-family:inherit;font-size:0.75rem;font-weight:700;letter-spacing:0.05em">+ Adaugă</button>
+          </div>`;
+        }).join('')}
+      </div>`;
   }
 })();
+
+async function loadAndAdd(oid,orderNo){
+  document.getElementById('orderSelect').value=oid;
+  await addOrderData();
+  // Marcheaza butonul ca adaugat
+  const btns=document.querySelectorAll('#solicitariBanner button');
+  btns.forEach(b=>{if(b.getAttribute('onclick')?.includes(oid)){b.textContent='✓ Adăugat';b.style.background='#1E4A2E';b.disabled=true;}});
+}
 </script>
 </body>
 </html>
