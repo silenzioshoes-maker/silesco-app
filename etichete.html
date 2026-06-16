@@ -440,9 +440,7 @@ function refreshPreview(){
     labels.slice(p*perPage,(p+1)*perPage).forEach((lbl,i)=>{
       drawLabelCanvas(ctx,i%COLS*LW,Math.floor(i/COLS)*LH,LW,LH,lbl,brand);
     });
-    ctx.strokeStyle='#ddd';ctx.lineWidth=0.5;
-    for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*LH);ctx.lineTo(canvasW,r*LH);ctx.stroke();}
-    for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*LW,0);ctx.lineTo(c*LW,canvasH);ctx.stroke();}
+    // Fara linii de separare intre etichete
   }
 }
 
@@ -678,8 +676,6 @@ const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
 async function loadOrders(){
-  // Comenzi care au cel putin un articol ajuns la talpuit/ambalat (gata/in_talpuit/pregatit_livrare/finalizat)
-  // - independent de orders.status, care poate ramane blocat (ex. la_cusut desi liniile-s gata)
   const{data:relLines}=await sb.from('order_lines')
     .select('order_id').in('production_status',['in_talpuit','gata','pregatit_livrare','finalizat']);
   const ids=[...new Set((relLines||[]).map(l=>l.order_id).filter(Boolean))];
@@ -755,12 +751,19 @@ async function loadOrderData(){
 // Încarcă comenzile la start
 (async()=>{
   await loadOrders();
-  // Verifică dacă e venit din management cu un orderId
   const params=new URLSearchParams(window.location.search);
-  const oid=params.get('order');
-  if(oid){
-    document.getElementById('orderSelect').value=oid;
+  // ?orders=id1,id2,... (din alerta management) sau ?order=id (legacy)
+  const oids=(params.get('orders')||params.get('order')||'').split(',').filter(Boolean);
+  if(oids.length){
+    // Selecteaza si incarca prima comanda solicitata
+    document.getElementById('orderSelect').value=oids[0];
     await loadOrderData();
+    // Adauga automat si restul comenzilor solicitate
+    for(let i=1;i<oids.length;i++){
+      document.getElementById('orderSelect').value=oids[i];
+      await addOrderData();
+    }
+    document.getElementById('orderSelect').value='';
   }
 })();
 </script>
