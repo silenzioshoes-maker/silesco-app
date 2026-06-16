@@ -2304,36 +2304,20 @@ async function loadProdDashboard(){
 async function loadProdCroit(){
   const{data}=await sb.from('orders')
     .select('id,order_no,priority,delivery_date,sort_order,total_pairs,is_repair,clients!orders_client_id_fkey(name,company_name),order_lines(id,color,free_model,production_status,workshop,notes,total_pairs,ponytage,sort_order,from_stock,products(code))')
-    .in('status',['aprobat','la_croit','in_productie'])
+    .not('status','in','("livrat","anulat","finalizat")')
     .order('sort_order',{ascending:true,nullsFirst:false})
     .order('delivery_date',{ascending:true});
   const DONE=['la_cusut','cusut_gata','pregatit_lansat','in_talpuit','gata','pregatit_livrare','finalizat'];
+  // Bazat pe LINII: arata orice comanda care are cel putin o linie inca la croit (nesarita)
   const deCroit=(data||[]).filter(o=>{
     const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
-    return wl.length===0||wl.some(l=>!DONE.includes(l.production_status));
+    return wl.length>0&&wl.some(l=>!DONE.includes(l.production_status));
   });
   _prodIds.croit=deCroit.map(o=>o.id);
   _croitOrdersCache=deCroit.slice();
   _croitGataCache=[];
   renderCroitFromCache();
 }
-
-async function loadProdCusut(){
-  const laCusut=allOrders.filter(o=>o.status==='la_cusut').sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  const EXCL=['la_talpuit','la_impachetat','gata_livrare','finalizat','livrat'];
-  const exclIds=new Set(allOrders.filter(o=>EXCL.includes(o.status)).map(o=>o.id));
-  const DONE=['cusut_gata','pregatit_lansat','in_talpuit','la_talpuit','gata','la_impachetat_talpuit','pregatit_livrare','finalizat'];
-  const activ=laCusut.filter(o=>{
-    if(exclIds.has(o.id))return false;
-    const wl=(o.order_lines||[]).filter(l=>!l.from_stock);
-    return !wl.every(l=>DONE.includes(l.production_status));
-  });
-  _prodIds.cusut_inlucru=activ.map(o=>o.id);
-  _cusutOrdersCache=activ.slice();
-  renderCusutFromCache();
-}
-
-
 
 async function loadProdCusut(){
   const atelEl=document.getElementById('pcu_ateliere');
@@ -2787,8 +2771,7 @@ async function deleteManualTalpuit(id){
 }
 
 async function loadProdTalpuit(){
-  const EXCL_STATUSES=['la_impachetat','gata_livrare','finalizat','livrat'];
-  const exclOrderIds=new Set(allOrders.filter(o=>EXCL_STATUSES.includes(o.status)).map(o=>o.id));
+  // Pur bazat pe LINII (production_status) - nu depinde de orders.status care poate fi stale
   const[{data:lines},{data:manual}]=await Promise.all([
     sb.from('order_lines')
       .select('id,total_pairs,production_status,product_id,free_model,color,notes,workshop,order_id,sort_order,ponytage,products(code,name)')
@@ -2799,13 +2782,13 @@ async function loadProdTalpuit(){
       .in('production_status',['pregatit_lansat','in_talpuit','gata'])
       .order('created_at',{ascending:true})
   ]);
-  const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata'&&!exclOrderIds.has(l.order_id));
+  const receptie=(lines||[]).filter(l=>l.production_status==='cusut_gata');
   const pregatit=[
-    ...(lines||[]).filter(l=>l.production_status==='pregatit_lansat'&&!exclOrderIds.has(l.order_id)),
+    ...(lines||[]).filter(l=>l.production_status==='pregatit_lansat'),
     ...(manual||[]).filter(m=>m.production_status==='pregatit_lansat').map(m=>({...m,_manual:true,order_id:null}))
   ];
   const inTalpuit=[
-    ...(lines||[]).filter(l=>(l.production_status==='in_talpuit'||l.production_status==='gata')&&!exclOrderIds.has(l.order_id)),
+    ...(lines||[]).filter(l=>(l.production_status==='in_talpuit'||l.production_status==='gata')),
     ...(manual||[]).filter(m=>m.production_status==='in_talpuit'||m.production_status==='gata').map(m=>({...m,_manual:true,order_id:null}))
   ];
   _prodIds.receptie=receptie.map(x=>x.id);
