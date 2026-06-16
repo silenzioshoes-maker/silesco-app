@@ -678,11 +678,20 @@ const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
 async function loadOrders(){
-  const{data}=await sb.from('orders')
-    .select('id,order_no,clients!orders_client_id_fkey(name,company_name)')
-    .in('status',['la_impachetat','finalizat','gata_livrare'])
-    .order('created_at',{ascending:false})
-    .limit(50);
+  // Comenzi care au cel putin un articol ajuns la talpuit/ambalat (gata/in_talpuit/pregatit_livrare/finalizat)
+  // - independent de orders.status, care poate ramane blocat (ex. la_cusut desi liniile-s gata)
+  const{data:relLines}=await sb.from('order_lines')
+    .select('order_id').in('production_status',['in_talpuit','gata','pregatit_livrare','finalizat']);
+  const ids=[...new Set((relLines||[]).map(l=>l.order_id).filter(Boolean))];
+  let data=[];
+  if(ids.length){
+    const r=await sb.from('orders')
+      .select('id,order_no,clients!orders_client_id_fkey(name,company_name)')
+      .in('id',ids)
+      .order('created_at',{ascending:false})
+      .limit(50);
+    data=r.data||[];
+  }
   const sel=document.getElementById('orderSelect');
   const cur=sel.value;
   sel.innerHTML='<option value="">— Selectează comanda —</option>';
