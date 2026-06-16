@@ -758,6 +758,13 @@ async function loadOrderData(){
   const oids=(params.get('orders')||params.get('order')||'').split(',').filter(Boolean);
   if(!oids.length) return;
 
+  // Marcheaza mesajele de solicitare ca citite (sa dispara din alerta management)
+  await sb.from('internal_messages')
+    .update({is_read:true,read_at:new Date().toISOString()})
+    .eq('to_department','management')
+    .eq('is_read',false)
+    .like('message','🖨 SOLICITARE ETICHETE%');
+
   // Aduce detaliile comenzilor solicitate (order_no + client)
   const{data:solOrders}=await sb.from('orders')
     .select('id,order_no,clients!orders_client_id_fkey(name,company_name)')
