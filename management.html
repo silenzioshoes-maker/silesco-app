@@ -652,7 +652,8 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         <button class="filter-btn" onclick="setFilter('nou',this)">Noi</button>
         <button class="filter-btn" onclick="setFilter('aprobat',this)">Aprobate</button>
         <button class="filter-btn" onclick="setFilter('in_productie',this)">Producție</button>
-        <button class="filter-btn" onclick="setFilter('finalizat',this)">Gata</button>
+        <button class="filter-btn" onclick="setFilter('gata_livrare',this)">Gata livrare</button>
+        <button class="filter-btn" onclick="setFilter('finalizat',this)">Finalizate</button>
         <button class="filter-btn" onclick="setFilter('intarziate',this)">Întârziate</button>
       </div>
       <div class="table-wrap">
@@ -1119,8 +1120,19 @@ function setFilter(f,el){activeFilter=f;document.querySelectorAll('.filter-btn')
 function filterOrders(q){searchQ=q.toLowerCase();applyFilter();}
 function applyFilter(){
   let list=allOrders;
-  if(activeFilter==='intarziate')list=list.filter(o=>o.delivery_date&&!['livrat','anulat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0);
-  else if(activeFilter!=='toate')list=list.filter(o=>o.status===activeFilter);
+  if(activeFilter==='toate'){
+    list=list.filter(o=>o.status!=='anulat');
+  } else if(activeFilter==='in_productie'){
+    // Productie = orice comanda cu cel putin o linie activa in productie
+    const PS_PROD=['la_croit','la_cusut','la_cusut_extern','cusut_extern_finalizat','cusut_gata','pregatit_lansat','in_talpuit','gata'];
+    list=list.filter(o=>(o.order_lines||[]).some(l=>PS_PROD.includes(l.production_status)));
+  } else if(activeFilter==='finalizat'){
+    list=list.filter(o=>['finalizat','livrat'].includes(o.status));
+  } else if(activeFilter==='intarziate'){
+    list=list.filter(o=>o.delivery_date&&!['livrat','anulat','finalizat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0);
+  } else {
+    list=list.filter(o=>o.status===activeFilter);
+  }
   if(searchQ)list=list.filter(o=>{const cl=o.clients?.company_name||o.clients?.name||'';return (o.order_no||'').toLowerCase().includes(searchQ)||cl.toLowerCase().includes(searchQ);});
   filteredOrders=list;renderOrders();
 }
