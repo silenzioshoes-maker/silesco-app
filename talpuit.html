@@ -321,7 +321,7 @@ async function loadAll(){
       .order('sort_order',{ascending:true}),
     sb.from('productie_manual')
       .select('id,free_model,color,ponytage,total_pairs,production_status,notes,label,created_at')
-      .in('production_status',['pregatit_lansat','in_talpuit'])
+      .in('production_status',['pregatit_lansat','in_talpuit','gata'])
       .order('created_at',{ascending:true})
   ]);
 
@@ -341,15 +341,20 @@ async function loadAll(){
     ...(lines||[]).filter(l=>l.production_status==='pregatit_lansat'),
     ...(manual||[]).filter(m=>m.production_status==='pregatit_lansat')
   ];
-  const gata=(lines||[]).filter(l=>l.production_status==='gata');
+  // Lista de jos = articolele lansate (gata) - informativ
+  const lansat=[
+    ...(lines||[]).filter(l=>l.production_status==='gata'),
+    ...(manual||[]).filter(m=>m.production_status==='gata')
+  ];
 
   document.getElementById('hdrBadge').textContent=pregatit.length+' de lansat';
   document.getElementById('stReceptie').textContent=cusutGata.length;
   document.getElementById('stLansat').textContent=pregatit.length;
-  document.getElementById('stGata').textContent=gata.reduce((s,l)=>s+(l.total_pairs||0),0);
+  document.getElementById('stGata').textContent=lansat.reduce((s,l)=>s+(l.total_pairs||0),0);
 
   renderReceptie(cusutGata);
   renderPregatit(pregatit);
+  renderLansat(lansat);
   hideLov();
 }
 
@@ -391,7 +396,7 @@ function renderLansat(lines){
   const el=document.getElementById('lansatList');
   const label=document.getElementById('lansatInfoLabel');
   if(!lines.length){el.innerHTML='';if(label)label.style.display='none';return;}
-  if(label)label.style.display='block';
+  if(label){label.style.display='block';label.textContent='Lansate in talpuit (informativ)';}
   el.innerHTML=groupByOrder(lines).map((g,gi)=>{
     const o=g.order||{};
     const cl=o.clients?.company_name||o.clients?.name||'—';
@@ -403,44 +408,23 @@ function renderLansat(lines){
           <div class="cmd-client">${cl}</div>
           <div class="cmd-meta">Livrare: ${dd}</div>
         </div>
-        <div class="cmd-progress"><div class="cmd-prog-num" style="color:#B08D57">${g.lines.length}</div><div class="cmd-prog-label">art.</div></div>
+        <div class="cmd-progress"><div class="cmd-prog-num" style="color:#1E4A2E">${g.lines.length}</div><div class="cmd-prog-label">art.</div></div>
         <svg class="cmd-arrow" id="lanarr_${gi}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="cmd-body" id="lan_${gi}">
         ${g.lines.map(l=>{
           const talpa=allTalpi.find(t=>t.id===l.talpa_id);
           const brant=allBranturi.find(t=>t.id===l.brant_id);
-          const ptEntries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
           return `<div class="art-row">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
               <div style="flex:1">
                 <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
                 <div class="art-pairs">${l.total_pairs} per. · ${l.workshop||'intern'}</div>
                 ${talpa?`<div style="font-size:13px;color:#333333;margin-top:2px">Talpă: <strong>${talpa.cod}</strong>${brant?' · Branț: <strong>'+brant.cod+'</strong>':''}</div>`:''}
                 <div class="pontaj">${renderPontaj(l.ponytage)}</div>
               </div>
-              <button class="btn-talpuit" 
-                id="btnt_${l.id}"
-                data-lid="${l.id}"
-                data-oid="${l.order_id}"
-                data-tid="${l.talpa_id||''}"
-                data-bid="${l.brant_id||''}"
-                data-pt='${JSON.stringify(l.ponytage||{}).replace(/'/g,"&#39;")}'
-                onclick="markTalpuitFromBtn(this)">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                Talpuit ✓
-              </button>
+              <span style="flex-shrink:0;font-size:13px;font-weight:700;padding:3px 10px;border-radius:4px;background:#EAF0EC;color:#1E4A2E">Lansat ✓</span>
             </div>
-            ${ptEntries.length?`
-            <div style="font-size:13px;font-weight:700;color:#333333;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Pontaj talpă/branț (modificabil)</div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap;padding:8px;background:#F8F5F0;border-radius:6px">
-              ${ptEntries.map(([s,q])=>`
-                <div style="text-align:center">
-                  <div style="font-size:13px;font-weight:700;color:#333333;margin-bottom:3px">${s}</div>
-                  <input type="number" min="0" value="${q}" id="pt_${l.id}_${s}"
-                    style="width:44px;padding:4px;border:1.5px solid #DDD7CE;border-radius:5px;text-align:center;font-size:13px;font-weight:700;font-family:Inter,sans-serif;outline:none"/>
-                </div>`).join('')}
-            </div>`:''}
           </div>`;
         }).join('')}
       </div>
