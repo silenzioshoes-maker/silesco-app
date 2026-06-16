@@ -1157,7 +1157,30 @@ function _buildOrdersHTML(orders,prefix='ord'){
   if(!orders||!orders.length)return '<div style="padding:40px;text-align:center;color:#3A3530;font-size:13px;font-weight:500">Nicio comandă găsită.</div>';
   return orders.map((o,i)=>{
     const idx=prefix+'_'+i;
-    const cfg=SC[o.status]||SC.nou;
+    // Badge status: calculat din statusurile REALE ale liniilor (nu din orders.status care poate fi stale)
+    const workLines=(o.order_lines||[]).filter(l=>!l.from_stock);
+    const ORDER_PS_LABEL={la_croit:'La croit',la_cusut:'La cusut',la_cusut_extern:'La cusut',cusut_extern_finalizat:'La cusut',cusut_gata:'La cusut',pregatit_lansat:'La talpuit',in_talpuit:'La talpuit',gata:'La talpuit',pregatit_livrare:'Gata livrare',finalizat:'Finalizat'};
+    const ORDER_PS_RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
+    let cfg;
+    if(workLines.length>0&&o.status!=='nou'&&o.status!=='aprobat'&&o.status!=='modificat_pending'&&o.status!=='anulat'&&o.status!=='livrat'){
+      // Gasim statusurile unice active (nesarite) din linii
+      const activeStatuses=[...new Set(workLines.map(l=>l.production_status).filter(ps=>ORDER_PS_LABEL[ps]))];
+      if(activeStatuses.length===0){
+        cfg=SC[o.status]||SC.nou;
+      } else if(activeStatuses.length===1){
+        // Un singur status — badge simplu
+        const ps=activeStatuses[0];
+        const lbl=ORDER_PS_LABEL[ps];
+        cfg=Object.values(SC).find(s=>s.l===lbl)||(SC[o.status]||SC.nou);
+      } else {
+        // Statusuri multiple — sortam dupa rank si combinam
+        activeStatuses.sort((a,b)=>(ORDER_PS_RANK[a]||9)-(ORDER_PS_RANK[b]||9));
+        const labels=[...new Set(activeStatuses.map(ps=>ORDER_PS_LABEL[ps]))];
+        cfg={l:labels.join(' / '),c:'#5A3E1B',b:'#F5ECD7'};
+      }
+    } else {
+      cfg=SC[o.status]||SC.nou;
+    }
     const isStock=o.is_stock;
     const cl=isStock?(o.allocated_to_client&&o.clients?(o.clients.company_name||o.clients.name):(o.titlu_stoc||'STOC')):(o.clients?.company_name||o.clients?.name||'—');
     const agent=o.user_profiles?.full_name||'—';
