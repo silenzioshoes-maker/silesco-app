@@ -486,6 +486,10 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
       <span>Stoc</span>
     </div>
+    <div class="nav-item" onclick="window.location.href='etichete.html'">
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      <span>Etichete</span>
+    </div>
   </div>
   <div class="sidebar-bottom">
     <div class="user-avatar"><svg style="width:14px;height:14px;stroke:rgba(255,255,255,.5);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
@@ -984,9 +988,7 @@ async function loadProdAlerts(){
       // Luăm order_id-urile din mesaje pentru a deschide etichete direct
       const{data:etiMsgFull}=await sb.from('internal_messages').select('id,order_id').eq('to_department','management').eq('is_read',false).like('message','🖨 SOLICITARE ETICHETE%');
       const etiOrderIds=(etiMsgFull||[]).map(m=>m.order_id).filter(Boolean);
-      const etiUrl=etiOrderIds.length===1
-        ?'etichete.html?order='+etiOrderIds[0]
-        :'etichete.html';
+      const etiUrl='etichete.html?orders='+etiOrderIds.join(',');
       alerts.push({color:'#2F4A63',bg:'#E8EFF6',border:'#2F4A63',icon:'🖨',text:`<strong>${etiMsg.length} solicitare${etiMsg.length>1?'i':''}</strong> etichete de printat`,onclick:`window.open('${etiUrl}','_blank')`});
       document.getElementById('impBadge').textContent=etiMsg.length;document.getElementById('impBadge').style.display='inline-block';
     }
