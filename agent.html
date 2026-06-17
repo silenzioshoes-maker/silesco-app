@@ -629,6 +629,21 @@ body {
     <span class="nav-icon">📦</span>
     <span class="nav-label">Stoc</span>
   </button>
+  <button class="nav-btn" id="nav_note" onclick="showScreen('note')">
+    <span class="nav-icon">📝</span>
+    <span class="nav-label">Notițe</span>
+  </button>
+</div>
+
+<!-- SCREEN: NOTITE -->
+<div id="noteView" style="display:none">
+  <div class="content" style="display:flex;flex-direction:column;height:calc(100vh - 120px)">
+    <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center">
+      Notițele mele
+      <button onclick="saveAgentNote()" style="padding:5px 14px;border-radius:6px;border:none;background:#111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Salvează</button>
+    </div>
+    <textarea id="agentNotepad" placeholder="Noteaza ceva important... (Ctrl+Enter pentru a salva)" onkeydown="if((e=event).ctrlKey&&e.key==='Enter')saveAgentNote()" style="flex:1;width:100%;border:1.5px solid #DDD7CE;border-radius:10px;padding:14px;font-size:14px;font-family:inherit;color:#2A2620;resize:none;outline:none;background:#FDFCFB;line-height:1.7;box-sizing:border-box"></textarea>
+  </div>
 </div>
 
 <script>
@@ -728,7 +743,7 @@ async function loadOrders() {
     .select(`
       id, order_no, status, delivery_date, total_pairs, total_value, created_at,
       clients(name, company_name),
-      order_lines(id, color, piele, ponytage, total_pairs, unit_price, production_status, from_stock)
+      order_lines(id, color, piele, ponytage, total_pairs, unit_price)
     `)
     .eq('agent_id', currentUser.id)
     .order('created_at', { ascending: false });
@@ -761,54 +776,16 @@ function renderOrders(orders) {
   }
 
   const STATUS_CFG = {
-    nou:                    { label:'Comandă nouă',        color:'#23394F', bg:'#E8EFF6' },
-    aprobat:                { label:'Aprobat',             color:'#8B6914', bg:'#F6F0E5' },
-    la_croit:               { label:'La croit',            color:'#5A3E1B', bg:'#F5ECD7' },
-    la_cusut:               { label:'La cusut',            color:'#2F4A63', bg:'#DCE8F5' },
-    la_cusut_extern:        { label:'La cusut',            color:'#2F4A63', bg:'#DCE8F5' },
-    cusut_extern_finalizat: { label:'La cusut',            color:'#2F4A63', bg:'#DCE8F5' },
-    cusut_gata:             { label:'La cusut',            color:'#2F4A63', bg:'#DCE8F5' },
-    pregatit_lansat:        { label:'La talpuit',          color:'#1E4A2E', bg:'#D8EEE0' },
-    in_talpuit:             { label:'La talpuit',          color:'#1E4A2E', bg:'#D8EEE0' },
-    gata:                   { label:'La talpuit',          color:'#1E4A2E', bg:'#D8EEE0' },
-    la_talpuit:             { label:'La talpuit',          color:'#1E4A2E', bg:'#D8EEE0' },
-    la_impachetat:          { label:'La ambalat',          color:'#3A3530', bg:'#EDEAE4' },
-    pregatit_livrare:       { label:'Gata livrare',        color:'#1E4A2E', bg:'#D8EEE0' },
-    gata_livrare:           { label:'Gata livrare',        color:'#1E4A2E', bg:'#D8EEE0' },
-    finalizat:              { label:'Finalizat',           color:'#3A3530', bg:'#EDEAE4' },
-    livrat:                 { label:'Livrat',              color:'#9A9088', bg:'#F5F2EE' },
-    anulat:                 { label:'Anulat',              color:'#A02020', bg:'#FDEAEA' },
-  };
-
-  // Badge calculat din statusurile REALE ale liniilor (ca in management)
-  const PS_LABEL={la_croit:'La croit',la_cusut:'La cusut',la_cusut_extern:'La cusut',cusut_extern_finalizat:'La cusut',cusut_gata:'La cusut',in_lucru:'La cusut',pregatit_lansat:'La talpuit',in_talpuit:'La talpuit',gata:'La talpuit',pregatit_livrare:'Gata livrare',finalizat:'Finalizat'};
-  const PS_RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,cusut_gata:2,in_lucru:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
-  const PS_CFG={
-    'La croit':     {color:'#5A3E1B',bg:'#F5ECD7'},
-    'La cusut':     {color:'#2F4A63',bg:'#DCE8F5'},
-    'La talpuit':   {color:'#1E4A2E',bg:'#D8EEE0'},
-    'Gata livrare': {color:'#1E4A2E',bg:'#D8EEE0'},
-    'Finalizat':    {color:'#3A3530',bg:'#EDEAE4'},
+    nou:          { label:'Comandă nouă',       color:'#1B3F6E', bg:'#E6EEF8' },
+    aprobat:      { label:'Aprobat',            color:'#2A6048', bg:'#EAF3ED' },
+    in_productie: { label:'În producție',       color:'#A07010', bg:'#FDF6E0' },
+    finalizat:    { label:'Gata de livrare ✅', color:'#2A6048', bg:'#EAF3ED' },
+    livrat:       { label:'Livrat',             color:'#9A9088', bg:'#F5F2EE' },
+    anulat:       { label:'Anulat',             color:'#A02020', bg:'#FDEAEA' },
   };
 
   list.innerHTML = orders.map(o => {
-    const workLines=(o.order_lines||[]).filter(l=>!l.from_stock);
-    let cfg;
-    if(workLines.length>0&&o.status!=='anulat'&&o.status!=='livrat'){
-      const activeStatuses=[...new Set(workLines.map(l=>l.production_status).filter(ps=>PS_LABEL[ps]))];
-      if(activeStatuses.length===0){
-        cfg=STATUS_CFG[o.status]||STATUS_CFG.nou;
-      } else if(activeStatuses.length===1){
-        const lbl=PS_LABEL[activeStatuses[0]];
-        cfg={label:lbl,...(PS_CFG[lbl]||{color:'#5A5248',bg:'#F4F1EA'})};
-      } else {
-        activeStatuses.sort((a,b)=>(PS_RANK[a]||9)-(PS_RANK[b]||9));
-        const labels=[...new Set(activeStatuses.map(ps=>PS_LABEL[ps]))];
-        cfg={label:labels.join(' / '),color:'#5A3E1B',bg:'#F5ECD7'};
-      }
-    } else {
-      cfg=STATUS_CFG[o.status]||STATUS_CFG.nou;
-    }
+    const cfg = STATUS_CFG[o.status] || STATUS_CFG.nou;
     const client = o.clients?.company_name || o.clients?.name || '—';
     const delDate = o.delivery_date
       ? new Date(o.delivery_date).toLocaleDateString('ro-RO')
@@ -841,8 +818,9 @@ function showScreen(name) {
   document.getElementById('ordersView').style.display    = 'none';
   document.getElementById('newOrderView').style.display  = 'none';
   document.getElementById('stocView').style.display      = 'none';
+  document.getElementById('noteView').style.display      = 'none';
 
-  ['orders','new','stoc'].forEach(n => {
+  ['orders','new','stoc','note'].forEach(n => {
     document.getElementById(`nav_${n}`)?.classList.remove('active');
   });
 
@@ -861,7 +839,38 @@ function showScreen(name) {
     document.getElementById('nav_stoc').classList.add('active');
     document.getElementById('headerTitle').textContent = 'Stoc disponibil';
     loadStoc();
+  } else if (name === 'note') {
+    document.getElementById('noteView').style.display = 'block';
+    document.getElementById('nav_note').classList.add('active');
+    document.getElementById('headerTitle').textContent = 'Notițele mele';
+    loadAgentNote();
   }
+}
+
+// ── NOTITE AGENT ──
+async function loadAgentNote(){
+  const{data}=await sb.from('management_notes').select('id,content').eq('user_id',currentUser.id).order('updated_at',{ascending:false}).limit(1).maybeSingle();
+  const el=document.getElementById('agentNotepad');
+  if(el&&data?.content)el.value=data.content;
+  if(data)el._noteId=data.id;
+}
+async function saveAgentNote(){
+  const el=document.getElementById('agentNotepad');
+  if(!el)return;
+  const content=el.value;
+  const noteId=el._noteId;
+  if(noteId){
+    await sb.from('management_notes').update({content,updated_at:new Date().toISOString()}).eq('id',noteId);
+  }else{
+    const{data}=await sb.from('management_notes').insert({user_id:currentUser.id,content}).select('id').single();
+    if(data)el._noteId=data.id;
+  }
+  // Toast feedback
+  const t=document.createElement('div');
+  t.textContent='Notita salvata!';
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;opacity:1;transition:opacity .3s';
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2000);
 }
 
 // ── NEW ORDER FLOW ────────────────────────────────────────
