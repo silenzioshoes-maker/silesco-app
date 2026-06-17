@@ -756,7 +756,7 @@ function showToast(m){const e=document.getElementById('toast');e.textContent=m;e
 
 // ── ANNOUNCEMENTS (sticky banner) ──
 const _dismissedAnns=new Set();
-async function loadAnnouncements('talpuit'){
+async function loadAnnouncements(dept){
   const{data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
   const el=document.getElementById('annBanners');if(!el)return;
   const COLORS={informare:['#E8EFF6','#2F4A63'],atentionare:['#FBF3E0','#7A5C28'],urgent:['#FBE9E7','#9C3A2B']};
