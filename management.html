@@ -561,17 +561,16 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 
       <!-- SPLIT: MESAJE + RAPOARTE ZILNICE -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <!-- MESAJE -->
-        <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden;min-width:0">
+        <!-- NOTITE MANAGEMENT -->
+        <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;overflow:hidden;min-width:0;display:flex;flex-direction:column">
           <div style="padding:9px 14px;border-bottom:1px solid #EDE8DF;display:flex;justify-content:space-between;align-items:center">
             <div style="font-size:12px;font-weight:700;color:#111111;display:flex;align-items:center;gap:6px">
-              <svg style="width:13px;height:13px;stroke:#111111;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Mesaje
-              <span id="msgPanelBadge" style="display:none;background:#9C3A2B;color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:1px 6px">0</span>
+              <svg style="width:13px;height:13px;stroke:#111111;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Notite
             </div>
-            <button onclick="window.location.href='messages.html'" style="padding:3px 8px;border-radius:4px;border:none;background:#111111;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Toate →</button>
+            <button onclick="saveNote()" style="padding:3px 8px;border-radius:4px;border:none;background:#111111;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salveaza</button>
           </div>
-          <div id="msgPanelList" style="max-height:220px;overflow-y:auto"></div>
+          <textarea id="mgmtNotepad" placeholder="Noteaza ceva important..." onkeydown="if((e=event).ctrlKey&&e.key==='Enter')saveNote()" style="flex:1;min-height:192px;padding:12px 14px;border:none;outline:none;font-size:13px;font-family:Inter,sans-serif;color:#2A2620;resize:none;background:#FDFCFB;line-height:1.6"></textarea>
         </div>
 
         <!-- RAPOARTE ZILNICE -->
@@ -786,6 +785,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     });
   });
   await loadAll();
+  loadNote();
   // Reinregistrare automata DOAR daca permisiunea e deja acordata
   if('Notification' in window && Notification.permission==='granted'){
     registerPush(CU.id,'management',sb);
@@ -1203,6 +1203,27 @@ document.addEventListener('click',function(e){
   if(panel&&!panel.closest('div')?.contains(e.target)&&!e.target.closest('[onclick*="toggleCusutPanel"]'))
     panel.style.display='none';
 });
+
+// ── NOTITE MANAGEMENT ──
+async function loadNote(){
+  const{data}=await sb.from('management_notes').select('id,content').eq('user_id',CU.id).order('updated_at',{ascending:false}).limit(1).maybeSingle();
+  const el=document.getElementById('mgmtNotepad');
+  if(el&&data?.content)el.value=data.content;
+  if(data)document.getElementById('mgmtNotepad')._noteId=data.id;
+}
+async function saveNote(){
+  const el=document.getElementById('mgmtNotepad');
+  if(!el)return;
+  const content=el.value;
+  const noteId=el._noteId;
+  if(noteId){
+    await sb.from('management_notes').update({content,updated_at:new Date().toISOString()}).eq('id',noteId);
+  }else{
+    const{data}=await sb.from('management_notes').insert({user_id:CU.id,content}).select('id').single();
+    if(data)el._noteId=data.id;
+  }
+  showToast('Notita salvata!');
+}
 
 async function syncOrderStatuses(){
   const RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,receptie_fete:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
