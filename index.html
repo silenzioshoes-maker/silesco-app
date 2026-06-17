@@ -685,8 +685,7 @@ async function loadAgentNote(){
     const txt=data?.content?.trim();
     if(txt){
       // Arata primele 3-4 randuri
-      prev.textContent=txt.split('
-').slice(0,4).join(' · ').slice(0,150);
+      prev.textContent=txt.split('\n').slice(0,4).join(' · ').slice(0,150);
       prev.style.color='rgba(255,255,255,.7)';
     }else{
       prev.textContent='Nici o notita. Apasa pentru a adauga...';
