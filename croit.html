@@ -314,6 +314,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     
   </div>
 </div>
+<div id="annBanners"></div>
 
 <!-- TABS -->
 <div class="tabs">
@@ -1017,7 +1018,8 @@ async function loadMsgs(){
   const msgs=data||[];
   // Marcheaza citite TOATE mesajele catre croit (root + reply-uri copil), ca bulina sa ajunga la 0
   await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('to_department','croit').eq('is_read',false);
-  await loadMsgBadge();
+  await loadAnnouncements('croit');
+  loadMsgBadge();
   const el=document.getElementById('msgList');
   const empty=document.getElementById('msgEmpty');
   if(!msgs.length){el.innerHTML='';empty.style.display='block';return;}
@@ -1208,6 +1210,22 @@ async function saveCompleteRestanta(){
   await loadAll();
 }
 
+
+// ── ANNOUNCEMENTS (sticky banner) ──
+const _dismissedAnns=new Set();
+async function loadAnnouncements(dept){
+  const{data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
+  const el=document.getElementById('annBanners');if(!el)return;
+  const COLORS={informare:['#E8EFF6','#2F4A63'],atentionare:['#FBF3E0','#7A5C28'],urgent:['#FBE9E7','#9C3A2B']};
+  const relevant=(data||[]).filter(a=>(a.departments||[]).includes('croit')&&!_dismissedAnns.has(a.id));
+  el.innerHTML=relevant.map(a=>{
+    const[bg,color]=COLORS[a.type]||COLORS.informare;
+    return `<div id="ann_${a.id}" style="background:${bg};border-bottom:2px solid ${color};padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="font-size:13px;color:${color};font-weight:600;flex:1">${a.message}</div>
+      <button onclick="_dismissedAnns.add('${a.id}');document.getElementById('ann_${a.id}').remove()" style="background:none;border:none;color:${color};font-size:18px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+    </div>`;
+  }).join('');
+}
 const VAPID_PUB='BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g';
 function urlBase64ToUint8Array(b){const p='='.repeat((4-b.length%4)%4);const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from([...atob(s)].map(c=>c.charCodeAt(0)));}
 async function registerPush(userId,dept,sbc){
