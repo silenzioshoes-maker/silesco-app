@@ -298,6 +298,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
   <!-- ORDERS -->
   <div id="vOrders" style="display:none">
 
+    <!-- NOTITE COMPACTE (in locul fostului status bar) -->
+    <div id="agentNoteBar" style="background:#1A1A1A;padding:8px 16px;display:flex;align-items:center;gap:10px;min-height:44px">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <div id="agentNotePreview" onclick="showV('note')" style="flex:1;font-size:12px;color:rgba(255,255,255,.5);line-height:1.4;cursor:pointer;max-height:56px;overflow:hidden">Nici o notita. Apasa pentru a adauga...</div>
+      <button onclick="showV('note')" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;font-family:Inter,sans-serif;flex-shrink:0">Edit</button>
+    </div>
+
     <div class="wrap">
       <div class="notif" id="ntf">
         <svg class="notif-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -542,10 +549,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
       <span class="nb-label">Mesaje</span>
       <span id="agentMsgBadge" style="display:none;position:absolute;top:2px;right:10px;background:#9C3A2B;color:#fff;font-size:8px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center">0</span>
     </button>
-    <button class="nb" id="n_note" onclick="showV('note')">
-      <svg class="nb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      <span class="nb-label">Notite</span>
-    </button>
+
   </div>
 </div>
 
@@ -619,6 +623,7 @@ async function initAgent(){
   showV('orders');
   if('Notification' in window && Notification.permission==='granted' && CU?.id){registerPush(CU.id,'agent',sb);}
   loadAnnouncements('agent');
+  loadAgentNote();
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
@@ -643,7 +648,7 @@ function showLogin(){
 // ── VIEWS ─────────────────────────────────────────────────────
 function showV(n){
   ['vOrders','vNew','vStoc','vMesaje','vNote'].forEach(v=>{const el=document.getElementById(v);if(el)el.style.display='none';});
-  ['orders','new','stoc','mesaje','note'].forEach(x=>document.getElementById('n_'+x)?.classList.remove('active'));
+  ['orders','new','stoc','mesaje'].forEach(x=>document.getElementById('n_'+x)?.classList.remove('active'));
   if(n==='orders'){
     document.getElementById('vOrders').style.display='block';
     document.getElementById('n_orders').classList.add('active');
@@ -663,7 +668,6 @@ function showV(n){
     window.location.href='/agent-messages.html';
   }else if(n==='note'){
     document.getElementById('vNote').style.display='block';
-    document.getElementById('n_note').classList.add('active');
     document.getElementById('hTitle').textContent='Notitele mele';
     loadAgentNote();
   }
@@ -675,6 +679,20 @@ async function loadAgentNote(){
   const el=document.getElementById('agentNotepad');
   if(el&&data?.content)el.value=data.content;
   if(data&&el)el._noteId=data.id;
+  // Actualizeaza preview in statusbar
+  const prev=document.getElementById('agentNotePreview');
+  if(prev){
+    const txt=data?.content?.trim();
+    if(txt){
+      // Arata primele 3-4 randuri
+      prev.textContent=txt.split('
+').slice(0,4).join(' · ').slice(0,150);
+      prev.style.color='rgba(255,255,255,.7)';
+    }else{
+      prev.textContent='Nici o notita. Apasa pentru a adauga...';
+      prev.style.color='rgba(255,255,255,.4)';
+    }
+  }
 }
 async function saveAgentNote(){
   const el=document.getElementById('agentNotepad');
