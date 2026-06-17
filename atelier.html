@@ -4,7 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SILESCO · Atelier</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ── ANNOUNCEMENTS ──
+const _dismissedAnns=new Set();
+async function loadAnnouncements(dept){
+  const{data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
+  const el=document.getElementById('annBanners');if(!el)return;
+  const COLORS={informare:['#E8EFF6','#2F4A63'],atentionare:['#FBF3E0','#7A5C28'],urgent:['#FBE9E7','#9C3A2B']};
+  const relevant=(data||[]).filter(a=>(a.departments||[]).includes(dept)&&!_dismissedAnns.has(a.id));
+  el.innerHTML=relevant.map(a=>{
+    const[bg,color]=COLORS[a.type]||COLORS.informare;
+    return '<div id="ann_'+a.id+'" style="background:'+bg+';border-bottom:2px solid '+color+';padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+      +'<div style="font-size:13px;color:'+color+';font-weight:600;flex:1">'+a.message+'</div>'
+      +'<button onclick="_dismissedAnns.add(''+a.id+'');document.getElementById('ann_'+a.id+'').remove()" style="background:none;border:none;color:'+color+';font-size:18px;cursor:pointer;padding:0 4px;line-height:1">×</button>'
+      +'</div>';
+  }).join('');
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 
@@ -124,13 +140,9 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div class="hdr-title">Atelier Cusut</div>
     <div class="hdr-ws" id="wsName">—</div>
   </div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <button id="notifBtn" onclick="activateNotifications()" title="Activeaza notificari" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 14px;color:#fff;cursor:pointer;min-height:44px;display:flex;align-items:center">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-    </button>
-    <button onclick="location.reload()" class="hdr-reload">↻ Reîncarcă</button>
-  </div>
+  <button onclick="location.reload()" class="hdr-reload">↻ Reîncarcă</button>
 </div>
+<div id="annBanners"></div>
 
 <div class="content" id="content">
   <div class="lov show" id="initLov"><div class="spinner"></div><div class="lov-text">Se verifică accesul...</div></div>
@@ -164,9 +176,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
   if(error||!ws){showInvalid('Link invalid sau expirat. Contactează SILESCO.');return;}
   wsName=ws.workshop_name;
   document.getElementById('wsName').textContent=wsName.charAt(0).toUpperCase()+wsName.slice(1);
-  await loadOrders();
-  if('Notification' in window && Notification.permission==='granted'){registerPush(wsName);}
   loadAnnouncements(wsName);
+  await loadOrders();
 });
 
 async function loadOrders(){
@@ -297,78 +308,6 @@ function showInvalid(msg){
 }
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
-// ── ANUNTURI STICKY (centru de comanda management) ──
-const ANN_TYPE_STYLE={
-  informare:{bg:'#EAF1F7',border:'#3A6EA5',label:'INFORMARE',color:'#1E4A6E'},
-  atentionare:{bg:'#FBF3E0',border:'#B08D57',label:'ATENTIONARE',color:'#7A5C28'},
-  urgent:{bg:'#FBE9E7',border:'#9C3A2B',label:'URGENT',color:'#7A2418'}
-};
-function annHiddenSet(){try{return new Set(JSON.parse(localStorage.getItem('annHidden')||'[]'));}catch(e){return new Set();}}
-function annHide(id){const s=annHiddenSet();s.add(id);localStorage.setItem('annHidden',JSON.stringify([...s]));renderAnnouncements(window._annCache||[]);}
-async function loadAnnouncements(dept){
-  try{
-    const now=new Date().toISOString();
-    const{data}=await sb.from('announcements').select('*').eq('active',true).contains('departments',[dept]).order('created_at',{ascending:false});
-    const list=(data||[]).filter(a=>!a.expires_at||a.expires_at>now);
-    window._annCache=list;
-    renderAnnouncements(list);
-  }catch(e){console.warn('Announcements:',e);}
-}
-function renderAnnouncements(list){
-  let box=document.getElementById('annBox');
-  if(!box){
-    box=document.createElement('div');box.id='annBox';
-    box.style.cssText='position:sticky;top:0;z-index:90;display:flex;flex-direction:column;gap:0';
-    const hdr=document.querySelector('.hdr');
-    if(hdr&&hdr.parentNode)hdr.parentNode.insertBefore(box,hdr.nextSibling);
-    else document.body.insertBefore(box,document.body.firstChild);
-  }
-  const hidden=annHiddenSet();
-  const visible=list.filter(a=>!hidden.has(a.id));
-  box.innerHTML=visible.map(a=>{
-    const st=ANN_TYPE_STYLE[a.type]||ANN_TYPE_STYLE.informare;
-    return '<div style="background:'+st.bg+';border-left:4px solid '+st.border+';padding:10px 14px;display:flex;align-items:flex-start;gap:10px;font-family:Inter,sans-serif">'
-      +'<div style="flex:1">'
-      +'<div style="font-size:10px;font-weight:800;letter-spacing:1px;color:'+st.color+';margin-bottom:2px">'+st.label+'</div>'
-      +'<div style="font-size:14px;color:#2A2620;line-height:1.35">'+(a.message||'').replace(/</g,'&lt;')+'</div>'
-      +'</div>'
-      +'<button onclick="annHide(\''+a.id+'\')" style="background:none;border:none;color:'+st.color+';font-size:18px;cursor:pointer;line-height:1;padding:0 2px" title="Ascunde">×</button>'
-      +'</div>';
-  }).join('');
-}
-
-const VAPID_PUB='BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g';
-function urlBase64ToUint8Array(b){const p='='.repeat((4-b.length%4)%4);const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from([...atob(s)].map(c=>c.charCodeAt(0)));}
-async function registerPush(dept){
-  if(!('serviceWorker' in navigator)||!('PushManager' in window))return false;
-  try{
-    await navigator.serviceWorker.register('/sw.js');
-    const reg=await navigator.serviceWorker.ready;
-    let sub=await reg.pushManager.getSubscription();
-    if(sub){
-      const ek=new Uint8Array(sub.options.applicationServerKey||[]);
-      const wk=urlBase64ToUint8Array(VAPID_PUB);
-      let same=ek.length===wk.length;
-      if(same){for(let i=0;i<wk.length;i++){if(ek[i]!==wk[i]){same=false;break;}}}
-      if(!same){await sub.unsubscribe();sub=null;}
-    }
-    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUB)});
-    const subJson=sub.toJSON();
-    const{error}=await sb.from('push_subscriptions').upsert({user_id:null,department:dept,subscription:subJson,endpoint:subJson.endpoint},{onConflict:'endpoint'});
-    if(error){console.warn('Push DB:',error);return false;}
-    return true;
-  }catch(e){console.warn('Push:',e);return false;}
-}
-async function activateNotifications(){
-  if(!('Notification' in window)){showToast('Browserul nu suporta notificari!');return;}
-  if(!('serviceWorker' in navigator)){showToast('Adauga pagina pe ecranul principal mai intai!');return;}
-  if(!wsName){showToast('Asteapta incarcarea atelierului.');return;}
-  const perm=await Notification.requestPermission();
-  if(perm!=='granted'){showToast('Permisiunea a fost refuzata!');return;}
-  const ok=await registerPush(wsName);
-  if(ok){const b=document.getElementById('notifBtn');if(b){b.style.background='#1E4A2E';b.style.borderColor='#1E4A2E';}showToast('Notificari activate!');}
-  else showToast('Eroare la activare. Reincearca.');
-}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
 </script>
 </body>
