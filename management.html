@@ -468,19 +468,15 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span>Clienți</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='talpuit.html?token=tp-5521-mQ3r'">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-      <span>Talpuit</span>
-    </div>
-    <div class="nav-item" onclick="window.location.href='impachetat.html?token=im-9034-vL7w'" style="position:relative">
-      <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-      <span>Împachetat</span>
-      <span class="nav-badge" id="impBadge" style="display:none">!</span>
-    </div>
     <div class="nav-item" onclick="window.location.href='messages.html'">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Mesaje</span>
       <span class="nav-badge" id="msgBadge" style="display:none">0</span>
+      <span id="impBadge" style="display:none"></span>
+    </div>
+    <div class="nav-item" id="nav_comanda" onclick="showSection('comanda',this)">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Notificari</span>
     </div>
     <div class="nav-item" onclick="window.location.href='stock.html'">
       <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
@@ -535,10 +531,21 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
       <div class="kpi-grid" id="kpiGrid"></div>
 
       <!-- LINKURI RAPIDE DEPARTAMENTE -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
         <a href="croit.html?token=cr-2847-xK9p" target="_blank" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fff;border:1px solid #DDD7CE;border-radius:8px;text-decoration:none;color:#111;font-size:13px;font-weight:700;border-top:3px solid #5A3E1B">
           <span style="font-size:20px">✂</span><span>Croit</span>
         </a>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#fff;border:1px solid #DDD7CE;border-radius:8px;border-top:3px solid #2F4A63">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:20px">🧵</span><span style="font-size:13px;font-weight:700;color:#111">Cusut</span>
+          </div>
+          <select onchange="if(this.value)window.open(this.value,'_blank');this.value=''" style="border:1px solid #DDD7CE;border-radius:6px;padding:5px 8px;font-size:12px;font-family:Inter,sans-serif;color:#3A3530;background:#FAFAF8;cursor:pointer;width:100%">
+            <option value="">— Atelier —</option>
+            <option value="atelier.html?ws=ceica">Ceica</option>
+            <option value="atelier.html?ws=oradea">Oradea</option>
+            <option value="atelier.html?ws=intern">Intern</option>
+          </select>
+        </div>
         <a href="talpuit.html?token=tp-5521-mQ3r" target="_blank" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fff;border:1px solid #DDD7CE;border-radius:8px;text-decoration:none;color:#111;font-size:13px;font-weight:700;border-top:3px solid #1E4A2E">
           <span style="font-size:20px">👟</span><span>Talpuit</span>
         </a>
@@ -676,6 +683,42 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     <div id="sectionMesaje" style="display:none"></div>
     <!-- STOC -->
     <div id="sectionStoc" style="display:none"></div>
+
+    <!-- NOTIFICARI -->
+    <div id="sectionComanda" style="display:none">
+      <div style="max-width:760px">
+        <div style="background:#fff;border:1px solid #DDD7CE;border-radius:10px;padding:20px;margin-bottom:20px">
+          <div style="font-size:13px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">Trimite anunt</div>
+          <div style="font-size:12px;font-weight:600;color:#5A5248;margin-bottom:6px">Mesaj</div>
+          <textarea id="cmdMsg" rows="3" placeholder="Scrie anuntul..." style="width:100%;border:1.5px solid #DDD7CE;border-radius:8px;padding:10px 12px;font-size:14px;font-family:Inter,sans-serif;color:#111;resize:vertical;box-sizing:border-box;margin-bottom:14px"></textarea>
+          <div style="font-size:12px;font-weight:600;color:#5A5248;margin-bottom:6px">Tip</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button type="button" class="cmdType active" data-type="informare" onclick="selCmdType(this)" style="flex:1;padding:9px;border-radius:8px;border:1.5px solid #3A6EA5;background:#EAF1F7;color:#1E4A6E;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Informare</button>
+            <button type="button" class="cmdType" data-type="atentionare" onclick="selCmdType(this)" style="flex:1;padding:9px;border-radius:8px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Atentionare</button>
+            <button type="button" class="cmdType" data-type="urgent" onclick="selCmdType(this)" style="flex:1;padding:9px;border-radius:8px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Urgent</button>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#5A5248;margin-bottom:6px">Departamente</div>
+          <div id="cmdDepts" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+            <label class="cmdDept" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid #DDD7CE;border-radius:8px;cursor:pointer;font-size:13px;color:#3A3530"><input type="checkbox" value="croit" style="accent-color:#B08D57"> Croit</label>
+            <label class="cmdDept" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid #DDD7CE;border-radius:8px;cursor:pointer;font-size:13px;color:#3A3530"><input type="checkbox" value="talpuit" style="accent-color:#B08D57"> Talpuit</label>
+            <label class="cmdDept" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid #DDD7CE;border-radius:8px;cursor:pointer;font-size:13px;color:#3A3530"><input type="checkbox" value="impachetat" style="accent-color:#B08D57"> Ambalat</label>
+            <label class="cmdDept" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid #DDD7CE;border-radius:8px;cursor:pointer;font-size:13px;color:#3A3530"><input type="checkbox" value="agent" style="accent-color:#B08D57"> Agent</label>
+            <span id="cmdWsLabel" style="width:100%;font-size:11px;color:#9E9890;margin-top:4px">Ateliere:</span>
+            <div id="cmdWorkshops" style="display:flex;flex-wrap:wrap;gap:8px;width:100%"></div>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#5A5248;margin-bottom:6px">Durata</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+            <button type="button" class="cmdDur active" data-dur="manual" onclick="selCmdDur(this)" style="padding:8px 14px;border-radius:8px;border:1.5px solid #B08D57;background:#F6F0E5;color:#7A5C28;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Pana inchid eu</button>
+            <button type="button" class="cmdDur" data-dur="24h" onclick="selCmdDur(this)" style="padding:8px 14px;border-radius:8px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">24 ore</button>
+            <button type="button" class="cmdDur" data-dur="date" onclick="selCmdDur(this)" style="padding:8px 14px;border-radius:8px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Pana la data</button>
+            <input type="date" id="cmdDate" style="display:none;border:1.5px solid #DDD7CE;border-radius:8px;padding:7px 10px;font-size:13px;font-family:Inter,sans-serif">
+          </div>
+          <button onclick="sendAnnouncement()" style="width:100%;padding:13px;border-radius:8px;border:none;background:#111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Trimite anunt</button>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Anunturi active</div>
+        <div id="cmdActiveList"><div style="text-align:center;padding:24px;color:#9E9890;font-size:13px">Se incarca...</div></div>
+      </div>
+    </div>
 
     <!-- PRODUCȚIE DASHBOARD -->
     <div id="sectionProductie" style="display:none">
@@ -1075,6 +1118,70 @@ async function loadOrders(){
 
 // Auto-corecteaza orders.status din statusul liniilor (stadiul celei mai putin avansate linii active).
 // Astfel o comanda partiala ramane vizibila in departamentul corect, iar badge-ul din lista e corect.
+// ── NOTIFICARI (CENTRU DE COMANDA) ──
+let _cmdType='informare',_cmdDur='manual';
+function selCmdType(el){
+  _cmdType=el.dataset.type;
+  document.querySelectorAll('.cmdType').forEach(b=>{b.classList.remove('active');b.style.background='#fff';b.style.color='#5A5248';b.style.borderColor='#DDD7CE';});
+  el.classList.add('active');
+  const c={informare:['#EAF1F7','#1E4A6E','#3A6EA5'],atentionare:['#FBF3E0','#7A5C28','#B08D57'],urgent:['#FBE9E7','#7A2418','#9C3A2B']}[_cmdType];
+  el.style.background=c[0];el.style.color=c[1];el.style.borderColor=c[2];
+}
+function selCmdDur(el){
+  _cmdDur=el.dataset.dur;
+  document.querySelectorAll('.cmdDur').forEach(b=>{b.classList.remove('active');b.style.background='#fff';b.style.color='#5A5248';b.style.borderColor='#DDD7CE';});
+  el.classList.add('active');el.style.background='#F6F0E5';el.style.color='#7A5C28';el.style.borderColor='#B08D57';
+  document.getElementById('cmdDate').style.display=_cmdDur==='date'?'inline-block':'none';
+}
+async function loadCmdCenter(){
+  try{
+    const{data:ws}=await sb.from('workshop_tokens').select('workshop_name');
+    const uniq=[...new Set((ws||[]).map(w=>w.workshop_name))];
+    document.getElementById('cmdWorkshops').innerHTML=uniq.map(w=>
+      '<label class="cmdDept" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid #DDD7CE;border-radius:8px;cursor:pointer;font-size:13px;color:#3A3530"><input type="checkbox" value="'+w+'" style="accent-color:#B08D57"> '+w.charAt(0).toUpperCase()+w.slice(1)+'</label>'
+    ).join('');
+  }catch(e){console.warn('WS:',e);}
+  loadActiveAnnouncements();
+}
+async function sendAnnouncement(){
+  const msg=document.getElementById('cmdMsg').value.trim();
+  if(!msg){showToast('Scrie un mesaj!');return;}
+  const depts=[...document.querySelectorAll('#cmdDepts input:checked,#cmdWorkshops input:checked')].map(c=>c.value);
+  if(!depts.length){showToast('Selecteaza cel putin un departament!');return;}
+  let expires=null;
+  if(_cmdDur==='24h')expires=new Date(Date.now()+86400000).toISOString();
+  if(_cmdDur==='date'){const d=document.getElementById('cmdDate').value;if(!d){showToast('Alege o data!');return;}expires=new Date(d+'T23:59:59').toISOString();}
+  const{error}=await sb.from('announcements').insert({message:msg,type:_cmdType,departments:depts,duration_type:_cmdDur,expires_at:expires,active:true,created_by:CU.id});
+  if(error){console.warn('Ann insert:',error);showToast('Eroare la trimitere!');return;}
+  document.getElementById('cmdMsg').value='';
+  document.querySelectorAll('#cmdDepts input:checked,#cmdWorkshops input:checked').forEach(c=>c.checked=false);
+  showToast('Anunt trimis!');
+  loadActiveAnnouncements();
+}
+async function loadActiveAnnouncements(){
+  const el=document.getElementById('cmdActiveList');if(!el)return;
+  const{data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
+  if(!data||!data.length){el.innerHTML='<div style="text-align:center;padding:24px;color:#9E9890;font-size:13px">Niciun anunt activ.</div>';return;}
+  const ts={informare:['#EAF1F7','#3A6EA5','INFORMARE'],atentionare:['#FBF3E0','#B08D57','ATENTIONARE'],urgent:['#FBE9E7','#9C3A2B','URGENT']};
+  el.innerHTML=data.map(a=>{
+    const t=ts[a.type]||ts.informare;
+    const exp=a.expires_at?('expira '+new Date(a.expires_at).toLocaleDateString('ro-RO')):'pana inchizi';
+    return '<div style="background:'+t[0]+';border-left:4px solid '+t[1]+';border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px">'
+      +'<div style="flex:1">'
+      +'<div style="font-size:10px;font-weight:800;letter-spacing:1px;color:'+t[1]+';margin-bottom:3px">'+t[2]+' · '+exp+'</div>'
+      +'<div style="font-size:14px;color:#2A2620;margin-bottom:4px">'+(a.message||'').replace(/</g,'&lt;')+'</div>'
+      +'<div style="font-size:11px;color:#9E9890">'+(a.departments||[]).join(', ')+'</div>'
+      +'</div>'
+      +'<button onclick="retractAnnouncement(\''+a.id+'\')" style="padding:6px 12px;border-radius:6px;border:1px solid '+t[1]+';background:#fff;color:'+t[1]+';font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Retrage</button>'
+      +'</div>';
+  }).join('');
+}
+async function retractAnnouncement(id){
+  await sb.from('announcements').update({active:false}).eq('id',id);
+  showToast('Anunt retras.');
+  loadActiveAnnouncements();
+}
+
 async function syncOrderStatuses(){
   const RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,receptie_fete:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
   const BY_RANK={1:'la_croit',2:'la_cusut',3:'la_talpuit',4:'gata_livrare',5:'finalizat'};
@@ -2248,17 +2355,18 @@ function toggleSidebar(open){
 
 // SECTIONS
 function showSection(name,el){
-  ['sectionDashboard','sectionOrders','sectionProductie','sectionClienti','sectionMesaje','sectionStoc'].forEach(s=>{
+  ['sectionDashboard','sectionOrders','sectionProductie','sectionClienti','sectionMesaje','sectionStoc','sectionComanda'].forEach(s=>{
     const e=document.getElementById(s);if(e)e.style.display='none';
   });
   const sec=document.getElementById('section'+name.charAt(0).toUpperCase()+name.slice(1));
   if(sec)sec.style.display='block';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el)el.classList.add('active');
-  const titles={dashboard:'Dashboard',orders:'Comenzi',productie:'Producție',clienti:'Clienți',mesaje:'Mesaje',stoc:'Stoc'};
+  const titles={dashboard:'Dashboard',orders:'Comenzi',productie:'Producție',clienti:'Clienți',mesaje:'Mesaje',stoc:'Stoc',comanda:'Notificari'};
   document.getElementById('pageTitle').textContent=titles[name]||name;
   toggleSidebar(false);
   if(name==='productie')loadOrders().then(()=>loadProdDashboard());
+  if(name==='comanda')loadCmdCenter();
   if(name==='clienti')renderClientiList(clientsList);
 }
 
