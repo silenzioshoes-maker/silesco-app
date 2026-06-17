@@ -297,19 +297,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
 
   <!-- ORDERS -->
   <div id="vOrders" style="display:none">
-    <!-- STATS BAR AGENT -->
-    <div style="background:#1A1A1A;padding:8px 16px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-      <div style="flex-shrink:0;padding:5px 16px 5px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
-        <div style="font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:1px">Săptămâna</div>
-        <div style="font-size:15px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="agSaptNr">—</div>
-        <div style="font-size:8px;color:rgba(255,255,255,.3)" id="agSaptVal">comenzi</div>
-      </div>
-      <div style="flex-shrink:0;padding:5px 0">
-        <div style="font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:1px">Luna</div>
-        <div style="font-size:15px;font-weight:700;color:#B08D57;font-family:'Playfair Display',serif" id="agLunaNr">—</div>
-        <div style="font-size:8px;color:rgba(255,255,255,.3)" id="agLunaVal">comenzi</div>
-      </div>
-    </div>
+
     <div class="wrap">
       <div class="notif" id="ntf">
         <svg class="notif-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -554,6 +542,21 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
       <span class="nb-label">Mesaje</span>
       <span id="agentMsgBadge" style="display:none;position:absolute;top:2px;right:10px;background:#9C3A2B;color:#fff;font-size:8px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center">0</span>
     </button>
+    <button class="nb" id="n_note" onclick="showV('note')">
+      <svg class="nb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="nb-label">Notite</span>
+    </button>
+  </div>
+</div>
+
+<!-- SCREEN: NOTITE -->
+<div id="vNote" style="display:none">
+  <div class="wrap" style="display:flex;flex-direction:column;min-height:calc(100vh - 120px)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-top:4px">
+      <div class="sec-label" style="margin:0">Notitele mele</div>
+      <button onclick="saveAgentNote()" style="padding:7px 16px;border-radius:7px;border:none;background:#111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salveaza</button>
+    </div>
+    <textarea id="agentNotepad" placeholder="Noteaza ceva important..." style="flex:1;min-height:60vh;width:100%;border:1.5px solid #DDD7CE;border-radius:10px;padding:14px;font-size:14px;font-family:'Inter',sans-serif;color:#2A2620;resize:none;outline:none;background:#FDFCFB;line-height:1.7;box-sizing:border-box"></textarea>
   </div>
 </div>
 
@@ -639,8 +642,8 @@ function showLogin(){
 
 // ── VIEWS ─────────────────────────────────────────────────────
 function showV(n){
-  ['vOrders','vNew','vStoc','vMesaje'].forEach(v=>{const el=document.getElementById(v);if(el)el.style.display='none';});
-  ['orders','new','stoc','mesaje'].forEach(x=>document.getElementById('n_'+x)?.classList.remove('active'));
+  ['vOrders','vNew','vStoc','vMesaje','vNote'].forEach(v=>{const el=document.getElementById(v);if(el)el.style.display='none';});
+  ['orders','new','stoc','mesaje','note'].forEach(x=>document.getElementById('n_'+x)?.classList.remove('active'));
   if(n==='orders'){
     document.getElementById('vOrders').style.display='block';
     document.getElementById('n_orders').classList.add('active');
@@ -658,7 +661,37 @@ function showV(n){
     loadStoc();
   }else if(n==='mesaje'){
     window.location.href='/agent-messages.html';
+  }else if(n==='note'){
+    document.getElementById('vNote').style.display='block';
+    document.getElementById('n_note').classList.add('active');
+    document.getElementById('hTitle').textContent='Notitele mele';
+    loadAgentNote();
   }
+}
+
+// ── NOTITE AGENT ──
+async function loadAgentNote(){
+  const{data}=await sb.from('management_notes').select('id,content').eq('user_id',CU.id).order('updated_at',{ascending:false}).limit(1).maybeSingle();
+  const el=document.getElementById('agentNotepad');
+  if(el&&data?.content)el.value=data.content;
+  if(data&&el)el._noteId=data.id;
+}
+async function saveAgentNote(){
+  const el=document.getElementById('agentNotepad');
+  if(!el)return;
+  const noteId=el._noteId;
+  const content=el.value;
+  if(noteId){
+    await sb.from('management_notes').update({content,updated_at:new Date().toISOString()}).eq('id',noteId);
+  }else{
+    const{data}=await sb.from('management_notes').insert({user_id:CU.id,content}).select('id').single();
+    if(data&&el)el._noteId=data.id;
+  }
+  const t=document.createElement('div');
+  t.textContent='Notita salvata!';
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:999';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2000);
 }
 
 // ── PRODUSE ───────────────────────────────────────────────────
@@ -891,10 +924,6 @@ async function loadOrders(){
   const saptVal=saptOrders.reduce((s,o)=>s+(o.total_value||0),0);
   const lunaVal=lunaOrders.reduce((s,o)=>s+(o.total_value||0),0);
   const fmt=v=>v>=1000?(v/1000).toFixed(1)+'k':v;
-  document.getElementById('agSaptNr').textContent=saptOrders.length;
-  document.getElementById('agSaptVal').textContent='com. · '+fmt(saptVal)+' RON';
-  document.getElementById('agLunaNr').textContent=lunaOrders.length;
-  document.getElementById('agLunaVal').textContent='com. · '+fmt(lunaVal)+' RON';
 }
 
 function renderOrders(orders,alocari){
