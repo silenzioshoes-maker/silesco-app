@@ -535,16 +535,13 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
         <a href="croit.html?token=cr-2847-xK9p" target="_blank" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fff;border:1px solid #DDD7CE;border-radius:8px;text-decoration:none;color:#111;font-size:13px;font-weight:700;border-top:3px solid #5A3E1B">
           <span style="font-size:20px">✂</span><span>Croit</span>
         </a>
-        <div style="display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#fff;border:1px solid #DDD7CE;border-radius:8px;border-top:3px solid #2F4A63">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:20px">🧵</span><span style="font-size:13px;font-weight:700;color:#111">Cusut</span>
+        <div style="position:relative">
+          <div onclick="toggleCusutPanel()" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fff;border:1px solid #DDD7CE;border-radius:8px;color:#111;font-size:13px;font-weight:700;border-top:3px solid #2F4A63;cursor:pointer">
+            <span style="font-size:20px">🧵</span><span>Cusut</span>
           </div>
-          <select onchange="if(this.value)window.open(this.value,'_blank');this.value=''" style="border:1px solid #DDD7CE;border-radius:6px;padding:5px 8px;font-size:12px;font-family:Inter,sans-serif;color:#3A3530;background:#FAFAF8;cursor:pointer;width:100%">
-            <option value="">— Atelier —</option>
-            <option value="atelier.html?ws=ceica">Ceica</option>
-            <option value="atelier.html?ws=oradea">Oradea</option>
-            <option value="atelier.html?ws=intern">Intern</option>
-          </select>
+          <div id="cusutPanel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #DDD7CE;border-radius:8px;z-index:100;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.1)">
+            <div id="cusutAtelierList" style="padding:4px 0"><div style="padding:8px 12px;font-size:12px;color:#9E9890">Se incarca...</div></div>
+          </div>
         </div>
         <a href="talpuit.html?token=tp-5521-mQ3r" target="_blank" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fff;border:1px solid #DDD7CE;border-radius:8px;text-decoration:none;color:#111;font-size:13px;font-weight:700;border-top:3px solid #1E4A2E">
           <span style="font-size:20px">👟</span><span>Talpuit</span>
@@ -1181,6 +1178,31 @@ async function retractAnnouncement(id){
   showToast('Anunt retras.');
   loadActiveAnnouncements();
 }
+
+// ── CUSUT PANEL (dashboard) ──
+let _cusutPanelLoaded=false;
+async function toggleCusutPanel(){
+  const panel=document.getElementById('cusutPanel');
+  const isOpen=panel.style.display!=='none';
+  // Inchide la click in afara
+  if(isOpen){panel.style.display='none';return;}
+  panel.style.display='block';
+  if(!_cusutPanelLoaded){
+    const{data:ws}=await sb.from('workshop_tokens').select('workshop_name,token').order('workshop_name');
+    const list=document.getElementById('cusutAtelierList');
+    if(!ws?.length){list.innerHTML='<div style="padding:8px 12px;font-size:12px;color:#9E9890">Niciun atelier</div>';return;}
+    list.innerHTML=(ws||[]).map(w=>`
+      <div onclick="window.open('${window.location.origin}/atelier.html?token=${w.token}','_blank');document.getElementById('cusutPanel').style.display='none'"
+        style="padding:10px 14px;font-size:13px;font-weight:600;color:#2F4A63;cursor:pointer;border-bottom:1px solid #F0EDE8"
+        onmouseover="this.style.background='#F4F1EA'" onmouseout="this.style.background=''">${w.workshop_name}</div>`).join('');
+    _cusutPanelLoaded=true;
+  }
+}
+document.addEventListener('click',function(e){
+  const panel=document.getElementById('cusutPanel');
+  if(panel&&!panel.closest('div')?.contains(e.target)&&!e.target.closest('[onclick*="toggleCusutPanel"]'))
+    panel.style.display='none';
+});
 
 async function syncOrderStatuses(){
   const RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,receptie_fete:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
