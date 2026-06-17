@@ -155,6 +155,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
     </button>
   </div>
 </div>
+<div id="annBanners"></div>
 
 <div class="tabs">
   <div class="tab active" id="tab_receptie" onclick="setTab('receptie')">Recepție cusut</div>
@@ -260,6 +261,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   CU=session.user;
   const{data:p}=await sb.from('user_profiles').select('role').eq('id',CU.id).single();
   CP=p;
+  loadAnnouncements('talpuit');
   await loadMateriale();
   await loadAll();
 });
@@ -751,6 +753,22 @@ async function markTalpuit(lineId,orderId,talpaId,brantId,ponytage){
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+
+// ── ANNOUNCEMENTS (sticky banner) ──
+const _dismissedAnns=new Set();
+async function loadAnnouncements('talpuit'){
+  const{data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
+  const el=document.getElementById('annBanners');if(!el)return;
+  const COLORS={informare:['#E8EFF6','#2F4A63'],atentionare:['#FBF3E0','#7A5C28'],urgent:['#FBE9E7','#9C3A2B']};
+  const relevant=(data||[]).filter(a=>(a.departments||[]).includes('talpuit')&&!_dismissedAnns.has(a.id));
+  el.innerHTML=relevant.map(a=>{
+    const[bg,color]=COLORS[a.type]||COLORS.informare;
+    return `<div id="ann_${a.id}" style="background:${bg};border-bottom:2px solid ${color};padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="font-size:13px;color:${color};font-weight:600;flex:1">${a.message}</div>
+      <button onclick="_dismissedAnns.add('${a.id}');document.getElementById('ann_${a.id}').remove()" style="background:none;border:none;color:${color};font-size:18px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+    </div>`;
+  }).join('');
+}
 
 // ── PUSH NOTIFICATIONS ──
 const VAPID_PUB='BMsatyGqxuGBcP3aiKeXAhvSBU3XmkTCCffthxmsuDxcJ2fPz6llrTkYVWiQwCVEh8Fo1XZGAgHJfrYLf5s387g';
