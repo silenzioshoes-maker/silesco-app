@@ -324,22 +324,6 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 
 <!-- STATS BAR -->
 <div id="statsBar" style="background:#111111;padding:8px 14px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-  <div class="stat-item" id="stat_azi" style="flex-shrink:0;padding:6px 16px 6px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
-    <div style="font-size:13px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Azi</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_azi_val">—</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.3)">per. croite</div>
-  </div>
-  <div class="stat-item" style="flex-shrink:0;padding:6px 16px 6px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px">
-    <div style="font-size:13px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Săptămâna</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_saptamana_val">—</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.3)">per. croite</div>
-  </div>
-  <div class="stat-item" style="flex-shrink:0;padding:6px 0">
-    <div style="font-size:13px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Luna</div>
-    <div style="font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif" id="stat_luna_val">—</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.3)">per. croite</div>
-  </div>
-</div>
 
 <!-- CONTENT -->
 <div class="wrap">
@@ -513,8 +497,6 @@ async function loadOrders(){
       }
     });
   });
-
-  document.getElementById('hdrBadge').textContent=orders.length+(orders.length===1?' comandă':' comenzi');
   renderOrders();
   renderFinalizate();
   // Detectează diferențe necroite din artState
