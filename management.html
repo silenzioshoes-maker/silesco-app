@@ -1076,7 +1076,7 @@ async function loadOrders(){
 // Auto-corecteaza orders.status din statusul liniilor (stadiul celei mai putin avansate linii active).
 // Astfel o comanda partiala ramane vizibila in departamentul corect, iar badge-ul din lista e corect.
 async function syncOrderStatuses(){
-  const RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,receptie_fete:2,cusut_gata:2,pregatit_lansat:2,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
+  const RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,receptie_fete:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
   const BY_RANK={1:'la_croit',2:'la_cusut',3:'la_talpuit',4:'gata_livrare',5:'finalizat'};
   const ALWAYS=['la_croit','la_cusut','la_talpuit','la_impachetat','gata_livrare'];
   const IF_ADVANCED=['nou','aprobat']; // corecteaza doar daca productia a inceput real (linie >= cusut)
@@ -1194,8 +1194,8 @@ function _buildOrdersHTML(orders,prefix='ord'){
     const idx=prefix+'_'+i;
     // Badge status: calculat din statusurile REALE ale liniilor (nu din orders.status care poate fi stale)
     const workLines=(o.order_lines||[]).filter(l=>!l.from_stock);
-    const ORDER_PS_LABEL={in_lucru:'La cusut',la_croit:'La croit',la_cusut:'La cusut',la_cusut_extern:'La cusut',cusut_extern_finalizat:'La cusut',cusut_gata:'La cusut',pregatit_lansat:'La talpuit',in_talpuit:'La talpuit',gata:'La talpuit',pregatit_livrare:'Gata livrare',finalizat:'Finalizat'};
-    const ORDER_PS_RANK={in_lucru:2,la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
+    const ORDER_PS_LABEL={la_croit:'La croit',la_cusut:'La cusut',la_cusut_extern:'La cusut',cusut_extern_finalizat:'La cusut',cusut_gata:'La cusut',pregatit_lansat:'La talpuit',in_talpuit:'La talpuit',gata:'La talpuit',pregatit_livrare:'Gata livrare',finalizat:'Finalizat'};
+    const ORDER_PS_RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
     let cfg;
     if(workLines.length>0&&o.status!=='anulat'&&o.status!=='livrat'){
       // Gasim statusurile unice active (nesarite) din linii
