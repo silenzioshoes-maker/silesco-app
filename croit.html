@@ -391,6 +391,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
 async function loadAll(){
   showLov('Se încarcă...');
+  loadAnnouncements('croit');
   await Promise.all([loadOrders(),loadMsgBadge(),loadCroitStats(),loadRestanteBanner()]);
   hideLov();
 }
@@ -1018,7 +1019,6 @@ async function loadMsgs(){
   const msgs=data||[];
   // Marcheaza citite TOATE mesajele catre croit (root + reply-uri copil), ca bulina sa ajunga la 0
   await sb.from('internal_messages').update({is_read:true,read_at:new Date().toISOString()}).eq('to_department','croit').eq('is_read',false);
-  await loadAnnouncements('croit');
   loadMsgBadge();
   const el=document.getElementById('msgList');
   const empty=document.getElementById('msgEmpty');
