@@ -4,23 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SILESCO · Atelier</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-// ── ANNOUNCEMENTS ──
-const _dismissedAnns=new Set();
-async function loadAnnouncements(dept){
-  const{data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
-  const el=document.getElementById('annBanners');if(!el)return;
-  const COLORS={informare:['#E8EFF6','#2F4A63'],atentionare:['#FBF3E0','#7A5C28'],urgent:['#FBE9E7','#9C3A2B']};
-  const relevant=(data||[]).filter(a=>(a.departments||[]).includes(dept)&&!_dismissedAnns.has(a.id));
-  el.innerHTML=relevant.map(a=>{
-    const[bg,color]=COLORS[a.type]||COLORS.informare;
-    return '<div id="ann_'+a.id+'" style="background:'+bg+';border-bottom:2px solid '+color+';padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-      +'<div style="font-size:13px;color:'+color+';font-weight:600;flex:1">'+a.message+'</div>'
-      +'<button onclick="_dismissedAnns.add(''+a.id+'');document.getElementById('ann_'+a.id+'').remove()" style="background:none;border:none;color:'+color+';font-size:18px;cursor:pointer;padding:0 4px;line-height:1">×</button>'
-      +'</div>';
-  }).join('');
-}
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 
@@ -309,6 +293,24 @@ function showInvalid(msg){
 function showLov(t){document.getElementById('lovText').textContent=t||'Se încarcă...';document.getElementById('lov').classList.add('show');}
 function hideLov(){document.getElementById('lov').classList.remove('show');}
 function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
+
+// ── ANNOUNCEMENTS ──
+const _dismissedAnns=new Set();
+async function loadAnnouncements(dept){
+  try{
+    const{data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
+    const el=document.getElementById('annBanners');if(!el)return;
+    const COLORS={informare:['#E8EFF6','#2F4A63'],atentionare:['#FBF3E0','#7A5C28'],urgent:['#FBE9E7','#9C3A2B']};
+    const relevant=(data||[]).filter(a=>(a.departments||[]).includes(dept)&&!_dismissedAnns.has(a.id));
+    el.innerHTML=relevant.map(a=>{
+      const c=COLORS[a.type]||COLORS.informare;
+      return '<div id="ann_'+a.id+'" style="background:'+c[0]+';border-bottom:2px solid '+c[1]+';padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+        +'<div style="font-size:13px;color:'+c[1]+';font-weight:600;flex:1">'+a.message+'</div>'
+        +'<button onclick="_dismissedAnns.add(\''+a.id+'\');document.getElementById(\'ann_'+a.id+'\').remove()" style="background:none;border:none;color:'+c[1]+';font-size:18px;cursor:pointer;padding:0 4px;line-height:1">×</button>'
+        +'</div>';
+    }).join('');
+  }catch(e){console.warn('Ann:',e);}
+}
 </script>
 </body>
 </html>
