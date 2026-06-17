@@ -89,12 +89,6 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
 .tab.active{color:#fff;background:#111;border-color:#111}
 
 .tab .tab-badge{display:inline-block;background:#9C3A2B;color:#fff;border-radius:10px;padding:1px 6px;font-size:13px;margin-left:4px}
-.stats-bar{background:#111111;padding:8px 14px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
-.stat-item{flex-shrink:0;padding:5px 16px 5px 0;border-right:1px solid rgba(255,255,255,.1);margin-right:16px}
-.stat-item:last-child{border-right:none;margin-right:0;padding-right:0}
-.stat-label{font-size:8px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
-.stat-val{font-size:16px;font-weight:700;color:#B08D57;font-family:Inter,sans-serif}
-.stat-sub{font-size:8px;color:rgba(255,255,255,.3)}
 .wrap{padding:12px 14px 80px}
 /* CARDS */
 .cmd-card{background:#fff;border:1px solid #DDD7CE;border-radius:10px;margin-bottom:10px;overflow:hidden}
@@ -180,14 +174,7 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
   <div class="tab" id="tab_gata" onclick="setTab('gata')">Gata livrare</div>
   <div class="tab" id="tab_mesaje" onclick="setTab('mesaje')">Mesaje<span class="tab-badge" id="tbMsg" style="display:none">0</span></div>
   <div class="tab" id="tab_istoric" onclick="setTab('istoric')">Istoric</div>
-</div>
-
-<div class="stats-bar">
-  <div class="stat-item"><div class="stat-label">De ambalat</div><div class="stat-val" id="stAmbalat">—</div><div class="stat-sub">comenzi</div></div>
-  <div class="stat-item"><div class="stat-label">Urgente</div><div class="stat-val" id="stUrgent" style="color:#9C3A2B">—</div><div class="stat-sub">comenzi</div></div>
-  <div class="stat-item"><div class="stat-label">Gata livrare</div><div class="stat-val" id="stGata">—</div><div class="stat-sub">comenzi</div></div>
-  <div class="stat-item"><div class="stat-label">Perechi azi</div><div class="stat-val" id="stPerechi">—</div><div class="stat-sub">ambalate</div></div>
-</div>
+</div></div>
 
 <div class="wrap">
   <!-- DE AMBALAT -->
@@ -385,11 +372,6 @@ async function loadAll(){
     .select('total_pairs').eq('status','gata_livrare').gte('updated_at',azi+'T00:00:00');
 
   const urgente=(ambOrders).filter(o=>o.priority==='urgent').length;
-  document.getElementById('hdrBadge').textContent=ambOrders.length+' comenzi';
-  document.getElementById('stAmbalat').textContent=ambOrders.length;
-  document.getElementById('stUrgent').textContent=urgente;
-  document.getElementById('stGata').textContent=gataOrders.length;
-  document.getElementById('stPerechi').textContent=(perechiiAzi||[]).reduce((s,o)=>s+(o.total_pairs||0),0);
 
   // Badge tabs
   const tbAmb=document.getElementById('tbAmbalat');
