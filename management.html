@@ -1774,7 +1774,8 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
       }).eq('id',l.id);
       externLines.push({...l,workshop:atelNume});
     }else if(flux==='direct_talpuit'){
-      // Semifabricat din stoc — sare peste croit+cusut, intră direct la recepție talpuit / pregătit de lansat
+      // Semifabricat din stoc — apare direct în "Lansat" (pregatit_lansat), sare peste croit+cusut.
+      // Notificarea către talpuit se trimite prin webhook (vezi dynamic-responder: pregatit_lansat).
       await sb.from('order_lines').update({
         production_status:'pregatit_lansat'
       }).eq('id',l.id);
