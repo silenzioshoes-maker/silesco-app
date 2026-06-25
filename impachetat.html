@@ -351,7 +351,7 @@ async function loadAll(){
   const ambQuery = relOrderIds.length
     ? sb.from('orders').select(`id,order_no,status,priority,delivery_date,total_pairs,notes,created_at,
         clients!orders_client_id_fkey(name,company_name),
-        order_lines(id,color,ponytage,total_pairs,notes,product_id,free_model,from_stock,production_status,products(code,name))`)
+        order_lines(id,color,ponytage,total_pairs,notes,product_id,free_model,from_stock,nr_baxuri,nr_baxuri_lansate,production_status,products(code,name))`)
         .in('id',relOrderIds)
         .order('priority',{ascending:false})
         .order('delivery_date',{ascending:true})
@@ -363,6 +363,22 @@ async function loadAll(){
       clients!orders_client_id_fkey(name,company_name)`)
       .in('status',['finalizat','livrat']).order('updated_at',{ascending:false}).limit(30),
   ]);
+
+  // Rezervari (stock_allocations) pentru liniile de stoc — pentru etichete client + alocare tarzie
+  const allStockLineIds=[];
+  (amb||[]).forEach(o=>(o.order_lines||[]).forEach(l=>{if(l.from_stock)allStockLineIds.push(l.id);}));
+  let allocByLine={};
+  if(allStockLineIds.length){
+    const{data:allocs}=await sb.from('stock_allocations')
+      .select('id,client_name,nr_baxuri,total_pairs,status,lansat,stock_line_id')
+      .in('stock_line_id',allStockLineIds)
+      .neq('status','anulat');
+    (allocs||[]).forEach(a=>{
+      if(!allocByLine[a.stock_line_id])allocByLine[a.stock_line_id]=[];
+      allocByLine[a.stock_line_id].push(a);
+    });
+  }
+  (amb||[]).forEach(o=>(o.order_lines||[]).forEach(l=>{l._allocs=allocByLine[l.id]||[];}));
 
   // Tab Ambalat = comenzi cu cel putin un articol in_talpuit (lansat, nemarcat inca)
   ambOrders=(amb||[]).filter(o=>(o.order_lines||[]).some(l=>['in_talpuit','gata'].includes(l.production_status)));
@@ -428,8 +444,8 @@ function renderAmbalat(orders){
     const dlColor=dl===null?'#5A5248':dl<0?'#9C3A2B':dl<=2?'#8B6914':'#1E4A2E';
     const dlText=dl===null?'':dl<0?`⚠ ${Math.abs(dl)}z întârziere`:`${dl}z rămase`;
     const isUrgent=o.priority==='urgent';
-    // Doar articolele lansate (in_talpuit / gata = talpuit facut) apar in tabul Ambalat
-    const lines=(o.order_lines||[]).filter(l=>!l.from_stock&&['in_talpuit','gata'].includes(l.production_status));
+    // Articolele lansate (in_talpuit / gata = talpuit facut) apar in tabul Ambalat — inclusiv stoc
+    const lines=(o.order_lines||[]).filter(l=>['in_talpuit','gata'].includes(l.production_status));
     if(!lines.length) return '';
     const nrGata=0;
 
@@ -454,12 +470,25 @@ function renderAmbalat(orders){
       <div class="cmd-body" id="amb_${i}">
         ${lines.map(l=>{
           const isDone=l.production_status==='pregatit_livrare'||l.production_status==='finalizat';
+          // Etichete client pentru articole de stoc
+          let stockHTML='';
+          if(l.from_stock){
+            const allocs=l._allocs||[];
+            const baxRezervate=allocs.reduce((s,a)=>s+(a.nr_baxuri||0),0);
+            const baxLibere=Math.max(0,(l.nr_baxuri||0)-baxRezervate);
+            const chips=allocs.map(a=>`<span style="font-size:11px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.25);padding:2px 8px;border-radius:4px">${a.client_name||'Client'} (${a.nr_baxuri||1} bax)${a.lansat?' ✓':''}</span>`);
+            if(baxLibere>0)chips.push(`<span style="font-size:11px;font-weight:700;color:#5A5248;background:#F4F1EA;border:1px solid #DDD7CE;padding:2px 8px;border-radius:4px">Stoc global (${baxLibere} bax)</span>`);
+            stockHTML=`
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${chips.join('')}</div>
+              ${baxLibere>0?`<button onclick="openAlocareTarzie('${l.id}','${getModName(l)} · ${l.color||''}',${baxLibere})" style="margin-top:6px;font-size:10px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.3);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif">+ Rezervă pentru client</button>`:''}`;
+          }
           return `<div class="art-row" id="artrow_${l.id}">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
               <div style="flex:1">
-                <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
+                <div class="art-name">${getModName(l)} · ${l.color||'—'}${l.from_stock?' <span style=\"font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;padding:1px 6px;border-radius:3px\">STOC</span>':''}</div>
                 <div class="art-pairs">${l.total_pairs} perechi</div>
                 <div class="pontaj">${renderPontaj(l.ponytage)}</div>
+                ${stockHTML}
               </div>
               ${isDone
                 ?`<span style="font-size:13px;font-weight:700;padding:3px 10px;border-radius:4px;flex-shrink:0;background:#EAF0EC;color:#1E4A2E">Pregatit</span>`
@@ -497,7 +526,7 @@ function renderGata(orders){
   el.innerHTML=orders.map((o,i)=>{
     const cl=o.clients?.company_name||o.clients?.name||'—';
     const dd=o.delivery_date?new Date(o.delivery_date).toLocaleDateString('ro-RO'):'—';
-    const lines=(o.order_lines||[]).filter(l=>!l.from_stock&&l.production_status==='pregatit_livrare');
+    const lines=(o.order_lines||[]).filter(l=>l.production_status==='pregatit_livrare');
     return `<div class="cmd-card" style="border-left:4px solid #1E4A2E;border-radius:0 10px 10px 0">
       <div class="cmd-header" onclick="togCmd('gat_${i}','gatarr_${i}')">
         <div style="flex:1;min-width:0">
@@ -592,6 +621,37 @@ function renderIstoric(orders){
 }
 
 // ── PREGĂTIT DE LIVRARE (per articol) ────────────────────
+// ── ALOCARE TÂRZIE (rezervă bax liber pentru client la ambalat) ──
+async function openAlocareTarzie(lineId,artLabel,baxLibere){
+  const client=prompt('Rezervă pentru client\n('+artLabel+' — '+baxLibere+' baxuri libere)\n\nNumele clientului:');
+  if(client===null)return;
+  const nume=client.trim();
+  if(!nume){showToast('Nume client gol.');return;}
+  const nrStr=prompt('Câte baxuri rezervi pentru '+nume+'?\n(disponibile: '+baxLibere+')','1');
+  if(nrStr===null)return;
+  const nr=parseInt(nrStr);
+  if(isNaN(nr)||nr<=0){showToast('Număr invalid.');return;}
+  if(nr>baxLibere){showToast('Maxim '+baxLibere+' baxuri libere.');return;}
+  showLov('Se rezervă...');
+  try{
+    // Ia pontaj_bax ca să calculeze total_pairs pentru rezervare
+    const{data:line}=await sb.from('order_lines').select('pontaj_bax').eq('id',lineId).single();
+    const pb=line?.pontaj_bax||{};
+    const perBax=Object.values(pb).reduce((s,q)=>s+(parseInt(q)||0),0);
+    const{error}=await sb.from('stock_allocations').insert({
+      stock_line_id:lineId,
+      client_name:nume,
+      nr_baxuri:nr,
+      total_pairs:perBax*nr,
+      status:'activ',
+      lansat:false
+    });
+    if(error){hideLov();showToast('Eroare: '+error.message);return;}
+    hideLov();showToast(nr+' bax rezervate pentru '+nume+'!');
+    await loadAll();
+  }catch(e){hideLov();showToast('Eroare: '+e.message);}
+}
+
 async function marcheazaArtPregatit(lineId,orderId){
   const{error}=await sb.from('order_lines')
     .update({production_status:'pregatit_livrare'})
@@ -602,9 +662,9 @@ async function marcheazaArtPregatit(lineId,orderId){
   if(o){
     const l=(o.order_lines||[]).find(x=>x.id===lineId);
     if(l)l.production_status='pregatit_livrare';
-    // Dacă toate articolele sunt pregatit_livrare → orders.status='gata_livrare'
-    const workLines=(o.order_lines||[]).filter(x=>!x.from_stock);
-    const allPregatit=workLines.length>0&&workLines.every(x=>x.production_status==='pregatit_livrare');
+    // Dacă toate articolele (inclusiv stoc) sunt pregatit_livrare → orders.status='gata_livrare'
+    const workLines=(o.order_lines||[]);
+    const allPregatit=workLines.length>0&&workLines.every(x=>x.production_status==='pregatit_livrare'||x.production_status==='finalizat');
     if(allPregatit){
       await sb.from('orders').update({status:'gata_livrare',updated_at:new Date().toISOString()}).eq('id',orderId);
     }
@@ -623,9 +683,9 @@ async function marcheazaArtFinalizat(lineId,orderId){
   if(o){
     const l=(o.order_lines||[]).find(x=>x.id===lineId);
     if(l)l.production_status='finalizat';
-    // Verifică dacă toate articolele din comandă sunt finalizate
-    const workLines=(o.order_lines||[]).filter(x=>!x.from_stock);
-    const allFinalizat=workLines.every(x=>x.production_status==='finalizat');
+    // Verifică dacă toate articolele din comandă (inclusiv stoc) sunt finalizate
+    const workLines=(o.order_lines||[]);
+    const allFinalizat=workLines.length>0&&workLines.every(x=>x.production_status==='finalizat');
     if(allFinalizat){
       await sb.from('orders')
         .update({status:'finalizat',updated_at:new Date().toISOString()})
