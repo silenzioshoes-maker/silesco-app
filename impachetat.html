@@ -366,7 +366,7 @@ async function loadAll(){
 
   // Rezervari (stock_allocations) pentru liniile de stoc — pentru etichete client + alocare tarzie
   const allStockLineIds=[];
-  (amb||[]).forEach(o=>(o.order_lines||[]).forEach(l=>{if(l.from_stock)allStockLineIds.push(l.id);}));
+  (amb||[]).forEach(o=>(o.order_lines||[]).forEach(l=>{if(l.nr_baxuri&&l.nr_baxuri>0)allStockLineIds.push(l.id);}));
   let allocByLine={};
   if(allStockLineIds.length){
     const{data:allocs}=await sb.from('stock_allocations')
@@ -472,7 +472,7 @@ function renderAmbalat(orders){
           const isDone=l.production_status==='pregatit_livrare'||l.production_status==='finalizat';
           // Etichete client pentru articole de stoc
           let stockHTML='';
-          if(l.from_stock){
+          if(l.nr_baxuri&&l.nr_baxuri>0){
             const allocs=l._allocs||[];
             const baxRezervate=allocs.reduce((s,a)=>s+(a.nr_baxuri||0),0);
             const baxLibere=Math.max(0,(l.nr_baxuri||0)-baxRezervate);
@@ -485,7 +485,7 @@ function renderAmbalat(orders){
           return `<div class="art-row" id="artrow_${l.id}">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
               <div style="flex:1">
-                <div class="art-name">${getModName(l)} · ${l.color||'—'}${l.from_stock?' <span style=\"font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;padding:1px 6px;border-radius:3px\">STOC</span>':''}</div>
+                <div class="art-name">${getModName(l)} · ${l.color||'—'}${l.nr_baxuri&&l.nr_baxuri>0?' <span style=\"font-size:9px;font-weight:700;color:#23394F;background:#E8EFF6;padding:1px 6px;border-radius:3px\">STOC</span>':''}</div>
                 <div class="art-pairs">${l.total_pairs} perechi</div>
                 <div class="pontaj">${renderPontaj(l.ponytage)}</div>
                 ${stockHTML}
