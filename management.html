@@ -1486,6 +1486,7 @@ function _buildOrdersHTML(orders,prefix='ord'){
             ${pt}
             ${workshopHTML}
             ${materialeHTML}
+            ${l.from_stock&&l.nr_baxuri?`<div style="margin-top:6px"><button onclick="openAdjustProd('${l.id}',${l.nr_baxuri},event)" style="font-size:10px;font-weight:700;color:#8B6914;background:#F6F0E5;border:1px solid #B08D57;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif">Ajustează producția (${l.nr_baxuri} bax)</button></div>`:''}
           </div>
           <div style="flex-shrink:0">
             <span style="font-size:9px;font-weight:700;color:${psColor.c};background:${psColor.b};padding:2px 8px;border-radius:4px;white-space:nowrap;display:inline-block">${psLabels[ps]||ps}</span>
@@ -1835,6 +1836,44 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
   hideLov();}
 
 // LANSARE CROIT
+// ── AJUSTARE PRODUCȚIE (comenzi stoc - produs mai puțin decât planificat) ──
+let _adjustLineId=null,_adjustOldBax=0;
+function openAdjustProd(lineId,currentBax,e){
+  if(e)e.stopPropagation();
+  _adjustLineId=lineId;_adjustOldBax=currentBax;
+  const nou=prompt('Câte baxuri s-au produs efectiv?\n(planificat: '+currentBax+' baxuri)',currentBax);
+  if(nou===null)return;
+  const n=parseInt(nou);
+  if(isNaN(n)||n<0){alert('Număr invalid.');return;}
+  if(n===currentBax){return;}
+  confirmAdjustProd(n);
+}
+async function confirmAdjustProd(newBax){
+  showLov('Se ajustează producția...');
+  try{
+    // Ia linia curentă ca să recalculeze pe baza pontaj_bax
+    const{data:l}=await sb.from('order_lines').select('id,order_id,nr_baxuri,pontaj_bax,ponytage,total_pairs,notes,color,products(code)').eq('id',_adjustLineId).single();
+    if(!l){hideLov();showToast('Linie negăsită.');return;}
+    const pb=l.pontaj_bax||{};
+    const perBax=Object.values(pb).reduce((s,q)=>s+(parseInt(q)||0),0);
+    // Pontaj total nou = pontaj_bax × newBax
+    const newPony={};
+    Object.keys(pb).forEach(sz=>{newPony[sz]=(parseInt(pb[sz])||0)*newBax;});
+    const newTotal=perBax*newBax;
+    const oldBax=l.nr_baxuri||_adjustOldBax;
+    const note=(l.notes?l.notes+' ':'')+'[Producție ajustată '+oldBax+'→'+newBax+' baxuri]';
+    const{error}=await sb.from('order_lines').update({nr_baxuri:newBax,ponytage:newPony,total_pairs:newTotal,notes:note}).eq('id',_adjustLineId);
+    if(error){hideLov();showToast('Eroare: '+error.message);return;}
+    // Recalculează total comandă
+    const{data:allLines}=await sb.from('order_lines').select('total_pairs,unit_price').eq('order_id',l.order_id);
+    const tp=(allLines||[]).reduce((s,x)=>s+(x.total_pairs||0),0);
+    const tv=(allLines||[]).reduce((s,x)=>s+((x.total_pairs||0)*(x.unit_price||0)),0);
+    await sb.from('orders').update({total_pairs:tp,total_value:tv,updated_at:new Date().toISOString()}).eq('id',l.order_id);
+    hideLov();showToast('Producție ajustată la '+newBax+' baxuri!');
+    await loadAll();
+  }catch(e){hideLov();showToast('Eroare: '+e.message);}
+}
+
 async function sendToCroit(id,e){
   e.stopPropagation();
   // Verifică că toate articolele au model
