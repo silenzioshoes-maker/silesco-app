@@ -1892,7 +1892,7 @@ async function loadStoc(){
     prodEl.innerHTML='<div style="text-align:center;padding:32px 0;color:#9E9890;font-size:13px;font-weight:500">Nicio comanda in stoc productie.</div>';
   } else {
     prodEl.innerHTML=(stocOrders||[]).map(o=>{
-      const lines=(o.order_lines||[]).filter(l=>l.from_stock);
+      const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
       const titlu=o.titlu_stoc||o.order_no||'—';
       const alocari=o.stock_allocations||[];
       return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
