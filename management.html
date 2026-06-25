@@ -568,9 +568,12 @@ body{font-family:'Inter',sans-serif;background:#F4F1EA;min-height:100vh;color:#1
               <svg style="width:13px;height:13px;stroke:#111111;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               Notite
             </div>
-            <button onclick="saveNote()" style="padding:3px 8px;border-radius:4px;border:none;background:#111111;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salveaza</button>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="mgmtNoteStatus" style="font-size:10px;color:#9E9890"></span>
+              <button onclick="saveNote()" style="padding:3px 8px;border-radius:4px;border:none;background:#111111;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salveaza</button>
+            </div>
           </div>
-          <textarea id="mgmtNotepad" placeholder="Noteaza ceva important..." onkeydown="if((e=event).ctrlKey&&e.key==='Enter')saveNote()" style="flex:1;min-height:192px;padding:12px 14px;border:none;outline:none;font-size:13px;font-family:Inter,sans-serif;color:#2A2620;resize:none;background:#FDFCFB;line-height:1.6"></textarea>
+          <textarea id="mgmtNotepad" placeholder="Noteaza ceva important... (se salveaza automat)" oninput="mgmtNoteChanged()" onkeydown="if((e=event).ctrlKey&&e.key==='Enter')saveNote()" style="flex:1;min-height:192px;padding:12px 14px;border:none;outline:none;font-size:13px;font-family:Inter,sans-serif;color:#2A2620;resize:none;background:#FDFCFB;line-height:1.6"></textarea>
         </div>
 
         <!-- RAPOARTE ZILNICE -->
@@ -1205,24 +1208,37 @@ document.addEventListener('click',function(e){
 });
 
 // ── NOTITE MANAGEMENT ──
+let _mgmtNoteId=null,_mgmtNoteTimer=null;
 async function loadNote(){
-  const{data}=await sb.from('management_notes').select('id,content').eq('user_id',CU.id).order('updated_at',{ascending:false}).limit(1).maybeSingle();
-  const el=document.getElementById('mgmtNotepad');
-  if(el&&data?.content)el.value=data.content;
-  if(data)document.getElementById('mgmtNotepad')._noteId=data.id;
+  try{
+    const{data}=await sb.from('management_notes').select('id,content').eq('user_id',CU.id).order('updated_at',{ascending:false}).limit(1).maybeSingle();
+    const el=document.getElementById('mgmtNotepad');
+    if(el&&data){el.value=data.content||'';_mgmtNoteId=data.id;}
+  }catch(e){console.warn('loadNote:',e);}
+}
+function mgmtNoteChanged(){
+  const st=document.getElementById('mgmtNoteStatus');
+  if(st)st.textContent='se scrie...';
+  clearTimeout(_mgmtNoteTimer);
+  _mgmtNoteTimer=setTimeout(saveNote,800);
 }
 async function saveNote(){
   const el=document.getElementById('mgmtNotepad');
   if(!el)return;
   const content=el.value;
-  const noteId=el._noteId;
-  if(noteId){
-    await sb.from('management_notes').update({content,updated_at:new Date().toISOString()}).eq('id',noteId);
-  }else{
-    const{data}=await sb.from('management_notes').insert({user_id:CU.id,content}).select('id').single();
-    if(data)el._noteId=data.id;
+  const st=document.getElementById('mgmtNoteStatus');
+  try{
+    if(_mgmtNoteId){
+      await sb.from('management_notes').update({content,updated_at:new Date().toISOString()}).eq('id',_mgmtNoteId);
+    }else{
+      const{data}=await sb.from('management_notes').insert({user_id:CU.id,content}).select('id').single();
+      if(data)_mgmtNoteId=data.id;
+    }
+    if(st){st.textContent='salvat ✓';setTimeout(()=>{if(st)st.textContent='';},1500);}
+  }catch(e){
+    console.warn('saveNote:',e);
+    if(st)st.textContent='eroare salvare';
   }
-  showToast('Notita salvata!');
 }
 
 async function syncOrderStatuses(){
@@ -1689,6 +1705,14 @@ async function openApprove(id,e){e.stopPropagation();approveOrderId=id;const o=a
           </div>
         </label>
 
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid #DDD7CE;background:#fff" id="fluxlbl_direct_talpuit_${l.id}">
+          <input type="radio" name="flux_${l.id}" value="direct_talpuit" onchange="setFlux('${l.id}','direct_talpuit')"/>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1E4A2E">👟 Direct la talpuit</div>
+            <div style="font-size:10px;color:#9E9890">Semifabricat din stoc — sare peste croit și cusut</div>
+          </div>
+        </label>
+
       </div>
       <div id="atelSel_${l.id}" style="display:none;margin-top:10px">
         <div style="font-size:10px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Selectează atelierul</div>
@@ -1704,12 +1728,14 @@ async function openApprove(id,e){e.stopPropagation();approveOrderId=id;const o=a
 function setFlux(lineId,flux){
   const needsAtelier=flux==='intern_extern'||flux==='extern_extern';
   document.getElementById('atelSel_'+lineId).style.display=needsAtelier?'block':'none';
-  ['intern_intern','intern_extern','extern_extern'].forEach(f=>{
+  ['intern_intern','intern_extern','extern_extern','direct_talpuit'].forEach(f=>{
     const lbl=document.getElementById('fluxlbl_'+f+'_'+lineId);
     if(lbl){
       const sel=f===flux;
-      lbl.style.borderColor=sel?(f==='intern_intern'?'#8B6914':f==='intern_extern'?'#2F4A63':'#365A43'):'#DDD7CE';
-      lbl.style.background=sel?(f==='intern_intern'?'#FFF8E8':f==='intern_extern'?'#E8EFF6':'#EAF0EC'):'#fff';
+      const colors={intern_intern:'#8B6914',intern_extern:'#2F4A63',extern_extern:'#365A43',direct_talpuit:'#1E4A2E'};
+      const bgs={intern_intern:'#FFF8E8',intern_extern:'#E8EFF6',extern_extern:'#EAF0EC',direct_talpuit:'#D8EEE0'};
+      lbl.style.borderColor=sel?colors[f]:'#DDD7CE';
+      lbl.style.background=sel?bgs[f]:'#fff';
     }
   });
 }
@@ -1747,6 +1773,11 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
         workshop:atelNume||null
       }).eq('id',l.id);
       externLines.push({...l,workshop:atelNume});
+    }else if(flux==='direct_talpuit'){
+      // Semifabricat din stoc — sare peste croit+cusut, intră direct la recepție talpuit / pregătit de lansat
+      await sb.from('order_lines').update({
+        production_status:'pregatit_lansat'
+      }).eq('id',l.id);
     }
   }
   if(lots.length)await sb.from('production_lots').insert(lots);
