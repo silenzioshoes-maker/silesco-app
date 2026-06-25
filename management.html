@@ -1144,8 +1144,8 @@ async function loadOrders(){
     .select(`id,order_no,status,priority,is_stock,allocated_to_client,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,titlu_stoc,
       clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
       user_profiles!orders_agent_id_fkey(full_name),
-      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,talpa_id,brant_id,siret_id,cutie_id,nr_baxuri,pontaj_bax,products(id,code,name,default_sole_id)),
-      stock_allocations(id,client_name,nr_baxuri,total_pairs,status,stock_line_id)`)
+      order_lines(id,color,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,talpa_id,brant_id,siret_id,cutie_id,nr_baxuri,nr_baxuri_lansate,pontaj_bax,products(id,code,name,default_sole_id)),
+      stock_allocations(id,client_name,nr_baxuri,total_pairs,status,lansat,stock_line_id)`)
     .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
   allOrders=data||[];
@@ -1556,7 +1556,44 @@ function _buildOrdersHTML(orders,prefix='ord'){
           <div>
             
             <div class="detail-section" style="margin-bottom:12px"><div class="detail-label">Articole (${lines.length})</div>${linesHTML||'<div style="font-size:12px;color:#5A5248">Niciun articol.</div>'}</div>
-            ${isStock&&(o.stock_allocations||[]).length?`
+            ${isStock?`
+            <div class="detail-section" style="margin-bottom:12px">
+              <div class="detail-label">Lansare în talpuit</div>
+              ${(()=>{
+                const allocs=(o.stock_allocations||[]).filter(a=>a.status!=='anulat');
+                const totalBax=(o.order_lines||[]).filter(l=>l.from_stock).reduce((s,l)=>s+(l.nr_baxuri||0),0);
+                const lansateBax=(o.order_lines||[]).filter(l=>l.from_stock).reduce((s,l)=>s+(l.nr_baxuri_lansate||0),0);
+                const baxRezervate=allocs.reduce((s,a)=>s+(a.nr_baxuri||0),0);
+                const baxLibere=Math.max(0,totalBax-baxRezervate);
+                const lineId=(o.order_lines||[]).find(l=>l.from_stock)?.id||'';
+                return `
+                <div style="font-size:12px;color:#5A5248;margin-bottom:10px;padding:6px 10px;background:#F4F1EA;border-radius:6px">
+                  Total: <strong>${totalBax} baxuri</strong> · Lansate: <strong style="color:#1E4A2E">${lansateBax}</strong> · Rămase: <strong style="color:#9C3A2B">${Math.max(0,totalBax-lansateBax)}</strong>
+                </div>
+                ${allocs.map(a=>`
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:${a.lansat?'#EAF0EC':'#E8EFF6'};border:1px solid ${a.lansat?'rgba(30,74,46,.2)':'rgba(47,74,99,.25)'};border-radius:7px;margin-bottom:6px">
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:#111">${a.client_name||'—'}</div>
+                    <div style="font-size:11px;color:#5A5248">${a.nr_baxuri||1} bax · ${a.total_pairs||0} per.</div>
+                  </div>
+                  ${a.lansat
+                    ?`<span style="font-size:11px;font-weight:700;color:#1E4A2E">Lansat ✓</span>`
+                    :`<button onclick="lansezaDinMgmt('${lineId}','${a.id}',${a.nr_baxuri||1},event)" style="padding:6px 12px;border-radius:6px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Lansează</button>`
+                  }
+                </div>`).join('')}
+                ${baxLibere>0?`
+                <div style="padding:8px 10px;background:#F4F1EA;border:1px solid #DDD7CE;border-radius:7px;margin-bottom:6px">
+                  <div style="font-size:12px;font-weight:700;color:#5A5248;margin-bottom:8px">Stoc liber — ${baxLibere} baxuri disponibile</div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input type="number" min="1" max="${baxLibere}" value="1" id="mgmt_liber_${lineId}" style="width:52px;padding:6px;border:1.5px solid #B08D57;border-radius:6px;text-align:center;font-size:14px;font-weight:700;color:#111;font-family:'Inter',sans-serif;outline:none"/>
+                    <span style="font-size:12px;color:#5A5248">baxuri</span>
+                    <button onclick="lansezaLiberDinMgmt('${lineId}',${baxLibere},event)" style="flex:1;padding:6px 12px;border-radius:6px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Lansează stoc liber</button>
+                  </div>
+                </div>`:''}
+                ${!allocs.length&&baxLibere<=0?`<div style="font-size:12px;color:#9E9890;font-style:italic;padding:8px 0">Toate baxurile au fost lansate.</div>`:''}`;
+              })()}
+            </div>`:''}
+            ${!isStock&&(o.stock_allocations||[]).length?`
             <div class="detail-section" style="margin-bottom:12px">
               <div class="detail-label">Rezervari (${(o.stock_allocations||[]).filter(a=>a.status!=='anulat').length})</div>
               ${(o.stock_allocations||[]).filter(a=>a.status!=='anulat').map(a=>{
@@ -1879,6 +1916,42 @@ async function confirmApprove(){if(!approveOrderId)return;showLov('Se aprobă...
   hideLov();}
 
 // LANSARE CROIT
+// ── LANSARE DIN MANAGEMENT ──
+async function lansezaDinMgmt(lineId,allocId,baxuri,e){
+  if(e)e.stopPropagation();
+  if(!confirm('Lansezi '+baxuri+' baxuri în talpuit pentru această rezervare?'))return;
+  showLov('Se lansează...');
+  try{
+    const{data:line}=await sb.from('order_lines')
+      .select('id,order_id,nr_baxuri,nr_baxuri_lansate,production_status').eq('id',lineId).single();
+    if(!line){hideLov();showToast('Linie negăsită.');return;}
+    const noulLansate=(line.nr_baxuri_lansate||0)+baxuri;
+    await sb.from('order_lines').update({nr_baxuri_lansate:noulLansate,production_status:'pregatit_lansat'}).eq('id',lineId);
+    await sb.from('stock_allocations').update({lansat:true,lansat_at:new Date().toISOString()}).eq('id',allocId);
+    hideLov();showToast(baxuri+' baxuri lansate în talpuit!');
+    await loadAll();
+  }catch(err){hideLov();showToast('Eroare: '+err.message);}
+}
+
+async function lansezaLiberDinMgmt(lineId,maxBax,e){
+  if(e)e.stopPropagation();
+  const inp=document.getElementById('mgmt_liber_'+lineId);
+  const baxuri=inp?parseInt(inp.value)||0:0;
+  if(baxuri<=0){showToast('Introdu un număr valid.');return;}
+  if(baxuri>maxBax){showToast('Maxim '+maxBax+' baxuri disponibile.');return;}
+  if(!confirm('Lansezi '+baxuri+' baxuri libere (stoc global) în talpuit?'))return;
+  showLov('Se lansează...');
+  try{
+    const{data:line}=await sb.from('order_lines')
+      .select('id,order_id,nr_baxuri,nr_baxuri_lansate').eq('id',lineId).single();
+    if(!line){hideLov();showToast('Linie negăsită.');return;}
+    const noulLansate=(line.nr_baxuri_lansate||0)+baxuri;
+    await sb.from('order_lines').update({nr_baxuri_lansate:noulLansate,production_status:'pregatit_lansat'}).eq('id',lineId);
+    hideLov();showToast(baxuri+' baxuri libere lansate în talpuit!');
+    await loadAll();
+  }catch(err){hideLov();showToast('Eroare: '+err.message);}
+}
+
 // ── AJUSTARE PRODUCȚIE (comenzi stoc - produs mai puțin decât planificat) ──
 let _adjustLineId=null,_adjustOldBax=0;
 function openAdjustProd(lineId,currentBax,e){
