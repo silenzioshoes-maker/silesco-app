@@ -577,7 +577,7 @@ async function downloadPDF(){
 function drawLabelPDF(doc,x,y,LW,LH,lbl,brand){
   const bv=`${lbl.prefix}/${lbl.art}/${lbl.size}`;
   const mm=v=>v/2.835;
-  doc.setDrawColor(200);doc.setLineWidth(0.15);doc.rect(x,y,LW,LH);
+  // Fara bordura/chenar in jurul etichetei (liniile sunt doar ghidaj imaginar, invizibile la print)
   const PAD_L=mm(17),PAD_R=mm(10),TOP_H=mm(52),BOT_H=LH-mm(52),TXT_MAX=mm(105);
   const FONT=12.5,LINE_H=mm(14);
 
@@ -679,18 +679,11 @@ const{createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
 async function loadOrders(){
-  const{data:relLines}=await sb.from('order_lines')
-    .select('order_id').in('production_status',['in_talpuit','gata','pregatit_livrare','finalizat']);
-  const ids=[...new Set((relLines||[]).map(l=>l.order_id).filter(Boolean))];
-  let data=[];
-  if(ids.length){
-    const r=await sb.from('orders')
-      .select('id,order_no,clients!orders_client_id_fkey(name,company_name)')
-      .in('id',ids)
-      .order('created_at',{ascending:false})
-      .limit(50);
-    data=r.data||[];
-  }
+  const{data}=await sb.from('orders')
+    .select('id,order_no,clients!orders_client_id_fkey(name,company_name)')
+    .not('status','in','("anulat")')
+    .order('created_at',{ascending:false})
+    .limit(200);
   const sel=document.getElementById('orderSelect');
   const cur=sel.value;
   sel.innerHTML='<option value="">— Selectează comanda —</option>';
