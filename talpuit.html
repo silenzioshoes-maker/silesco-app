@@ -650,6 +650,31 @@ function renderPregatit(lines){
   }).join('');
 }
 
+// Verifică dacă talpa/brântul consumat a scăzut sub prag și notifică management
+async function checkLowStockNotify(talpaId,brantId){
+  try{
+    const low=[];
+    const check=async(table,id,label)=>{
+      if(!id)return;
+      const{data:it}=await sb.from(table).select('cod,name,nume,stoc,min_alert_sz').eq('id',id).single();
+      if(!it)return;
+      const stoc=it.stoc||{};const min=it.min_alert_sz||{};
+      const lowSizes=Object.keys(min).filter(s=>min[s]>0&&(stoc[s]||0)<=min[s]);
+      if(lowSizes.length)low.push(label+' '+it.cod+(it.name||it.nume?' ('+(it.name||it.nume)+')':'')+' — mărimi: '+lowSizes.join(', '));
+    };
+    await check('talpi',talpaId,'Talpă');
+    await check('branturi',brantId,'Brânț');
+    if(low.length){
+      await sb.from('internal_messages').insert({
+        from_user_id:CU.id,to_department:'management',
+        subject:'Stoc scăzut',
+        message:'⚠ STOC SCĂZUT: '+low.join(' | '),
+        priority:'normal',is_read:false
+      }).catch(e=>console.warn('lowstock msg:',e));
+    }
+  }catch(e){console.warn('checkLowStock:',e);}
+}
+
 async function markLansat(lineId,orderId,isManual){
   showLov('Se lansează...');
   const table=isManual==='1'?'productie_manual':'order_lines';
@@ -698,8 +723,8 @@ function markTalpuitFromBtn(btn){
 async function markTalpuit(lineId,orderId,talpaId,brantId,ponytage){
   showLov('Se finalizează...');
   try{
-    // 1. Marchează articolul ca gata
-    const{error:lineErr}=await sb.from('order_lines').update({production_status:'gata'}).eq('id',lineId);
+    // 1. Lansare în talpuit -> status in_talpuit (apare în Producție 'in talpuit' + ambalat)
+    const{error:lineErr}=await sb.from('order_lines').update({production_status:'in_talpuit'}).eq('id',lineId);
     if(lineErr){hideLov();showToast('Eroare: '+lineErr.message);return;}
 
     // 2. Scade stoc talpi
@@ -731,6 +756,9 @@ async function markTalpuit(lineId,orderId,talpaId,brantId,ponytage){
         brant.stoc=stocNou;
       }
     }
+
+    // 3b. Verifică stoc scăzut și notifică management
+    await checkLowStockNotify(talpaId,brantId);
 
     // 4. Verifică dacă toate articolele comenzii sunt gata
     const{data:remaining}=await sb.from('order_lines')
