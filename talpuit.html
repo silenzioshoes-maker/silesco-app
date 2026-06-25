@@ -656,11 +656,19 @@ async function checkLowStockNotify(talpaId,brantId){
     const low=[];
     const check=async(table,id,label)=>{
       if(!id)return;
-      const{data:it}=await sb.from(table).select('cod,name,nume,stoc,min_alert_sz').eq('id',id).single();
+      const sel=table==='talpi'?'cod,name,nume,stoc,min_alert_sz,bax_pontaj,bax_alert':'cod,name,nume,stoc,min_alert_sz';
+      const{data:it}=await sb.from(table).select(sel).eq('id',id).single();
       if(!it)return;
       const stoc=it.stoc||{};const min=it.min_alert_sz||{};
       const lowSizes=Object.keys(min).filter(s=>min[s]>0&&(stoc[s]||0)<=min[s]);
       if(lowSizes.length)low.push(label+' '+it.cod+(it.name||it.nume?' ('+(it.name||it.nume)+')':'')+' — mărimi: '+lowSizes.join(', '));
+      // Verificare baxuri (doar talpi)
+      if(table==='talpi'&&it.bax_alert>0&&it.bax_pontaj&&Object.keys(it.bax_pontaj).length){
+        const bp=it.bax_pontaj;
+        const baxPerSize=Object.keys(bp).filter(s=>bp[s]>0).map(s=>Math.floor((stoc[s]||0)/bp[s]));
+        const baxPosibile=baxPerSize.length?Math.min(...baxPerSize):0;
+        if(baxPosibile<=it.bax_alert)low.push('Talpă '+it.cod+' — mai ajunge pentru '+baxPosibile+' baxuri');
+      }
     };
     await check('talpi',talpaId,'Talpă');
     await check('branturi',brantId,'Brânț');
