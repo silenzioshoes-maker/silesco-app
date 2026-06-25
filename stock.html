@@ -805,6 +805,37 @@ function renderMaterieGrid(elId,items,tip){
         </div>
         <button onclick="saveMinAlertSz('${item.id}','${tip}')" style="width:100%;padding:6px;border-radius:5px;border:1px solid #9C3A2B;background:#FDF4F2;color:#9C3A2B;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salvează alerte minime</button>
       </div>`:''}
+      ${tip==='talpi'&&entries.length?(()=>{
+        const stdPontaj={'39':1,'40':2,'41':3,'42':3,'43':2,'44':1};
+        const bp=item.bax_pontaj||stdPontaj;
+        const baxAlert=item.bax_alert||0;
+        // Calcul baxuri intregi posibile (marimea cea mai limitata)
+        const stocObj=Object.fromEntries(entries);
+        const baxPerSize=Object.keys(bp).filter(s=>bp[s]>0).map(s=>Math.floor((stocObj[s]||0)/bp[s]));
+        const baxPosibile=baxPerSize.length?Math.min(...baxPerSize):0;
+        const allSz=[...new Set([...Object.keys(bp),...entries.map(([s])=>s)])].sort((a,b)=>parseInt(a)-parseInt(b));
+        return `
+      <div style="margin-top:8px;background:#FBF8F0;border:1px solid #E8DCC0;border-radius:6px;padding:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:9px;font-weight:700;color:#8B6914;text-transform:uppercase;letter-spacing:1px">Pontaj per bax (referință)</div>
+          <div style="font-size:11px;font-weight:700;color:${baxPosibile<=baxAlert&&baxAlert>0?'#9C3A2B':'#1E4A2E'}">≈ ${baxPosibile} baxuri posibile</div>
+        </div>
+        <div style="display:flex;gap:0;border:1px solid #E8DCC0;border-radius:5px;overflow:hidden;margin-bottom:6px">
+          ${allSz.map(s=>`
+            <div style="flex:1;text-align:center;border-right:1px solid #E8DCC0;min-width:30px">
+              <div style="font-size:10px;font-weight:700;color:#8B6914;background:#F5ECD7;padding:2px;border-bottom:1px solid #E8DCC0">${s}</div>
+              <input type="number" min="0" value="${bp[s]||0}" id="baxpt_${item.id}_${s}"
+                style="width:100%;padding:3px 2px;border:none;text-align:center;font-size:11px;font-weight:700;color:#8B6914;background:#FBF8F0;outline:none"/>
+            </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:10px;color:#5A5248;font-weight:600;white-space:nowrap">Alertă sub</span>
+          <input type="number" min="0" value="${baxAlert}" id="baxalert_${item.id}"
+            style="width:50px;padding:4px;border:1px solid #E8DCC0;border-radius:5px;text-align:center;font-size:12px;font-weight:700;color:#8B6914;background:#fff;outline:none"/>
+          <span style="font-size:10px;color:#5A5248;font-weight:600;white-space:nowrap">baxuri</span>
+          <button onclick="saveBaxAlert('${item.id}')" style="flex:1;padding:5px;border-radius:5px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salvează pontaj + alertă</button>
+        </div>
+      </div>`;})():''}
       <div style="display:flex;gap:6px;margin-top:10px;align-items:center">
         <button onclick="editMaterie('${item.id}','${tip}')" style="flex:1;padding:7px;border-radius:6px;border:1px solid #B08D57;background:#F6F0E5;color:#8B6914;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Editează</button>
         <button onclick="openBulkEntry('${item.id}','${tip}','${item.cod}')" style="flex:1;padding:7px;border-radius:6px;border:1px solid #2F4A63;background:#E8EFF6;color:#2F4A63;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Intrare</button>
@@ -847,6 +878,22 @@ async function saveMinAlertSz(id,tip){
   const{error}=await sb.from(tip).update({min_alert_sz:newSz}).eq('id',id);
   if(error){console.warn('saveMinAlert:',error);showToast('Eroare: '+(error.message||'nu s-a salvat'));return;}
   showToast('Alerte salvate!');
+}
+
+async function saveBaxAlert(id){
+  // Citeste pontajul per bax din inputurile baxpt_ID_*
+  const bp={};
+  document.querySelectorAll('[id^="baxpt_'+id+'_"]').forEach(el=>{
+    const sz=el.id.replace('baxpt_'+id+'_','');
+    const v=parseInt(el.value)||0;
+    if(v>0)bp[sz]=v;
+  });
+  const alertEl=document.getElementById('baxalert_'+id);
+  const baxAlert=alertEl?parseInt(alertEl.value)||0:0;
+  const{error}=await sb.from('talpi').update({bax_pontaj:bp,bax_alert:baxAlert}).eq('id',id);
+  if(error){console.warn('saveBaxAlert:',error);showToast('Eroare: '+(error.message||'nu s-a salvat'));return;}
+  showToast('Pontaj și alertă salvate!');
+  await loadMaterii();
 }
 
 async function saveTalpaInline(){
