@@ -1058,7 +1058,7 @@ async function loadProdAlerts(){
   // ALERTE STOC SCĂZUT — talpi + branturi sub pragul minim per mărime
   {
     const[{data:talpi},{data:branturi}]=await Promise.all([
-      sb.from('talpi').select('id,cod,name,stoc,min_alert_sz'),
+      sb.from('talpi').select('id,cod,name,stoc,min_alert_sz,bax_pontaj,bax_alert'),
       sb.from('branturi').select('id,cod,nume,stoc,min_alert_sz')
     ]);
     const lowItems=[];
@@ -1073,6 +1073,22 @@ async function loadProdAlerts(){
     if(lowItems.length){
       const detail=lowItems.slice(0,3).map(i=>i.cod+' ('+i.sizes.join(',')+')').join(', ')+(lowItems.length>3?' +'+(lowItems.length-3):'');
       alerts.push({color:'#7A2418',bg:'#F5EAE8',border:'#9C3A2B',icon:'⚠',text:`<strong>${lowItems.length} materiale</strong> cu stoc scăzut: ${detail}`,onclick:`window.location.href='stock.html'`});
+    }
+    // ALERTE BAXURI — talpi care mai pot face doar X baxuri (sub pragul setat)
+    const lowBax=[];
+    (talpi||[]).forEach(t=>{
+      const baxAlert=t.bax_alert||0;
+      if(baxAlert<=0)return;
+      const bp=t.bax_pontaj;
+      if(!bp||!Object.keys(bp).length)return;
+      const stoc=t.stoc||{};
+      const baxPerSize=Object.keys(bp).filter(s=>bp[s]>0).map(s=>Math.floor((stoc[s]||0)/bp[s]));
+      const baxPosibile=baxPerSize.length?Math.min(...baxPerSize):0;
+      if(baxPosibile<=baxAlert)lowBax.push({cod:t.cod,baxuri:baxPosibile});
+    });
+    if(lowBax.length){
+      const detail=lowBax.slice(0,3).map(i=>i.cod+' ('+i.baxuri+' bax)').join(', ')+(lowBax.length>3?' +'+(lowBax.length-3):'');
+      alerts.push({color:'#7A2418',bg:'#F5EAE8',border:'#9C3A2B',icon:'⚠',text:`<strong>${lowBax.length} tălpi</strong> aproape de epuizare: ${detail}`,onclick:`window.location.href='stock.html'`});
     }
   }
   const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat','finalizat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
