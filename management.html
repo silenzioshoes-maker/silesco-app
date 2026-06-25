@@ -1055,6 +1055,26 @@ async function loadProdAlerts(){
       document.getElementById('impBadge').textContent=nr;document.getElementById('impBadge').style.display='inline-block';
     }
   }
+  // ALERTE STOC SCĂZUT — talpi + branturi sub pragul minim per mărime
+  {
+    const[{data:talpi},{data:branturi}]=await Promise.all([
+      sb.from('talpi').select('id,cod,name,stoc,min_alert_sz'),
+      sb.from('branturi').select('id,cod,nume,stoc,min_alert_sz')
+    ]);
+    const lowItems=[];
+    const checkLow=(items,label)=>{
+      (items||[]).forEach(it=>{
+        const stoc=it.stoc||{};const min=it.min_alert_sz||{};
+        const lowSizes=Object.keys(min).filter(s=>min[s]>0&&(stoc[s]||0)<=min[s]);
+        if(lowSizes.length)lowItems.push({cod:it.cod,name:it.name||it.nume||'',label,sizes:lowSizes});
+      });
+    };
+    checkLow(talpi,'Talpă');checkLow(branturi,'Brânț');
+    if(lowItems.length){
+      const detail=lowItems.slice(0,3).map(i=>i.cod+' ('+i.sizes.join(',')+')').join(', ')+(lowItems.length>3?' +'+(lowItems.length-3):'');
+      alerts.push({color:'#7A2418',bg:'#F5EAE8',border:'#9C3A2B',icon:'⚠',text:`<strong>${lowItems.length} materiale</strong> cu stoc scăzut: ${detail}`,onclick:`window.location.href='stock.html'`});
+    }
+  }
   const intarz=allOrders.filter(o=>o.delivery_date&&!['livrat','anulat','finalizat'].includes(o.status)&&Math.ceil((new Date(o.delivery_date)-new Date())/86400000)<0).length;
   if(intarz>0){
     alerts.push({color:'#7A2418',bg:'#F5EAE8',border:'#9C3A2B',icon:'⚠',text:`<strong>${intarz} comenzi</strong> au depășit termenul de livrare`,onclick:`showSection('orders',document.getElementById('nav_orders'));setFilter('intarziate',document.querySelector('.filter-btn[onclick*=intarziate]'));`});
