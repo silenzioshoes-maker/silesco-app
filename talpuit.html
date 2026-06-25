@@ -308,7 +308,7 @@ async function loadAll(){
   showLov('Se încarcă...');
   const[{data:lines},{data:manual}]=await Promise.all([
     sb.from('order_lines')
-      .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,sort_order,talpa_id,brant_id,products(code,name)')
+      .select('id,product_id,free_model,color,ponytage,total_pairs,notes,production_status,workshop,order_id,sort_order,talpa_id,brant_id,from_stock,nr_baxuri,nr_baxuri_lansate,pontaj_bax,products(code,name)')
       .in('production_status',['cusut_gata','pregatit_lansat','in_talpuit','gata'])
       .order('sort_order',{ascending:true}),
     sb.from('productie_manual')
@@ -327,6 +327,21 @@ async function loadAll(){
   }
   (lines||[]).forEach(l=>l.orders=ordersMap[l.order_id]||null);
   (manual||[]).forEach(m=>{m._manual=true;m.orders={order_no:m.label||'Producție internă',clients:{company_name:'Producție internă',name:''}};});
+
+  // Rezervari (stock_allocations) pentru liniile de stoc — pentru lansare partiala
+  const stockLineIds=(lines||[]).filter(l=>l.from_stock).map(l=>l.id);
+  let allocByLine={};
+  if(stockLineIds.length){
+    const{data:allocs}=await sb.from('stock_allocations')
+      .select('id,client_name,nr_baxuri,total_pairs,status,lansat,stock_line_id')
+      .in('stock_line_id',stockLineIds)
+      .neq('status','anulat');
+    (allocs||[]).forEach(a=>{
+      if(!allocByLine[a.stock_line_id])allocByLine[a.stock_line_id]=[];
+      allocByLine[a.stock_line_id].push(a);
+    });
+  }
+  (lines||[]).forEach(l=>l._allocs=allocByLine[l.id]||[]);
 
   const cusutGata=(lines||[]).filter(l=>l.production_status==='cusut_gata');
   const pregatit=[
@@ -371,6 +386,7 @@ function renderReceptie(lines){
               <div class="art-name">${getModName(l)} · ${l.color||'—'}</div>
               <div class="art-pairs">${l.total_pairs} per. · ${l.workshop||'intern'}</div>
               <div class="pontaj">${renderPontaj(l.ponytage)}</div>
+              ${l.from_stock&&l.nr_baxuri?`<div style="margin-top:6px"><button onclick="openAdjustProd('${l.id}',${l.nr_baxuri})" style="font-size:10px;font-weight:700;color:#8B6914;background:#F6F0E5;border:1px solid #B08D57;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif">Ajustează producția (${l.nr_baxuri} bax)</button></div>`:''}
             </div>
             <button class="btn-receptie" onclick="markReceptionat('${l.id}')">Recepționat ✓</button>
           </div>`).join('')}
@@ -402,6 +418,16 @@ function renderLansat(lines){
         ${g.lines.map(l=>{
           const talpa=allTalpi.find(t=>t.id===l.talpa_id);
           const brant=allBranturi.find(t=>t.id===l.brant_id);
+          // Etichete client pentru articole de stoc (rezervari lansate + stoc liber)
+          let clientLabels='';
+          if(l.from_stock&&l._allocs){
+            const lansate=l._allocs.filter(a=>a.lansat);
+            const baxRezLansate=lansate.reduce((s,a)=>s+(a.nr_baxuri||0),0);
+            const lansateDinLiber=Math.max(0,(l.nr_baxuri_lansate||0)-baxRezLansate);
+            const chips=lansate.map(a=>`<span style="font-size:11px;font-weight:700;color:#23394F;background:#E8EFF6;border:1px solid rgba(47,74,99,.25);padding:2px 8px;border-radius:4px">${a.client_name||'Client'} (${a.nr_baxuri||1} bax)</span>`);
+            if(lansateDinLiber>0)chips.push(`<span style="font-size:11px;font-weight:700;color:#5A5248;background:#F4F1EA;border:1px solid #DDD7CE;padding:2px 8px;border-radius:4px">Stoc global (${lansateDinLiber} bax)</span>`);
+            if(chips.length)clientLabels=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${chips.join('')}</div>`;
+          }
           return `<div class="art-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
               <div style="flex:1">
@@ -409,6 +435,7 @@ function renderLansat(lines){
                 <div class="art-pairs">${l.total_pairs} per. · ${l.workshop||'intern'}</div>
                 ${talpa?`<div style="font-size:13px;color:#333333;margin-top:2px">Talpă: <strong>${talpa.cod}</strong>${brant?' · Branț: <strong>'+brant.cod+'</strong>':''}</div>`:''}
                 <div class="pontaj">${renderPontaj(l.ponytage)}</div>
+                ${clientLabels}
               </div>
               <span style="flex-shrink:0;font-size:13px;font-weight:700;padding:3px 10px;border-radius:4px;background:#EAF0EC;color:#1E4A2E">Lansat ✓</span>
             </div>
@@ -632,6 +659,13 @@ function renderPregatit(lines){
     const entries=l.ponytage?Object.entries(l.ponytage).filter(([,q])=>q>0):[];
     const pontajHtml=entries.map(([s,q])=>`<div class="pchip">${s}×${q}</div>`).join('');
     const mod=l.products?.code?'Art. '+l.products.code:l.free_model||'—';
+
+    // ── ARTICOL DE STOC: lansare partiala pe rezervari ──
+    if(l.from_stock&&!l._manual&&l.nr_baxuri){
+      return renderPregatitStock(l,o,mod,pontajHtml);
+    }
+
+    // ── ARTICOL NORMAL (comanda-client): lansare simpla, neschimbata ──
     return `<div class="card">
       <div class="card-header">
         <div class="order-no">${o.order_no||'—'}</div>
@@ -648,6 +682,93 @@ function renderPregatit(lines){
       </div>
     </div>`;
   }).join('');
+}
+
+// Randare articol de stoc cu lansare partiala pe rezervari + stoc liber
+function renderPregatitStock(l,o,mod,pontajHtml){
+  const totalBax=l.nr_baxuri||0;
+  const lansate=l.nr_baxuri_lansate||0;
+  const ramase=Math.max(0,totalBax-lansate);
+  const allocs=l._allocs||[];
+  // Rezervari nelancate
+  const rezNelancate=allocs.filter(a=>!a.lansat);
+  const baxRezervate=allocs.reduce((s,a)=>s+(a.nr_baxuri||0),0);
+  const baxRezNelancate=rezNelancate.reduce((s,a)=>s+(a.nr_baxuri||0),0);
+  // Baxuri libere ramase = total - rezervate_total - (lansate care erau din liber)
+  // lansate din liber = lansate - rezervari deja lansate
+  const baxRezLansate=allocs.filter(a=>a.lansat).reduce((s,a)=>s+(a.nr_baxuri||0),0);
+  const lansateDinLiber=Math.max(0,lansate-baxRezLansate);
+  const baxLibereTotal=Math.max(0,totalBax-baxRezervate);
+  const baxLibereRamase=Math.max(0,baxLibereTotal-lansateDinLiber);
+
+  const rezHTML=rezNelancate.map(a=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:#E8EFF6;border:1px solid rgba(47,74,99,.25);border-radius:7px;margin-bottom:6px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#23394F">${a.client_name||'Client'}</div>
+        <div style="font-size:11px;color:#5A5248">${a.nr_baxuri||1} bax</div>
+      </div>
+      <button onclick="lanseazaPartial('${l.id}','${a.id}',${a.nr_baxuri||1})" style="padding:7px 14px;border-radius:7px;border:none;background:#2F4A63;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Lansează</button>
+    </div>`).join('');
+
+  const liberHTML=baxLibereRamase>0?`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:#F4F1EA;border:1px solid #DDD7CE;border-radius:7px;margin-bottom:6px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#5A5248">Stoc liber</div>
+        <div style="font-size:11px;color:#9E9890">${baxLibereRamase} bax disponibile</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" min="1" max="${baxLibereRamase}" value="1" id="liber_${l.id}" style="width:48px;padding:6px;border:1px solid #B08D57;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:#111;font-family:'Inter',sans-serif;outline:none"/>
+        <button onclick="lanseazaLiber('${l.id}',${baxLibereRamase})" style="padding:7px 12px;border-radius:7px;border:none;background:#1E4A2E;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Lansează</button>
+      </div>
+    </div>`:'';
+
+  const nimicDeLanst=!rezNelancate.length&&baxLibereRamase<=0;
+
+  return `<div class="card">
+    <div class="card-header">
+      <div class="order-no">${o.order_no||'—'} · STOC</div>
+      <div class="client">${mod} · ${l.color||'—'}</div>
+      <div style="font-size:12px;color:#5A5248;margin-top:4px">${totalBax} baxuri produse · <span style="color:#1E4A2E;font-weight:700">${lansate} lansate</span> · <span style="color:#9C3A2B;font-weight:700">${ramase} rămase</span></div>
+    </div>
+    <div style="padding:14px 16px">
+      <div class="pontaj" style="margin-bottom:10px">${pontajHtml}</div>
+      ${rezNelancate.length?`<div style="font-size:10px;font-weight:700;color:#9E9890;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Rezervări de lansat</div>${rezHTML}`:''}
+      ${liberHTML}
+      ${nimicDeLanst?'<div style="font-size:12px;color:#9E9890;text-align:center;padding:8px;font-style:italic">Toate baxurile au fost lansate</div>':''}
+    </div>
+  </div>`;
+}
+
+// ── AJUSTARE PRODUCȚIE (comenzi stoc - produs mai puțin) ──
+function openAdjustProd(lineId,currentBax){
+  const nou=prompt('Câte baxuri s-au produs efectiv?\n(planificat: '+currentBax+' baxuri)',currentBax);
+  if(nou===null)return;
+  const n=parseInt(nou);
+  if(isNaN(n)||n<0){alert('Număr invalid.');return;}
+  if(n===currentBax)return;
+  confirmAdjustProd(lineId,currentBax,n);
+}
+async function confirmAdjustProd(lineId,oldBax,newBax){
+  showLov('Se ajustează...');
+  try{
+    const{data:l}=await sb.from('order_lines').select('id,order_id,nr_baxuri,pontaj_bax,notes').eq('id',lineId).single();
+    if(!l){hideLov();showToast('Linie negăsită.');return;}
+    const pb=l.pontaj_bax||{};
+    const perBax=Object.values(pb).reduce((s,q)=>s+(parseInt(q)||0),0);
+    const newPony={};
+    Object.keys(pb).forEach(sz=>{newPony[sz]=(parseInt(pb[sz])||0)*newBax;});
+    const newTotal=perBax*newBax;
+    const ob=l.nr_baxuri||oldBax;
+    const note=(l.notes?l.notes+' ':'')+'[Producție ajustată '+ob+'→'+newBax+' baxuri]';
+    const{error}=await sb.from('order_lines').update({nr_baxuri:newBax,ponytage:newPony,total_pairs:newTotal,notes:note}).eq('id',lineId);
+    if(error){hideLov();showToast('Eroare: '+error.message);return;}
+    const{data:allLines}=await sb.from('order_lines').select('total_pairs,unit_price').eq('order_id',l.order_id);
+    const tp=(allLines||[]).reduce((s,x)=>s+(x.total_pairs||0),0);
+    const tv=(allLines||[]).reduce((s,x)=>s+((x.total_pairs||0)*(x.unit_price||0)),0);
+    await sb.from('orders').update({total_pairs:tp,total_value:tv,updated_at:new Date().toISOString()}).eq('id',l.order_id);
+    hideLov();showToast('Producție ajustată la '+newBax+' baxuri!');
+    await loadAll();
+  }catch(e){hideLov();showToast('Eroare: '+e.message);}
 }
 
 // Verifică dacă talpa/brântul consumat a scăzut sub prag și notifică management
@@ -681,6 +802,76 @@ async function checkLowStockNotify(talpaId,brantId){
       }).catch(e=>console.warn('lowstock msg:',e));
     }
   }catch(e){console.warn('checkLowStock:',e);}
+}
+
+// ── LANSARE PARȚIALĂ STOC ──────────────────────────────────
+// Consumă tălpi/branturi pentru un număr de baxuri și actualizează nr_baxuri_lansate
+async function consumaSiInregistreaza(lineId,baxuri){
+  const{data:line}=await sb.from('order_lines')
+    .select('id,order_id,talpa_id,brant_id,pontaj_bax,nr_baxuri,nr_baxuri_lansate,production_status').eq('id',lineId).single();
+  if(!line)throw new Error('Linie negăsită');
+  const pb=line.pontaj_bax||{};
+  // Consum pe mărime = pontaj_bax × baxuri lansate acum
+  const consum={};
+  Object.keys(pb).forEach(sz=>{consum[sz]=(parseInt(pb[sz])||0)*baxuri;});
+
+  // Scade tălpi
+  if(line.talpa_id){
+    const talpa=allTalpi.find(t=>t.id===line.talpa_id);
+    if(talpa&&talpa.stoc){
+      const stocNou={...talpa.stoc};
+      Object.keys(consum).forEach(sz=>{if(stocNou[sz]!==undefined)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-consum[sz]);});
+      await sb.from('talpi').update({stoc:stocNou}).eq('id',line.talpa_id);
+      talpa.stoc=stocNou;
+    }
+  }
+  // Scade branturi
+  if(line.brant_id){
+    const brant=allBranturi.find(t=>t.id===line.brant_id);
+    if(brant&&brant.stoc){
+      const stocNou={...brant.stoc};
+      Object.keys(consum).forEach(sz=>{if(stocNou[sz]!==undefined)stocNou[sz]=Math.max(0,(parseInt(stocNou[sz])||0)-consum[sz]);});
+      await sb.from('branturi').update({stoc:stocNou}).eq('id',line.brant_id);
+      brant.stoc=stocNou;
+    }
+  }
+
+  // Actualizează nr_baxuri_lansate
+  const noulLansate=(line.nr_baxuri_lansate||0)+baxuri;
+  const updates={nr_baxuri_lansate:noulLansate};
+  // Dacă toate baxurile au fost lansate -> in_talpuit (dispare din "Lansat")
+  if(noulLansate>=(line.nr_baxuri||0))updates.production_status='in_talpuit';
+  await sb.from('order_lines').update(updates).eq('id',lineId);
+
+  // Verifică stoc scăzut
+  await checkLowStockNotify(line.talpa_id,line.brant_id);
+}
+
+// Lansează o rezervare (client) — marchează alocarea ca lansată
+async function lanseazaPartial(lineId,allocId,baxuri){
+  showLov('Se lansează '+baxuri+' bax...');
+  try{
+    await consumaSiInregistreaza(lineId,baxuri);
+    await sb.from('stock_allocations').update({lansat:true,lansat_at:new Date().toISOString()}).eq('id',allocId);
+    hideLov();showToast(baxuri+' bax lansate în talpuit!');
+    await loadMateriale();
+    await loadAll();
+  }catch(e){hideLov();showToast('Eroare: '+e.message);}
+}
+
+// Lansează baxuri din stocul liber (nealocat) — rămân stoc global
+async function lanseazaLiber(lineId,maxBax){
+  const inp=document.getElementById('liber_'+lineId);
+  const baxuri=inp?parseInt(inp.value)||0:0;
+  if(baxuri<=0){showToast('Introdu un număr valid.');return;}
+  if(baxuri>maxBax){showToast('Maxim '+maxBax+' baxuri disponibile.');return;}
+  showLov('Se lansează '+baxuri+' bax...');
+  try{
+    await consumaSiInregistreaza(lineId,baxuri);
+    hideLov();showToast(baxuri+' bax lansate (stoc liber)!');
+    await loadMateriale();
+    await loadAll();
+  }catch(e){hideLov();showToast('Eroare: '+e.message);}
 }
 
 async function markLansat(lineId,orderId,isManual){
