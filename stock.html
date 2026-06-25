@@ -896,6 +896,35 @@ async function saveBaxAlert(id){
   await loadMaterii();
 }
 
+// Verifica dupa modificare manuala de stoc daca materialul a scazut sub limita -> notifica management
+async function checkStockAlertAfterEdit(id,tip){
+  if(tip!=='talpi'&&tip!=='branturi')return;
+  try{
+    const sel=tip==='talpi'?'cod,name,nume,stoc,min_alert_sz,bax_pontaj,bax_alert':'cod,name,nume,stoc,min_alert_sz';
+    const{data:it}=await sb.from(tip).select(sel).eq('id',id).single();
+    if(!it)return;
+    const stoc=it.stoc||{};const min=it.min_alert_sz||{};
+    const low=[];
+    const lowSizes=Object.keys(min).filter(s=>min[s]>0&&(stoc[s]||0)<=min[s]);
+    if(lowSizes.length)low.push((tip==='talpi'?'Talpă ':'Brânț ')+it.cod+(it.name||it.nume?' ('+(it.name||it.nume)+')':'')+' — mărimi: '+lowSizes.join(', '));
+    // Verificare baxuri (doar talpi)
+    if(tip==='talpi'&&it.bax_alert>0&&it.bax_pontaj&&Object.keys(it.bax_pontaj).length){
+      const bp=it.bax_pontaj;
+      const baxPerSize=Object.keys(bp).filter(s=>bp[s]>0).map(s=>Math.floor((stoc[s]||0)/bp[s]));
+      const baxPosibile=baxPerSize.length?Math.min(...baxPerSize):0;
+      if(baxPosibile<=it.bax_alert)low.push('Talpă '+it.cod+' — mai ajunge pentru '+baxPosibile+' baxuri');
+    }
+    if(low.length){
+      await sb.from('internal_messages').insert({
+        from_user_id:CU.id,to_department:'management',
+        subject:'Stoc scăzut',
+        message:'⚠ STOC SCĂZUT: '+low.join(' | '),
+        priority:'normal',is_read:false
+      }).catch(e=>console.warn('lowstock msg:',e));
+    }
+  }catch(e){console.warn('checkStockAlert:',e);}
+}
+
 async function saveTalpaInline(){
   const cod=document.getElementById('tCod').value.trim();
   if(!cod){showToast('Completează codul!');return;}
@@ -1049,6 +1078,7 @@ async function saveBulkEntry(id,tip,perMarime){
   if(error){hideLov();showToast('Eroare: '+error.message);return;}
   window._bulkExistStoc=null;
   Object.keys(bulkVals).forEach(k=>delete bulkVals[k]);
+  await checkStockAlertAfterEdit(id,tip);
   hideLov();closeModal('bulkModal');showToast('Stoc actualizat!');await loadMaterii();
 }
 
@@ -1079,6 +1109,8 @@ async function saveMaterie(){
   }else{
     await sb.from(curMaterie).insert(payload);
   }
+  // Verifica alerta dupa modificare manuala (doar la edit pe talpi/branturi)
+  if(mEditId&&(curMaterie==='talpi'||curMaterie==='branturi'))await checkStockAlertAfterEdit(mEditId,curMaterie);
   hideLov();closeModal('materieModal');showToast('Salvat!');
   window._saving=false;
   if(['talpi','branturi','sireturi','cutii'].includes(curMaterie)){
