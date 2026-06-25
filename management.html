@@ -1277,6 +1277,35 @@ async function saveNote(){
   }
 }
 
+// ── SCHIMBARE STATUS MANUAL (override din dashboard) ──
+async function changeStatusManual(orderId,newStatus,selEl){
+  if(!newStatus)return;
+  const o=allOrders.find(x=>x.id===orderId);
+  const label=selEl?.options[selEl.selectedIndex]?.text||newStatus;
+  if(!confirm('Schimbi manual statusul comenzii '+(o?.order_no||'')+' la "'+label+'"?\n\nAcest lucru va actualiza și statusul articolelor.'))
+    {if(selEl)selEl.value='';return;}
+  showLov('Se schimbă statusul...');
+  try{
+    // Mapare status comanda -> production_status pe linii (ca afisarea derivata sa fie consistenta)
+    const STATUS_TO_PS={
+      nou:null,aprobat:null,
+      la_croit:'la_croit',la_cusut:'la_cusut',la_talpuit:'in_talpuit',
+      la_impachetat:'in_talpuit',gata_livrare:'pregatit_livrare',finalizat:'finalizat',anulat:null
+    };
+    // 1. Actualizează statusul comenzii
+    const{error:ordErr}=await sb.from('orders').update({status:newStatus,updated_at:new Date().toISOString()}).eq('id',orderId);
+    if(ordErr){hideLov();showToast('Eroare: '+ordErr.message);return;}
+    // 2. Propagă pe linii (doar dacă maparea există — nou/aprobat/anulat nu ating liniile)
+    const ps=STATUS_TO_PS[newStatus];
+    if(ps){
+      await sb.from('order_lines').update({production_status:ps}).eq('order_id',orderId);
+    }
+    hideLov();showToast('Status schimbat la "'+label+'"!');
+    closeModal('orderModal');
+    await loadAll();
+  }catch(e){hideLov();showToast('Eroare: '+e.message);}
+}
+
 async function syncOrderStatuses(){
   const RANK={la_croit:1,la_cusut:2,la_cusut_extern:2,cusut_extern_finalizat:2,receptie_fete:2,cusut_gata:2,pregatit_lansat:3,in_talpuit:3,gata:3,pregatit_livrare:4,finalizat:5};
   const BY_RANK={1:'la_croit',2:'la_cusut',3:'la_talpuit',4:'gata_livrare',5:'finalizat'};
@@ -1561,17 +1590,31 @@ function _buildOrdersHTML(orders,prefix='ord'){
             <div class="detail-section">
               <div class="detail-label">Acțiuni Management</div>
               ${actiuni}
-              ${isStock&&!o.allocated_to_client?`<button class="action-btn ab-blue" onclick="openAllocate('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>Alocă la client</button>`:''}
               <button class="action-btn ab-black" onclick="genFisaProductie('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><polyline points="15 2 15 7 20 7"/></svg>Fișă de Producție</button>
               <button class="action-btn ab-blue" onclick="openMsgFromOrder('${o.id}','${o.order_no||'—'}',event)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Trimite mesaj despre comandă</button>
-              <button class="action-btn ab-gold" onclick="genFisaClient('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Fișă client (cu prețuri)</button>
+              ${!isStock?`<button class="action-btn ab-gold" onclick="genFisaClient('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Fișă client (cu prețuri)</button>`:''}
               <div style="display:flex;gap:8px;margin-top:4px">
-                <button class="action-btn ab-blue" style="flex:1;margin:0" onclick="openAtelier('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>Atelier extern</button>
+                ${!isStock?`<button class="action-btn ab-blue" style="flex:1;margin:0" onclick="openAtelier('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>Atelier extern</button>`:''}
                 <button class="action-btn ab-gold" style="flex:1;margin:0" onclick="togglePriority('${o.id}','${o.priority||'normal'}',event)"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${isUrgent?'Anulează urgent':'Marchează urgent'}</button>
               </div>
               <div style="display:flex;gap:8px;margin-top:8px">
                 <button class="action-btn ab-outline" style="flex:1;margin:0" onclick="openEditOrder('${o.id}',event)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editează</button>
                 <button class="action-btn ab-red" style="flex:1;margin:0" onclick="openDelete('${o.id}',event)"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>Șterge</button>
+              </div>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px solid #EDE8DF">
+                <div style="font-size:10px;font-weight:700;color:#9E9890;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Schimbă status manual</div>
+                <select onchange="changeStatusManual('${o.id}',this.value,this)" style="width:100%;padding:9px 11px;border:1.5px solid #C8C0B8;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;color:#111111;background:#fff;cursor:pointer;outline:none">
+                  <option value="">— Selectează status —</option>
+                  <option value="nou">Nou</option>
+                  <option value="aprobat">Aprobat</option>
+                  <option value="la_croit">La croit</option>
+                  <option value="la_cusut">La cusut</option>
+                  <option value="la_talpuit">La talpuit</option>
+                  <option value="la_impachetat">La ambalat</option>
+                  <option value="gata_livrare">Gata livrare</option>
+                  <option value="finalizat">Finalizat</option>
+                  <option value="anulat">Anulat</option>
+                </select>
               </div>
               ${o.notes?`<div style="margin-top:10px;padding:8px 10px;background:#F4F1EA;border-radius:6px;font-size:11px;color:#3A3530"><strong>Obs:</strong> ${o.notes}</div>`:''}
             </div>
