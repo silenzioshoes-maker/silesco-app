@@ -846,10 +846,6 @@ async function saveMinAlertSz(id,tip){
   });
   const{error}=await sb.from(tip).update({min_alert_sz:newSz}).eq('id',id);
   if(error){console.warn('saveMinAlert:',error);showToast('Eroare: '+(error.message||'nu s-a salvat'));return;}
-  // Update local
-  const arr=tip==='talpi'?allMaterii?.talpi||[]:allMaterii?.branturi||[];
-  const item=arr.find(x=>x.id===id);
-  if(item)item.min_alert_sz=newSz;
   showToast('Alerte salvate!');
 }
 
