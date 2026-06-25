@@ -298,11 +298,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
   <!-- ORDERS -->
   <div id="vOrders" style="display:none">
 
-    <!-- NOTITE COMPACTE (in locul fostului status bar) -->
-    <div id="agentNoteBar" style="background:#1A1A1A;padding:8px 16px;display:flex;align-items:center;gap:10px;min-height:44px">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      <div id="agentNotePreview" onclick="showV('note')" style="flex:1;font-size:12px;color:rgba(255,255,255,.5);line-height:1.4;cursor:pointer;max-height:56px;overflow:hidden">Nici o notita. Apasa pentru a adauga...</div>
-      <button onclick="showV('note')" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;font-family:Inter,sans-serif;flex-shrink:0">Edit</button>
+    <!-- NOTITE INLINE EDITABILE -->
+    <div style="background:#1A1A1A;padding:10px 16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px">Notite</span>
+        <span id="agentNoteStatus" style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto"></span>
+      </div>
+      <textarea id="agentNotepad" placeholder="Noteaza ceva important... (se salveaza automat)" oninput="agentNoteChanged()" style="width:100%;min-height:64px;max-height:140px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 12px;font-size:13px;font-family:Inter,sans-serif;color:#fff;resize:vertical;outline:none;line-height:1.5;box-sizing:border-box"></textarea>
     </div>
 
     <div class="wrap">
@@ -553,17 +556,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
   </div>
 </div>
 
-<!-- SCREEN: NOTITE -->
-<div id="vNote" style="display:none">
-  <div class="wrap" style="display:flex;flex-direction:column;min-height:calc(100vh - 120px)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-top:4px">
-      <div class="sec-label" style="margin:0">Notitele mele</div>
-      <button onclick="saveAgentNote()" style="padding:7px 16px;border-radius:7px;border:none;background:#111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salveaza</button>
-    </div>
-    <textarea id="agentNotepad" placeholder="Noteaza ceva important..." style="flex:1;min-height:60vh;width:100%;border:1.5px solid #DDD7CE;border-radius:10px;padding:14px;font-size:14px;font-family:'Inter',sans-serif;color:#2A2620;resize:none;outline:none;background:#FDFCFB;line-height:1.7;box-sizing:border-box"></textarea>
-  </div>
-</div>
-
 <script>
 const SURL='https://nprpwaxijtbjkxdhdxmq.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wcnB3YXhpanRiamt4ZGhkeG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODc3MzIsImV4cCI6MjA5NTU2MzczMn0.Ae8_C-3ke-KBTgIy9xcJZeDNFaR3Q9vTkoPxC6AbAg0';
@@ -647,7 +639,7 @@ function showLogin(){
 
 // ── VIEWS ─────────────────────────────────────────────────────
 function showV(n){
-  ['vOrders','vNew','vStoc','vMesaje','vNote'].forEach(v=>{const el=document.getElementById(v);if(el)el.style.display='none';});
+  ['vOrders','vNew','vStoc','vMesaje'].forEach(v=>{const el=document.getElementById(v);if(el)el.style.display='none';});
   ['orders','new','stoc','mesaje'].forEach(x=>document.getElementById('n_'+x)?.classList.remove('active'));
   if(n==='orders'){
     document.getElementById('vOrders').style.display='block';
@@ -666,49 +658,41 @@ function showV(n){
     loadStoc();
   }else if(n==='mesaje'){
     window.location.href='/agent-messages.html';
-  }else if(n==='note'){
-    document.getElementById('vNote').style.display='block';
-    document.getElementById('hTitle').textContent='Notitele mele';
-    loadAgentNote();
   }
 }
 
-// ── NOTITE AGENT ──
+// ── NOTITE AGENT (inline autosave) ──
+let _agentNoteId=null,_agentNoteTimer=null;
 async function loadAgentNote(){
-  const{data}=await sb.from('management_notes').select('id,content').eq('user_id',CU.id).order('updated_at',{ascending:false}).limit(1).maybeSingle();
-  const el=document.getElementById('agentNotepad');
-  if(el&&data?.content)el.value=data.content;
-  if(data&&el)el._noteId=data.id;
-  // Actualizeaza preview in statusbar
-  const prev=document.getElementById('agentNotePreview');
-  if(prev){
-    const txt=data?.content?.trim();
-    if(txt){
-      // Arata primele 3-4 randuri
-      prev.textContent=txt.split('\n').slice(0,4).join(' · ').slice(0,150);
-      prev.style.color='rgba(255,255,255,.7)';
-    }else{
-      prev.textContent='Nici o notita. Apasa pentru a adauga...';
-      prev.style.color='rgba(255,255,255,.4)';
-    }
-  }
+  try{
+    const{data}=await sb.from('management_notes').select('id,content').eq('user_id',CU.id).order('updated_at',{ascending:false}).limit(1).maybeSingle();
+    const el=document.getElementById('agentNotepad');
+    if(el&&data){el.value=data.content||'';_agentNoteId=data.id;}
+  }catch(e){console.warn('loadNote:',e);}
+}
+function agentNoteChanged(){
+  const st=document.getElementById('agentNoteStatus');
+  if(st)st.textContent='se scrie...';
+  clearTimeout(_agentNoteTimer);
+  _agentNoteTimer=setTimeout(saveAgentNote,800);
 }
 async function saveAgentNote(){
   const el=document.getElementById('agentNotepad');
   if(!el)return;
-  const noteId=el._noteId;
   const content=el.value;
-  if(noteId){
-    await sb.from('management_notes').update({content,updated_at:new Date().toISOString()}).eq('id',noteId);
-  }else{
-    const{data}=await sb.from('management_notes').insert({user_id:CU.id,content}).select('id').single();
-    if(data&&el)el._noteId=data.id;
+  const st=document.getElementById('agentNoteStatus');
+  try{
+    if(_agentNoteId){
+      await sb.from('management_notes').update({content,updated_at:new Date().toISOString()}).eq('id',_agentNoteId);
+    }else{
+      const{data}=await sb.from('management_notes').insert({user_id:CU.id,content}).select('id').single();
+      if(data)_agentNoteId=data.id;
+    }
+    if(st){st.textContent='salvat ✓';setTimeout(()=>{if(st)st.textContent='';},1500);}
+  }catch(e){
+    console.warn('saveNote:',e);
+    if(st)st.textContent='eroare salvare';
   }
-  const t=document.createElement('div');
-  t.textContent='Notita salvata!';
-  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:999';
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2000);
 }
 
 // ── PRODUSE ───────────────────────────────────────────────────
