@@ -500,32 +500,64 @@ body{font-family:'Inter',system-ui,sans-serif;background:#F4F1EA;min-height:100v
   </div>
 
   <!-- MODAL REZERVARE -->
-  <div id="rezervareModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
-    <div style="background:#FAF8F4;border-radius:12px;padding:24px;width:90%;max-width:380px">
-      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Rezerva</div>
-      <div id="rezervareInfo" style="font-size:13px;color:#5A5248;margin-bottom:12px"></div>
-      <div id="rezervareNrBaxWrap" style="display:none;margin-bottom:12px">
-        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Numar baxuri</div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <button onclick="adjRezBax(-1)" style="width:36px;height:36px;border-radius:6px;border:1px solid #DDD7CE;background:#fff;font-size:18px;cursor:pointer">−</button>
-          <span id="rezervareNrBax" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#111;min-width:30px;text-align:center">1</span>
-          <button onclick="adjRezBax(1)" style="width:36px;height:36px;border-radius:6px;border:1px solid #DDD7CE;background:#fff;font-size:18px;cursor:pointer">+</button>
-          <span id="rezervareBaxInfo" style="font-size:11px;color:#1E4A2E;font-weight:600"></span>
+  <div id="splitModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:16px;overflow-y:auto">
+    <div style="background:#FAF8F4;border-radius:12px;padding:22px;width:100%;max-width:420px;max-height:92vh;overflow-y:auto">
+      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#111;margin-bottom:2px">Scoate pentru client</div>
+      <div id="splitInfo" style="font-size:12px;color:#5A5248;margin-bottom:14px"></div>
+
+      <!-- CLIENT -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Client</div>
+        <div id="splitCSel" style="display:none;background:#EAF0EC;border:1px solid #C8DEC8;border-radius:7px;padding:10px 12px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div id="splitCSelN" style="font-size:14px;font-weight:700;color:#111"></div><div id="splitCSelM" style="font-size:11px;color:#5A5248;margin-top:2px"></div></div>
+            <button onclick="splitClearClient()" style="background:none;border:none;color:#9C3A2B;cursor:pointer;font-size:18px;padding:0 4px">×</button>
+          </div>
+        </div>
+        <input id="splitCSearch" type="text" placeholder="Caută client..." oninput="splitSearchClients(this.value)"
+          style="width:100%;padding:10px;border:1px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;background:#fff">
+        <div id="splitCRes" style="margin-top:6px"></div>
+        <button id="splitNcBtn" onclick="splitToggleNCF(true)" style="display:none;margin-top:6px;width:100%;padding:8px;border-radius:6px;border:1px dashed #B08D57;background:#F6F0E5;color:#8B6914;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">+ Client nou</button>
+        <div id="splitNcForm" style="display:none;margin-top:8px;background:#fff;border:1px solid #DDD7CE;border-radius:8px;padding:12px">
+          <input id="split_nc_co" type="text" placeholder="Nume companie *" style="width:100%;padding:8px;border:1px solid #DDD7CE;border-radius:6px;font-size:13px;margin-bottom:6px;font-family:'Inter',sans-serif">
+          <input id="split_nc_ph" type="text" placeholder="Telefon" style="width:100%;padding:8px;border:1px solid #DDD7CE;border-radius:6px;font-size:13px;margin-bottom:6px;font-family:'Inter',sans-serif">
+          <input id="split_nc_cui" type="text" placeholder="CUI" style="width:100%;padding:8px;border:1px solid #DDD7CE;border-radius:6px;font-size:13px;margin-bottom:6px;font-family:'Inter',sans-serif">
+          <button onclick="splitSaveNewClient()" style="width:100%;padding:9px;border-radius:6px;border:none;background:#111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salvează client</button>
         </div>
       </div>
-      <div style="margin-bottom:12px">
-        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Client</div>
-        <input id="rezervareClient" type="text" placeholder="Numele clientului..."
-          style="width:100%;padding:10px;border:1px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;background:#fff">
+
+      <!-- MODE: BAX vs CUSTOM -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cantitate de scos</div>
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <button id="splitModeBax" onclick="splitSetMode('bax')" style="flex:1;padding:9px;border-radius:7px;border:1.5px solid #111;background:#111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Pe baxuri</button>
+          <button id="splitModeCustom" onclick="splitSetMode('custom')" style="flex:1;padding:9px;border-radius:7px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Pontaj custom</button>
+        </div>
+        <!-- BAX mode -->
+        <div id="splitBaxWrap">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onclick="splitAdjBax(-1)" style="width:36px;height:36px;border-radius:6px;border:1px solid #DDD7CE;background:#fff;font-size:18px;cursor:pointer">−</button>
+            <span id="splitNrBax" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#111;min-width:30px;text-align:center">1</span>
+            <button onclick="splitAdjBax(1)" style="width:36px;height:36px;border-radius:6px;border:1px solid #DDD7CE;background:#fff;font-size:18px;cursor:pointer">+</button>
+            <span id="splitBaxInfo" style="font-size:11px;color:#1E4A2E;font-weight:600"></span>
+          </div>
+        </div>
+        <!-- CUSTOM mode -->
+        <div id="splitCustomWrap" style="display:none">
+          <div style="font-size:10px;color:#9E9890;margin-bottom:6px">Introdu câte perechi scoți la fiecare mărime</div>
+          <div id="splitCustomGrid" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
       </div>
+
+      <!-- TERMEN -->
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Note (optional)</div>
-        <input id="rezervareNote" type="text" placeholder="observatii..."
-          style="width:100%;padding:10px;border:1px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;background:#fff">
+        <div style="font-size:11px;font-weight:700;color:#5A5248;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Termen livrare</div>
+        <input id="splitTermen" type="date" style="width:100%;padding:10px;border:1px solid #DDD7CE;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;background:#fff">
       </div>
+
       <div style="display:flex;gap:8px">
-        <button onclick="closeRezervare()" style="flex:1;padding:11px;border-radius:7px;border:1px solid #DDD7CE;background:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;color:#5A5248">Anuleaza</button>
-        <button onclick="salveazaRezervare()" style="flex:1;padding:11px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Rezerva</button>
+        <button onclick="closeSplit()" style="flex:1;padding:11px;border-radius:7px;border:1px solid #DDD7CE;background:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;color:#5A5248">Anulează</button>
+        <button onclick="salveazaSplit()" style="flex:1;padding:11px;border-radius:7px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Scoate pentru client</button>
       </div>
     </div>
   </div>
@@ -913,22 +945,15 @@ function selectEditModel(id,code){
 
 // ── COMENZI ───────────────────────────────────────────────────
 async function loadOrders(){
-  const[{data:orders,error},{data:alocari}]=await Promise.all([
-    sb.from('orders')
+  const{data:orders,error}=await sb.from('orders')
       .select(`id,order_no,status,delivery_date,delivery_preset,plata,total_pairs,total_value,created_at,notes,updated_at,pending_changes,rejection_reason,
         clients!orders_client_id_fkey(id,name,company_name,cui,phone,delivery_address),
         order_lines(id,color,piele,ponytage,total_pairs,unit_price,notes,product_id,free_model,from_stock,production_status,workshop,products(code,name))`)
       .eq('agent_id',CU.id)
-      .order('created_at',{ascending:false}),
-    sb.from('stock_allocations')
-      .select('id,client_name,nr_baxuri,total_pairs,status,notes,created_at,stock_order_id,stock_line_id,order_lines!stock_line_id(color,free_model,products(code,name)),orders!stock_order_id(order_no,titlu_stoc,nr_baxuri,pontaj_bax,status)')
-      .eq('allocated_by',CU.id)
-      .neq('status','anulat')
-      .order('created_at',{ascending:false})
-  ]);
+      .order('created_at',{ascending:false});
   if(error){console.error(error);return;}
   allOrders=orders||[];
-  allAlocari=alocari||[];
+  allAlocari=[];
   renderOrders(allOrders,allAlocari);
   const active=allOrders.filter(o=>o.status!=='livrat'&&o.status!=='anulat').length;
   document.getElementById('hBadge').textContent=active+' active';
@@ -1881,8 +1906,7 @@ async function loadStoc(){
   // Stoc Productie
   const{data:stocOrders}=await sb.from('orders')
     .select(`id,order_no,status,total_pairs,titlu_stoc,
-      order_lines(id,color,ponytage,total_pairs,nr_baxuri,pontaj_bax,product_id,free_model,production_status,from_stock,products(code,name)),
-      stock_allocations(id,nr_baxuri,total_pairs,client_name,stock_line_id,status)`)
+      order_lines(id,color,ponytage,total_pairs,nr_baxuri,pontaj_bax,product_id,free_model,production_status,from_stock,products(code,name))`)
     .eq('is_stock',true)
     .not('status','in','(finalizat,livrat,anulat)')
     .order('created_at',{ascending:false});
@@ -1894,7 +1918,6 @@ async function loadStoc(){
     prodEl.innerHTML=(stocOrders||[]).map(o=>{
       const lines=(o.order_lines||[]).filter(l=>!l.from_stock);
       const titlu=o.titlu_stoc||o.order_no||'—';
-      const alocari=o.stock_allocations||[];
       return `<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;border-radius:10px">
         <div style="padding:14px">
           <div style="margin-bottom:10px">
@@ -1906,11 +1929,9 @@ async function loadStoc(){
             const pontajBax=l.pontaj_bax&&Object.keys(l.pontaj_bax).length?l.pontaj_bax:l.ponytage||{};
             const nrBaxTotal=l.nr_baxuri||1;
             const perBax=Object.values(pontajBax).reduce((s,q)=>s+(parseInt(q)||0),0);
-            const alocateAcest=alocari.filter(a=>a.stock_line_id===l.id&&a.status!=='anulat').reduce((s,a)=>s+(a.nr_baxuri||1),0);
-            const nrBaxDisp=Math.max(0,nrBaxTotal-alocateAcest);
+            const nrBaxDisp=nrBaxTotal;
             const entries=Object.entries(pontajBax).filter(([,q])=>q>0);
             const pontaj=entries.map(([s,q])=>s+'×'+q).join('  ');
-            const alocL=alocari.filter(a=>a.stock_line_id===l.id&&a.status!=='anulat');
             return `<div style="border-top:1px solid #F4F1EA;padding:10px 0">
               <div style="display:flex;justify-content:space-between;align-items:flex-start">
                 <div>
@@ -1925,13 +1946,10 @@ async function loadStoc(){
                   <div style="font-size:9px;color:#9A9088">${nrBaxTotal} total</div>
                 </div>
               </div>
-              ${alocL.length?`<div style="margin-top:8px;padding:6px 8px;background:#F4F1EA;border-radius:6px">
-                ${alocL.map(a=>`<div style="font-size:11px;color:#111;font-weight:600;padding:2px 0">${a.client_name} · ${a.nr_baxuri||1} bax · ${a.total_pairs||0} per.</div>`).join('')}
-              </div>`:''}
-              ${nrBaxDisp>0?`<button onclick="openRezervare('productie','${l.id}','${o.id}','${titlu} — ${mod} · ${(l.color||'').replace(/'/g,"\\'")}',${nrBaxDisp},${perBax})"
+              ${nrBaxDisp>0?`<button onclick='openSplit("${l.id}","${o.id}",${JSON.stringify(titlu+" — "+mod+" · "+(l.color||''))},${nrBaxDisp},${perBax},${JSON.stringify(pontajBax)},${JSON.stringify(o.status||"nou")})'
                 style="width:100%;margin-top:10px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
-                Rezerva baxuri
-              </button>`:`<div style="margin-top:8px;padding:8px;background:#EAF0EC;border-radius:6px;font-size:11px;color:#1E4A2E;text-align:center;font-weight:700">Toate baxurile rezervate</div>`}
+                Scoate pentru client
+              </button>`:`<div style="margin-top:8px;padding:8px;background:#EAF0EC;border-radius:6px;font-size:11px;color:#1E4A2E;text-align:center;font-weight:700">Toate baxurile scoase</div>`}
             </div>`;
           }).join('')}
         </div>
@@ -1959,7 +1977,7 @@ async function loadStoc(){
           <div style="font-size:13px;color:#5A5248;margin-top:2px;font-weight:600">${item.color||'—'}</div>
           <div style="font-size:11px;color:#3A3530;margin-top:6px;font-family:monospace;font-weight:600">${pontajStr||'—'}</div>
           <div style="margin-top:8px"><span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#1E4A2E">${item.total_pairs}</span><span style="font-size:10px;color:#5A5248;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:4px">per.</span></div>
-          <button onclick="openRezervare('finit','${item.id}',null,'${mod} · ${(item.color||'').replace(/'/g,"\\'")}',null)"
+          <button onclick="rezervaMarfaFinita('${item.id}','${mod} · ${(item.color||'').replace(/'/g,"\\'")}')"
             style="width:100%;margin-top:12px;padding:12px;border-radius:8px;border:none;background:#111111;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
             Rezerva
           </button>
@@ -2025,58 +2043,220 @@ function setStocTab(tab){
 }
 
 let _stocTab='productie';
-let _rezervareData=null;
+// ── SPLIT COMANDA STOC → COMANDA CLIENT ──
+let _splitData=null,_splitClient=null,_splitMode='bax',_splitSTimer=null;
 
+function openSplit(lineId,orderId,label,nrBaxDisp,perBax,pontajBax,stockStatus){
+  _splitData={lineId,orderId,nrBaxDisp:parseInt(nrBaxDisp)||1,perBax:parseInt(perBax)||0,pontajBax:pontajBax||{},stockStatus:stockStatus||'nou'};
+  _splitClient=null;_splitMode='bax';
+  document.getElementById('splitInfo').textContent=label;
+  // reset client
+  document.getElementById('splitCSel').style.display='none';
+  document.getElementById('splitCSearch').value='';
+  document.getElementById('splitCRes').innerHTML='';
+  document.getElementById('splitNcBtn').style.display='none';
+  document.getElementById('splitNcForm').style.display='none';
+  // reset bax
+  document.getElementById('splitNrBax').textContent='1';
+  document.getElementById('splitBaxInfo').textContent=perBax?'= '+perBax+' per.':'';
+  splitSetMode('bax');
+  // termen default: +10 zile
+  const d=new Date();d.setDate(d.getDate()+10);
+  document.getElementById('splitTermen').value=d.toISOString().split('T')[0];
+  document.getElementById('splitModal').style.display='flex';
+}
+function closeSplit(){document.getElementById('splitModal').style.display='none';_splitData=null;_splitClient=null;}
 
-function adjRezBax(d){
-  const el=document.getElementById('rezervareNrBax');
-  const max=_rezervareData?.nrBaxuriDisp||99;
+function splitSetMode(mode){
+  _splitMode=mode;
+  const bBtn=document.getElementById('splitModeBax'),cBtn=document.getElementById('splitModeCustom');
+  const bWrap=document.getElementById('splitBaxWrap'),cWrap=document.getElementById('splitCustomWrap');
+  if(mode==='bax'){
+    bBtn.style.cssText='flex:1;padding:9px;border-radius:7px;border:1.5px solid #111;background:#111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:\'Inter\',sans-serif';
+    cBtn.style.cssText='flex:1;padding:9px;border-radius:7px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:\'Inter\',sans-serif';
+    bWrap.style.display='block';cWrap.style.display='none';
+  }else{
+    cBtn.style.cssText='flex:1;padding:9px;border-radius:7px;border:1.5px solid #111;background:#111;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:\'Inter\',sans-serif';
+    bBtn.style.cssText='flex:1;padding:9px;border-radius:7px;border:1.5px solid #DDD7CE;background:#fff;color:#5A5248;font-size:12px;font-weight:700;cursor:pointer;font-family:\'Inter\',sans-serif';
+    bWrap.style.display='none';cWrap.style.display='block';
+    renderSplitCustomGrid();
+  }
+}
+
+function renderSplitCustomGrid(){
+  const pb=_splitData?.pontajBax||{};
+  const sizes=Object.keys(pb).length?Object.keys(pb).sort((a,b)=>parseInt(a)-parseInt(b)):['39','40','41','42','43','44'];
+  document.getElementById('splitCustomGrid').innerHTML=sizes.map(s=>`
+    <div style="text-align:center">
+      <div style="font-size:10px;color:#5A5248;font-weight:700;margin-bottom:3px">${s}</div>
+      <input type="number" min="0" value="0" id="splitcz_${s}" style="width:46px;padding:6px 4px;border:1.5px solid #DDD7CE;border-radius:6px;text-align:center;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;outline:none"/>
+    </div>`).join('');
+}
+
+function splitAdjBax(d){
+  const el=document.getElementById('splitNrBax');
+  const max=_splitData?.nrBaxDisp||99;
   let v=parseInt(el.textContent)||1;
   v=Math.max(1,Math.min(max,v+d));
   el.textContent=v;
-  const perBax=_rezervareData?.perBax||0;
-  document.getElementById('rezervareBaxInfo').textContent=perBax?'= '+(v*perBax)+' per.':'';
+  const perBax=_splitData?.perBax||0;
+  document.getElementById('splitBaxInfo').textContent=perBax?'= '+(v*perBax)+' per.':'';
 }
 
-function openRezervare(tip,itemId,orderId,label,nrBaxuriDisp,perBax){
-  _rezervareData={tip,itemId,orderId,label,nrBaxuriDisp:parseInt(nrBaxuriDisp)||1,perBax:parseInt(perBax)||0};
-  document.getElementById('rezervareInfo').textContent=label;
-  document.getElementById('rezervareClient').value='';
-  document.getElementById('rezervareNote').value='';
-  document.getElementById('rezervareNrBax').textContent='1';
-  document.getElementById('rezervareBaxInfo').textContent=perBax?'= '+perBax+' per.':'';
-  document.getElementById('rezervareNrBaxWrap').style.display=tip==='productie'?'block':'none';
-  document.getElementById('rezervareModal').style.display='flex';
+// Client search in split modal
+function splitSearchClients(q){
+  clearTimeout(_splitSTimer);
+  const res=document.getElementById('splitCRes');
+  const btn=document.getElementById('splitNcBtn');
+  if(!q.trim()){res.innerHTML='';btn.style.display='none';return;}
+  _splitSTimer=setTimeout(async()=>{
+    const{data}=await sb.from('clients').select('id,name,company_name,phone,cui,delivery_address').or(`name.ilike.%${q}%,company_name.ilike.%${q}%`).limit(6);
+    if(!data?.length){res.innerHTML='<div style="font-size:12px;color:#4A4540;padding:6px 0">Niciun client găsit.</div>';btn.style.display='block';return;}
+    btn.style.display='block';
+    res.innerHTML=data.map(c=>`<div onclick='splitSelC(${JSON.stringify(c)})' style="padding:9px 11px;background:#fff;border:1px solid #DDD7CE;border-radius:7px;margin-bottom:5px;cursor:pointer">
+      <div style="font-size:13px;font-weight:700;color:#1B1B1B">${c.company_name||c.name}</div>
+      <div style="font-size:11px;color:#4A4540;margin-top:2px">${c.phone||''} ${c.cui?'· CUI: '+c.cui:''}</div>
+    </div>`).join('');
+  },300);
+}
+function splitSelC(c){
+  _splitClient=c;
+  document.getElementById('splitCRes').innerHTML='';
+  document.getElementById('splitCSearch').value='';
+  document.getElementById('splitNcBtn').style.display='none';
+  document.getElementById('splitNcForm').style.display='none';
+  document.getElementById('splitCSel').style.display='block';
+  document.getElementById('splitCSelN').textContent=c.company_name||c.name;
+  document.getElementById('splitCSelM').textContent=[c.phone,c.cui?'CUI: '+c.cui:''].filter(Boolean).join(' · ');
+}
+function splitClearClient(){_splitClient=null;document.getElementById('splitCSel').style.display='none';}
+function splitToggleNCF(s){document.getElementById('splitNcForm').style.display=s?'block':'none';document.getElementById('splitNcBtn').style.display=s?'none':'block';}
+async function splitSaveNewClient(){
+  const co=document.getElementById('split_nc_co').value.trim();
+  if(!co){showToast('Completează numele companiei!');return;}
+  showLov('Salvează client...');
+  const{data,error}=await sb.from('clients').insert({
+    company_name:co,name:co,
+    cui:document.getElementById('split_nc_cui').value.trim(),
+    phone:document.getElementById('split_nc_ph').value.trim(),
+    agent_id:CU.id,
+  }).select().single();
+  hideLov();
+  if(error){showToast('Eroare: '+error.message);return;}
+  splitSelC(data);splitToggleNCF(false);showToast('Client salvat!');
 }
 
-function closeRezervare(){
-  document.getElementById('rezervareModal').style.display='none';
-  _rezervareData=null;
-}
+async function salveazaSplit(){
+  if(!_splitData)return;
+  if(!_splitClient){showToast('Selectează un client!');return;}
+  const termen=document.getElementById('splitTermen').value;
+  if(!termen){showToast('Alege un termen de livrare!');return;}
+  const{lineId,orderId,perBax,pontajBax,stockStatus,nrBaxDisp}=_splitData;
 
-async function salveazaRezervare(){
-  if(!_rezervareData)return;
-  const client=document.getElementById('rezervareClient').value.trim();
-  if(!client){showToast('Introdu numele clientului!');return;}
-  const note=document.getElementById('rezervareNote').value.trim();
-  const nrBax=parseInt(document.getElementById('rezervareNrBax').textContent)||1;
-  showLov('Se salveaza...');
-  const{tip,itemId,orderId,perBax}=_rezervareData;
-  if(tip==='productie'){
-    const totalPer=nrBax*(perBax||0);
-    await sb.from('stock_allocations').insert({
-      stock_order_id:orderId,stock_line_id:itemId,
-      client_name:client,ponytage:_rezervareData.pontajBax||{},
-      total_pairs:totalPer,nr_baxuri:nrBax,
-      status:'rezervat',notes:note||null,allocated_by:CU?.id||null
-    });
-  } else {
-    await sb.from('stock_marfa_finita').update({
-      status:'rezervat',notes:(note?note+' — ':'')+client
-    }).eq('id',itemId);
+  // Calculează pontajul scos
+  let pontajScos={},nrBaxScos=0,totalPerScos=0;
+  if(_splitMode==='bax'){
+    nrBaxScos=parseInt(document.getElementById('splitNrBax').textContent)||1;
+    if(nrBaxScos>nrBaxDisp){showToast('Maxim '+nrBaxDisp+' baxuri disponibile.');return;}
+    // pontaj = pontajBax × nrBaxScos
+    Object.entries(pontajBax).forEach(([s,q])=>{pontajScos[s]=(parseInt(q)||0)*nrBaxScos;});
+    totalPerScos=perBax*nrBaxScos;
+  }else{
+    // custom: citește inputurile
+    const sizes=Object.keys(pontajBax).length?Object.keys(pontajBax):['39','40','41','42','43','44'];
+    sizes.forEach(s=>{const el=document.getElementById('splitcz_'+s);const v=el?parseInt(el.value)||0:0;if(v>0){pontajScos[s]=v;totalPerScos+=v;}});
+    if(totalPerScos<=0){showToast('Introdu cel puțin o pereche!');return;}
   }
-  hideLov();closeRezervare();
-  showToast('Rezervat '+nrBax+' bax pentru '+client+'!');
+
+  showLov('Se scoate pentru client...');
+  try{
+    // 1. Ia linia curentă din stoc
+    const{data:stockLine}=await sb.from('order_lines')
+      .select('id,order_id,product_id,free_model,color,ponytage,total_pairs,nr_baxuri,pontaj_bax,unit_price,talpa_id,brant_id,siret_id,cutie_id,production_status,workshop').eq('id',lineId).single();
+    if(!stockLine){hideLov();showToast('Linie negăsită.');return;}
+
+    // Verifică să nu scoți mai mult decât e disponibil (pe pontaj)
+    const stocPony=stockLine.ponytage||{};
+    for(const s of Object.keys(pontajScos)){
+      if((pontajScos[s]||0)>(stocPony[s]||0)){hideLov();showToast('Nu ai destul stoc la mărimea '+s+' (disponibil: '+(stocPony[s]||0)+').');return;}
+    }
+
+    // 2. Mapare status stoc → production_status linie
+    const STATUS_TO_PS={nou:'la_croit',aprobat:'la_croit',la_croit:'la_croit',la_cusut:'la_cusut',la_talpuit:'in_talpuit',la_impachetat:'in_talpuit',gata_livrare:'pregatit_livrare',finalizat:'finalizat'};
+    const linePS=STATUS_TO_PS[stockStatus]||'la_croit';
+    const newOrderStatus=(stockStatus==='nou'||stockStatus==='aprobat')?'aprobat':stockStatus;
+
+    // 3. Creează comanda-client nouă (moștenește statusul stocului)
+    const stockOrderNo=(allOrders.find(o=>o.id===orderId)?.order_no)||'stoc';
+    const{data:newOrd,error:ordErr}=await sb.from('orders').insert({
+      client_id:_splitClient.id,agent_id:CU.id,
+      status:newOrderStatus,
+      delivery_date:termen,
+      total_pairs:totalPerScos,
+      total_value:(stockLine.unit_price||0)*totalPerScos,
+      notes:'Din stoc '+stockOrderNo,
+      split_from_order:orderId
+    }).select().single();
+    if(ordErr){hideLov();showToast('Eroare comandă: '+ordErr.message);return;}
+
+    // 4. Creează linia comenzii noi cu pontajul scos
+    const{error:lineErr}=await sb.from('order_lines').insert({
+      order_id:newOrd.id,
+      product_id:stockLine.product_id,
+      free_model:stockLine.free_model,
+      color:stockLine.color,
+      ponytage:pontajScos,
+      total_pairs:totalPerScos,
+      unit_price:stockLine.unit_price,
+      production_status:linePS,
+      talpa_id:stockLine.talpa_id,brant_id:stockLine.brant_id,
+      siret_id:stockLine.siret_id,cutie_id:stockLine.cutie_id,
+      workshop:stockLine.workshop
+    });
+    if(lineErr){hideLov();showToast('Eroare linie: '+lineErr.message);return;}
+
+    // 5. Scade din comanda de stoc (pontaj + total + nr_baxuri recalculat)
+    const newStocPony={...stocPony};
+    Object.keys(pontajScos).forEach(s=>{newStocPony[s]=Math.max(0,(parseInt(newStocPony[s])||0)-pontajScos[s]);});
+    const newStocTotal=Object.values(newStocPony).reduce((sum,q)=>sum+(parseInt(q)||0),0);
+    // Recalculează nr_baxuri rămase (dacă avem pontaj_bax)
+    const pb=stockLine.pontaj_bax||{};
+    const pbPer=Object.values(pb).reduce((sum,q)=>sum+(parseInt(q)||0),0);
+    const newNrBax=pbPer>0?Math.floor(newStocTotal/pbPer):stockLine.nr_baxuri;
+
+    if(newStocTotal<=0){
+      // Tot stocul a fost scos → marchează linia finalizată
+      await sb.from('order_lines').update({ponytage:{},total_pairs:0,nr_baxuri:0,production_status:'finalizat'}).eq('id',lineId);
+      // Verifică dacă toată comanda de stoc e goală → finalizat
+      const{data:remLines}=await sb.from('order_lines').select('total_pairs').eq('order_id',orderId);
+      const remTotal=(remLines||[]).reduce((s,x)=>s+(x.total_pairs||0),0);
+      if(remTotal<=0)await sb.from('orders').update({status:'finalizat',updated_at:new Date().toISOString()}).eq('id',orderId);
+    }else{
+      await sb.from('order_lines').update({ponytage:newStocPony,total_pairs:newStocTotal,nr_baxuri:newNrBax}).eq('id',lineId);
+    }
+    // Recalculează total comanda de stoc
+    const{data:allStocLines}=await sb.from('order_lines').select('total_pairs,unit_price').eq('order_id',orderId);
+    const stTp=(allStocLines||[]).reduce((s,x)=>s+(x.total_pairs||0),0);
+    const stTv=(allStocLines||[]).reduce((s,x)=>s+((x.total_pairs||0)*(x.unit_price||0)),0);
+    await sb.from('orders').update({total_pairs:stTp,total_value:stTv,updated_at:new Date().toISOString()}).eq('id',orderId);
+
+    hideLov();closeSplit();
+    showToast('Scos pentru '+(_splitClient.company_name||_splitClient.name)+' → comanda '+(newOrd.order_no||'nouă')+'!');
+    await loadStoc();
+  }catch(e){hideLov();showToast('Eroare: '+e.message);}
+}
+
+// Rezervare simplă marfă finită (produs gata în depozit → marchează rezervat)
+async function rezervaMarfaFinita(itemId,label){
+  const client=prompt('Rezervă marfa finită pentru client\n('+label+')\n\nNumele clientului:');
+  if(client===null)return;
+  const nume=client.trim();
+  if(!nume){showToast('Nume client gol.');return;}
+  showLov('Se rezervă...');
+  const{error}=await sb.from('stock_marfa_finita').update({status:'rezervat',notes:'Rezervat: '+nume}).eq('id',itemId);
+  hideLov();
+  if(error){showToast('Eroare: '+error.message);return;}
+  showToast('Rezervat pentru '+nume+'!');
   await loadStoc();
 }
 
